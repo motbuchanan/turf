@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.3.2">
+<meta name="build" content="0.3.3">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,6 +31,13 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 
 /* title */
 #title{background:linear-gradient(180deg,rgba(14,15,18,.2) 0%,rgba(14,15,18,0) 40%,rgba(14,15,18,.86) 78%)}
+/* painted pictures behind the title and the Viceroy's story cards; if one fails to load it hides and the 3D block shows instead */
+.layer > .pic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.layer > .pic[hidden],.layer > .pic[hidden] + .shade{display:none}
+.layer > .shade{position:absolute;inset:0;pointer-events:none}
+#titlePic{object-position:50% 55%}
+#title .shade{background:linear-gradient(180deg,rgba(14,15,18,.1) 0%,rgba(14,15,18,0) 45%,rgba(14,15,18,.9) 82%)}
+#story .shade{background:linear-gradient(180deg,rgba(10,10,12,0) 45%,rgba(10,10,12,.75) 100%)}
 #title .mark{position:absolute;left:calc(20px + var(--safe-l));right:calc(20px + var(--safe-r));bottom:calc(150px + var(--safe-b));pointer-events:none}
 #title .mark svg{width:min(72vw,300px);height:auto;display:block}
 #title .mark p{margin-top:12px;font-size:clamp(15px,4.2vw,18px);color:var(--dim);max-width:36ch;line-height:1.4}
@@ -158,12 +165,14 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 <div id="stage"><canvas id="fb"></canvas></div>
 
 <div id="title" class="layer">
+ <img class="pic" id="titlePic" alt="" src="title.jpg"><div class="shade"></div>
  <div class="mark"><h1 aria-label="Turf"></h1><p>One house on one block. Take the rest of it.</p></div>
  <button class="go" id="goBtn">Start</button>
  <button class="alt" id="watchBtn" hidden>Watch last fight</button>
 </div>
 
 <div id="story" class="layer">
+ <img class="pic" id="storyPic" alt="" hidden><div class="shade"></div>
  <div class="card" id="card"><div class="face" hidden><img id="faceImg" alt="The Viceroy" width="96" height="96"></div><div><div class="who">The Viceroy</div><div class="say"></div><span class="tap">Tap to continue</span></div></div>
 </div>
 
@@ -195,7 +204,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.3.2 · Nov 20 2026</button>
+<button id="badge">v0.3.3 · Nov 20 2026</button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
 
@@ -1608,7 +1617,7 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.3.2', BUILD_DATE = 'Nov 20 2026';
+const VER = '0.3.3', BUILD_DATE = 'Nov 20 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
@@ -1748,7 +1757,14 @@ const FB = (() => {
 
 // ---------- story cards ----------
 let storyQ = [], storyDone = null;
-function story(lines, done){ storyQ = lines.slice(); storyDone = done; show('story'); cam('viceroy'); nextCard(); }
+// each story beat can show a painted scene behind the card: [file, where to keep in frame when a tall screen crops it]
+const SCENES = {rescue:['event-rescue.jpg', '50% 42%'], keys:['event-keys.jpg', '45% 28%']};
+function story(lines, done, scene){ storyQ = lines.slice(); storyDone = done; show('story'); cam('viceroy');
+ const im = $('storyPic'), sc = SCENES[scene];
+ if (sc){ im.hidden = false; im.style.objectPosition = sc[1]; if (!im.src.endsWith(sc[0])) im.src = sc[0]; } else { im.hidden = true; im.removeAttribute('src'); }
+ nextCard(); }
+$('storyPic').onerror = () => { $('storyPic').hidden = true; };
+$('titlePic').onerror = () => { $('titlePic').hidden = true; };
 function nextCard(){ if (!storyQ.length){ const d = storyDone; storyDone = null; d && d(); return; } $('card').querySelector('.say').textContent = storyQ.shift(); }
 // the Viceroy's portrait is a picture file (viceroy.png) uploaded beside the page; until it is there, the card shows no picture
 (function(){ const im = $('faceImg'), box = $('card').querySelector('.face'); im.onload = () => { box.hidden = false; }; im.onerror = () => { box.hidden = true; }; im.src = 'viceroy.png'; })();
@@ -1834,7 +1850,7 @@ function showResult(res, stars, won){
  setStars($('resStars'), stars); $('resPct').textContent = res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash and ' + g.sup + ' Supplies.' : '');
  const again = () => raid ? startAttack(T.raidRecipe(seed(), save.army)) : startAttack(T.rescueRecipe(seed()));
  $('resNext').textContent = raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
- $('resNext').onclick = () => raid ? toHome() : won ? story([WIN, NEXT], toHome) : again();
+ $('resNext').onclick = () => raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
  $('resAgain').textContent = raid ? 'Hit them again' : 'Run it again'; $('resAgain').onclick = again;
  $('resAgain').style.display = (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
  show('result');
@@ -1886,7 +1902,7 @@ function toTitle(){
  $('watchBtn').hidden = !save.reports.length;
  show('title'); cam('title');
 }
-$('goBtn').onclick = () => { if (save.fs && fsCan && !standalone && !fsOn()) fsEnter(); if (save.rescued) toHome(); else story(INTRO, () => startAttack(T.rescueRecipe(seed()))); };
+$('goBtn').onclick = () => { if (save.fs && fsCan && !standalone && !fsOn()) fsEnter(); if (save.rescued) toHome(); else story(INTRO, () => startAttack(T.rescueRecipe(seed())), 'rescue'); };
 $('watchBtn').onclick = () => { lastReport = save.reports[0]; try { watch(lastReport); } catch (e){ save.reports = []; saveGame(); toTitle(); toast("That replay can't be played"); } };
 
 // ---------- your block: build, level up, train a crew ----------

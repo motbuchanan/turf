@@ -1,7 +1,7 @@
 // Turf service worker. The cache name carries the version, so every release installs fresh;
 // only Turf's own old caches are removed. Files are fetched fresh at install, never from the browser's own cache.
-const CACHE = 'turf-v0.3.2';   // stamped by build.py
-const FILES = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'viceroy.png'];
+const CACHE = 'turf-v0.3.3';   // stamped by build.py
+const FILES = ['./', 'index.html', 'manifest.json', 'icon-192.png', 'icon-512.png', 'viceroy.png', 'title.jpg', 'event-rescue.jpg', 'event-keys.jpg'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, {cache:'reload'})))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('turf-v') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

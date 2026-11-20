@@ -137,7 +137,14 @@ const FB = (() => {
 
 // ---------- story cards ----------
 let storyQ = [], storyDone = null;
-function story(lines, done){ storyQ = lines.slice(); storyDone = done; show('story'); cam('viceroy'); nextCard(); }
+// each story beat can show a painted scene behind the card: [file, where to keep in frame when a tall screen crops it]
+const SCENES = {rescue:['event-rescue.jpg', '50% 42%'], keys:['event-keys.jpg', '45% 28%']};
+function story(lines, done, scene){ storyQ = lines.slice(); storyDone = done; show('story'); cam('viceroy');
+ const im = $('storyPic'), sc = SCENES[scene];
+ if (sc){ im.hidden = false; im.style.objectPosition = sc[1]; if (!im.src.endsWith(sc[0])) im.src = sc[0]; } else { im.hidden = true; im.removeAttribute('src'); }
+ nextCard(); }
+$('storyPic').onerror = () => { $('storyPic').hidden = true; };
+$('titlePic').onerror = () => { $('titlePic').hidden = true; };
 function nextCard(){ if (!storyQ.length){ const d = storyDone; storyDone = null; d && d(); return; } $('card').querySelector('.say').textContent = storyQ.shift(); }
 // the Viceroy's portrait is a picture file (viceroy.png) uploaded beside the page; until it is there, the card shows no picture
 (function(){ const im = $('faceImg'), box = $('card').querySelector('.face'); im.onload = () => { box.hidden = false; }; im.onerror = () => { box.hidden = true; }; im.src = 'viceroy.png'; })();
@@ -223,7 +230,7 @@ function showResult(res, stars, won){
  setStars($('resStars'), stars); $('resPct').textContent = res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash and ' + g.sup + ' Supplies.' : '');
  const again = () => raid ? startAttack(T.raidRecipe(seed(), save.army)) : startAttack(T.rescueRecipe(seed()));
  $('resNext').textContent = raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
- $('resNext').onclick = () => raid ? toHome() : won ? story([WIN, NEXT], toHome) : again();
+ $('resNext').onclick = () => raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
  $('resAgain').textContent = raid ? 'Hit them again' : 'Run it again'; $('resAgain').onclick = again;
  $('resAgain').style.display = (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
  show('result');
@@ -275,7 +282,7 @@ function toTitle(){
  $('watchBtn').hidden = !save.reports.length;
  show('title'); cam('title');
 }
-$('goBtn').onclick = () => { if (save.fs && fsCan && !standalone && !fsOn()) fsEnter(); if (save.rescued) toHome(); else story(INTRO, () => startAttack(T.rescueRecipe(seed()))); };
+$('goBtn').onclick = () => { if (save.fs && fsCan && !standalone && !fsOn()) fsEnter(); if (save.rescued) toHome(); else story(INTRO, () => startAttack(T.rescueRecipe(seed())), 'rescue'); };
 $('watchBtn').onclick = () => { lastReport = save.reports[0]; try { watch(lastReport); } catch (e){ save.reports = []; saveGame(); toTitle(); toast("That replay can't be played"); } };
 
 // ---------- your block: build, level up, train a crew ----------

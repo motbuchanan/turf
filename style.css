@@ -16,6 +16,13 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 
 /* title */
 #title{background:linear-gradient(180deg,rgba(14,15,18,.2) 0%,rgba(14,15,18,0) 40%,rgba(14,15,18,.86) 78%)}
+/* painted pictures behind the title and the Viceroy's story cards; if one fails to load it hides and the 3D block shows instead */
+.layer > .pic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.layer > .pic[hidden],.layer > .pic[hidden] + .shade{display:none}
+.layer > .shade{position:absolute;inset:0;pointer-events:none}
+#titlePic{object-position:50% 55%}
+#title .shade{background:linear-gradient(180deg,rgba(14,15,18,.1) 0%,rgba(14,15,18,0) 45%,rgba(14,15,18,.9) 82%)}
+#story .shade{background:linear-gradient(180deg,rgba(10,10,12,0) 45%,rgba(10,10,12,.75) 100%)}
 #title .mark{position:absolute;left:calc(20px + var(--safe-l));right:calc(20px + var(--safe-r));bottom:calc(150px + var(--safe-b));pointer-events:none}
 #title .mark svg{width:min(72vw,300px);height:auto;display:block}
 #title .mark p{margin-top:12px;font-size:clamp(15px,4.2vw,18px);color:var(--dim);max-width:36ch;line-height:1.4}

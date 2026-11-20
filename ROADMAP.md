@@ -4,7 +4,7 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
-**v0.3.2 · Nov 20 2026 · Your Block, part one.** Win the rescue and the Viceroy hands over a house. You pick crew colors,
+**v0.3.3 · Nov 20 2026 · Your Block, part one.** Win the rescue and the Viceroy hands over a house. You pick crew colors,
 place and move buildings, lay fence, level things up with Cash and Supplies (no waiting), train Brawlers, Shooters and
 Bruisers at the Gym, and raid the Boombox Kings for loot. Corners and supply runs pay out after every fight. A Full screen
 button (top right, on the title and on your block) hides the browser bars on Android; installed from the home screen, the game opens full screen.
@@ -16,7 +16,7 @@ Still to come in part two: the other seven fighters, research, the Workshop, and
 - A new logo. The block-letter wordmark is a stand-in.
 - An intro animation built from generated art.
 - A proper app icon.
-- A painted portrait for the Viceroy (viceroy.png) and the other big characters.
+- Done Nov 20 2026: painted Viceroy portrait, title screen, rescue and keys scenes. Painted Brawler, Shooter, Bruiser and Pops Cassette exist and are waiting for a place in the game (troop info, boss intro).
 
 ## Plan (each phase is tried on a phone before the next)
 1. **First Fight (v0.1):** hands-on troop drops, the rescue, Watch. *Shipped Nov 19 2026.*
@@ -44,7 +44,7 @@ battles), new districts (downtown, rural).
 
 ## Building it
 The top of the repo is the live game plus everything needed to rebuild it.
-- **Live game (what the site serves):** index.html, sw.js, manifest.json, icon-192.png, icon-512.png, viceroy.png.
+- **Live game (what the site serves):** index.html, sw.js, manifest.json, icon-192.png, icon-512.png, viceroy.png, title.jpg, event-rescue.jpg, event-keys.jpg.
 - **Source:** shell.html (page skeleton), style.css, base.js (fight sim, shared engine), engine.js (units, buildings, costs, blocks),
   figs.js (people), art.js (buildings and ground), village-iso.js (3D renderer), ui.js (screens), build.py.
 - **Checks:** turfcheck.js and turfsweep.js (run with node), gates.py, proof1.py, proof_home.py, proof_flat.py (Playwright play-throughs;
@@ -54,6 +54,7 @@ The top of the repo is the live game plus everything needed to rebuild it.
 - base.js is shared with Ravenmarrow. Its fight results for Ravenmarrow must not change.
 
 ## Version history
+- v0.3.3 · Nov 20 2026: painted art. A painted title screen, painted scenes behind the Viceroy's story cards (the rescue, the keys to your house), and a painted Viceroy portrait.
 - v0.3.2 · Nov 20 2026: first release in its own repo. Update checks now always reach the server, replays read from a save are checked before they play, and the source and checks ship alongside the game.
 - v0.3.1 · Nov 20 2026: the Full screen button is also on the block screen, top right.
 - v0.3 · Nov 20 2026: your own block (build, move, fence, level up), crew colors, training, loot raids, Full screen button.
