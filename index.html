@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="build" content="0.3.2">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#16171b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Turf</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--ink:#f1eee8;--dim:#a8a49c;--street:#16171b;--panel:#1f2126;--line:#34373e;--sodium:#f2a23a;--lav:#b9a3ff;--blue:#4f6bff;--brick:#8a3b2e;--ok:#5fd38a;--bad:#f0503a;
+ --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);--safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--street);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+#stage{position:fixed;inset:0}
+.vilcv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.vlabs{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.vlab{position:absolute;left:0;top:0;pointer-events:none}
+#fb{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none}
+
+/* layers over the map */
+.layer{position:fixed;inset:0;pointer-events:none;display:none}
+.layer.on{display:block}
+.layer > *{pointer-events:auto}
+
+/* title */
+#title{background:linear-gradient(180deg,rgba(14,15,18,.2) 0%,rgba(14,15,18,0) 40%,rgba(14,15,18,.86) 78%)}
+#title .mark{position:absolute;left:calc(20px + var(--safe-l));right:calc(20px + var(--safe-r));bottom:calc(150px + var(--safe-b));pointer-events:none}
+#title .mark svg{width:min(72vw,300px);height:auto;display:block}
+#title .mark p{margin-top:12px;font-size:clamp(15px,4.2vw,18px);color:var(--dim);max-width:36ch;line-height:1.4}
+#title .go{position:absolute;left:calc(20px + var(--safe-l));bottom:calc(64px + var(--safe-b));min-width:200px;padding:16px 26px;background:var(--sodium);color:#1a1209;font-weight:800;font-size:18px;border-radius:4px 14px 4px 14px;box-shadow:0 4px 0 #9a5d14}
+#title .go:active{transform:translateY(3px);box-shadow:0 1px 0 #9a5d14}
+#title .alt{position:absolute;left:calc(236px + var(--safe-l));bottom:calc(74px + var(--safe-b));padding:10px 4px;color:var(--dim);font-size:15px;text-decoration:underline;text-underline-offset:4px}
+
+/* story card */
+#story{background:rgba(10,10,12,.35)}
+.card{position:absolute;left:calc(12px + var(--safe-l));right:calc(12px + var(--safe-r));bottom:calc(16px + var(--safe-b));background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;gap:14px;align-items:flex-start;max-width:560px;margin:0 auto}
+.card .face{flex:0 0 96px;height:96px;border-radius:4px;overflow:hidden;border:2px solid var(--lav)}
+.card .face[hidden]{display:none}
+.card .face img{width:100%;height:100%;object-fit:cover;display:block}
+.card .who{color:var(--lav);font-weight:800;font-size:15px;margin-bottom:4px}
+.card .say{font-size:clamp(16px,4.4vw,19px);line-height:1.4}
+.card .tap{display:block;margin-top:10px;color:var(--dim);font-size:13px}
+
+/* attack HUD */
+#hud .top{position:absolute;top:calc(10px + var(--safe-t));left:calc(10px + var(--safe-l));right:calc(10px + var(--safe-r));display:flex;align-items:center;gap:10px;pointer-events:none}
+#hud .clock{font-variant-numeric:tabular-nums;font-weight:800;font-size:22px;background:rgba(14,15,18,.78);padding:6px 10px;border-radius:4px;min-width:72px;text-align:center}
+#hud .score{display:flex;align-items:center;gap:6px;background:rgba(14,15,18,.78);padding:6px 10px;border-radius:4px}
+#hud .score b{font-size:20px;font-variant-numeric:tabular-nums;min-width:3.2ch}
+.stars{display:flex;gap:3px}
+.stars i{width:20px;height:20px;display:block;background:#3a3c42;clip-path:polygon(50% 0,63% 36%,100% 38%,71% 61%,81% 100%,50% 78%,19% 100%,29% 61%,0 38%,37% 36%)}
+.stars i.on{background:var(--sodium)}
+#hud .end{margin-left:auto;pointer-events:auto;background:rgba(14,15,18,.78);border:1px solid var(--line);padding:9px 14px;border-radius:4px;font-weight:700}
+#hud .end:active{background:#2a2c31}
+#hud .tip{position:absolute;top:calc(92px + var(--safe-t));left:50%;transform:translateX(-50%);background:rgba(14,15,18,.85);padding:8px 14px;border-radius:4px;font-size:15px;white-space:nowrap;pointer-events:none;transition:opacity .3s}
+#hud .bar{position:absolute;left:calc(8px + var(--safe-l));right:calc(8px + var(--safe-r));bottom:calc(10px + var(--safe-b));display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.troop{position:relative;width:96px;height:112px;background:var(--panel);border:2px solid var(--line);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 4px 6px}
+.troop canvas{margin-bottom:2px}
+.troop .nm{font-size:13px;font-weight:700}
+.troop .n{position:absolute;top:4px;right:6px;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.troop.sel{border-color:var(--sodium);box-shadow:0 0 0 2px var(--sodium) inset}
+.troop.out{opacity:.38}
+.troop:active{transform:scale(.96)}
+.bar.nudge{animation:nudge .35s}
+@keyframes nudge{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* result */
+#result{background:rgba(10,10,12,.55)}
+.panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,380px);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 20px 18px}
+.panel h2{font-size:26px;line-height:1.15;margin-bottom:8px}
+.panel .stars{gap:8px;margin:12px 0 6px}
+.panel .stars i{width:44px;height:44px}
+.panel .pct{color:var(--dim);margin-bottom:16px}
+.panel .acts{display:flex;flex-direction:column;gap:10px}
+.btn{padding:14px 16px;border-radius:4px;font-weight:700;font-size:17px;background:#2c2e34;border:1px solid var(--line);text-align:left}
+.btn.main{background:var(--sodium);color:#1a1209;border-color:#9a5d14}
+.btn:active{background:#3a3c42}
+.btn.main:active{background:#d98c2a}
+
+/* watch */
+#watch .ctl{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + var(--safe-b));display:flex;gap:8px;background:rgba(14,15,18,.85);padding:8px;border-radius:6px}
+#watch .ctl button{min-width:64px;padding:12px 10px;border:1px solid var(--line);border-radius:4px;font-weight:700}
+#watch .lbl{position:absolute;top:calc(12px + var(--safe-t));left:calc(12px + var(--safe-l));background:rgba(14,15,18,.8);padding:6px 10px;border-radius:4px;font-weight:700}
+
+/* your block */
+#home .res{position:absolute;top:calc(10px + var(--safe-t));left:calc(10px + var(--safe-l));right:calc(64px + var(--safe-r));display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
+.chip{display:flex;align-items:center;gap:7px;background:rgba(14,15,18,.82);padding:7px 10px;border-radius:4px;font-weight:800;font-variant-numeric:tabular-nums;font-size:17px;pointer-events:auto;min-height:44px}
+.chip.full b{color:var(--sodium)}
+.ic{display:block;width:20px;height:13px;border-radius:2px}
+.ic.cash{background:#5fd38a;box-shadow:inset 0 0 0 2px #2d7a4b}
+.ic.sup{width:16px;height:16px;background:#96764f;box-shadow:inset 0 0 0 2px #5c452a}
+.ic.crew{width:14px;height:18px;border-radius:7px 7px 2px 2px;background:var(--lav)}
+#home .dock{position:absolute;left:calc(10px + var(--safe-l));right:calc(10px + var(--safe-r));bottom:calc(14px + var(--safe-b));display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;pointer-events:none}
+#home.sheeton .dock{display:none}
+.hb{pointer-events:auto;min-width:84px;min-height:52px;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:4px;font-weight:800;font-size:17px}
+.hb.main{background:var(--sodium);color:#1a1209;border-color:#9a5d14;border-radius:4px 14px 4px 14px;box-shadow:0 4px 0 #9a5d14;min-width:112px}
+.hb:active{transform:translateY(2px)}
+#home .hint{position:absolute;top:calc(64px + var(--safe-t));left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:rgba(14,15,18,.92);border:1px solid var(--sodium);padding:6px 6px 6px 14px;border-radius:4px;font-size:15px;width:max-content;max-width:94vw}
+#home .hint[hidden]{display:none}
+#home .hint button{min-height:44px;padding:8px 14px;background:var(--sodium);color:#1a1209;font-weight:800;border-radius:3px}
+.sheet{position:absolute;left:calc(8px + var(--safe-l));right:calc(8px + var(--safe-r));bottom:calc(8px + var(--safe-b));max-width:520px;margin:0 auto;max-height:58vh;overflow:hidden;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px 10px 4px 4px;padding:14px 14px 12px}
+#sheetBody{overflow-y:auto;min-height:0;touch-action:pan-y;overscroll-behavior:contain}
+.sheet[hidden]{display:none}
+.sheet .x{position:absolute;top:10px;right:10px;z-index:1;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:4px;background:#2c2e34;font-weight:700;font-size:14px}
+.sheet h3{font-size:20px;line-height:1.25;margin-bottom:6px;min-height:42px;padding-right:92px}
+.sheet h3 span{color:var(--dim);font-size:14px;font-weight:600;margin-left:8px;white-space:nowrap}
+.sheet p{color:var(--dim);font-size:15px;line-height:1.4;margin-bottom:8px}
+.sheet p.stat{color:var(--ink)}
+.sheet .btn{display:block;width:100%;margin:10px 0}
+.btn.no{opacity:.45}
+.rows{display:flex;flex-direction:column;gap:8px;clear:both}
+.row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#26282d;border:1px solid var(--line);border-radius:4px;padding:10px 12px;min-height:60px}
+.row .nm{font-weight:800;font-size:16px}
+.row .sub{color:var(--dim);font-size:13px;line-height:1.3}
+.row .mid{flex:1;min-width:0}
+.row .pr{font-weight:800;font-size:13px;white-space:nowrap;text-align:right;line-height:1.35}
+.row.no{opacity:.5}
+.row canvas{flex:0 0 auto}
+.sw{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 12px;clear:both}
+.sw button{width:46px;height:46px;border-radius:4px 12px 4px 12px;border:2px solid var(--line)}
+.sw button.on{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.mini{flex:0 0 auto;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:#2c2e34;font-weight:800;min-width:46px;min-height:46px;font-size:15px}
+.mini:active,.row:active{background:#3a3c42}
+@media (orientation:landscape) and (max-height:500px){.sheet{left:auto;margin:0;width:min(48vw,430px);max-height:calc(100vh - 16px - var(--safe-b))}}
+
+/* always there */
+#fsBtn{position:fixed;top:calc(10px + var(--safe-t));right:calc(10px + var(--safe-r));z-index:30;display:none;align-items:center;gap:8px;min-width:44px;min-height:44px;padding:10px 13px;background:rgba(14,15,18,.82);border:1px solid var(--line);border-radius:4px;font-weight:700;font-size:15px}
+#title.on ~ #fsBtn:not([hidden]),#home.on ~ #fsBtn:not([hidden]){display:flex}
+#home.on ~ #fsBtn span,#home.sheeton ~ #fsBtn:not([hidden]){display:none}
+#fsBtn i{display:block;width:18px;height:18px;--c:var(--ink);background:linear-gradient(to right,var(--c) 6px,transparent 6px,transparent 12px,var(--c) 12px) top/100% 2px no-repeat,linear-gradient(to right,var(--c) 6px,transparent 6px,transparent 12px,var(--c) 12px) bottom/100% 2px no-repeat,linear-gradient(to bottom,var(--c) 6px,transparent 6px,transparent 12px,var(--c) 12px) left/2px 100% no-repeat,linear-gradient(to bottom,var(--c) 6px,transparent 6px,transparent 12px,var(--c) 12px) right/2px 100% no-repeat}
+#fsBtn:active{background:#2a2c31}
+#badge{position:fixed;right:calc(8px + var(--safe-r));bottom:calc(4px + var(--safe-b));font-size:11px;color:var(--dim);padding:6px;z-index:30;opacity:.8}
+#story.on ~ #badge,#hud.on ~ #badge,#home.on ~ #badge{bottom:auto;top:calc(56px + var(--safe-t));right:auto;left:calc(8px + var(--safe-l))}
+#title.on ~ #badge{min-height:44px;display:flex;align-items:flex-end}
+#toast{position:fixed;left:50%;top:calc(110px + var(--safe-t));transform:translateX(-50%);background:#0e0f12;border:1px solid var(--line);color:var(--ink);padding:10px 16px;border-radius:4px;font-size:15px;z-index:40;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+#toast.act{pointer-events:auto;border-color:var(--sodium)}
+#nogl{position:fixed;left:12px;right:12px;top:calc(12px + var(--safe-t));background:#2a1d14;border:1px solid #7a4a1c;padding:10px 12px;border-radius:4px;font-size:14px;display:none;z-index:35}
+@media (prefers-reduced-motion:reduce){.bar.nudge{animation:none}}
+#story{pointer-events:auto}
+#hud .bar{pointer-events:none}
+#hud .troop{pointer-events:auto}
+@media (orientation:landscape) and (max-height:500px){
+ .troop{width:84px;height:86px}.troop canvas{width:52px!important;height:52px!important}
+ #hud .bar{left:auto;right:calc(8px + var(--safe-r));justify-content:flex-end}
+ #title .mark{bottom:calc(96px + var(--safe-b))}#title .mark svg{width:min(40vw,240px)}#title .go{bottom:calc(20px + var(--safe-b))}#title .alt{bottom:calc(30px + var(--safe-b))}
+ .card{max-width:640px}}
+
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="fb"></canvas></div>
+
+<div id="title" class="layer">
+ <div class="mark"><h1 aria-label="Turf"></h1><p>One house on one block. Take the rest of it.</p></div>
+ <button class="go" id="goBtn">Start</button>
+ <button class="alt" id="watchBtn" hidden>Watch last fight</button>
+</div>
+
+<div id="story" class="layer">
+ <div class="card" id="card"><div class="face" hidden><img id="faceImg" alt="The Viceroy" width="96" height="96"></div><div><div class="who">The Viceroy</div><div class="say"></div><span class="tap">Tap to continue</span></div></div>
+</div>
+
+<div id="hud" class="layer">
+ <div class="top">
+  <div class="clock" id="clock">3:00</div>
+  <div class="score"><div class="stars" id="hudStars"><i></i><i></i><i></i></div><b id="pct">0%</b></div>
+  <button class="end" id="endBtn">End</button>
+ </div>
+ <div class="tip" id="tip">Pick a troop, then tap the street</div>
+ <div class="bar" id="bar"></div>
+</div>
+
+<div id="result" class="layer">
+ <div class="panel"><h2 id="resTitle"></h2><div class="stars" id="resStars"><i></i><i></i><i></i></div><div class="pct" id="resPct"></div>
+  <div class="acts"><button class="btn main" id="resNext"></button><button class="btn" id="resWatch">Watch the fight</button><button class="btn" id="resAgain">Run it again</button></div></div>
+</div>
+
+<div id="watch" class="layer">
+ <div class="lbl" id="watchLbl">Replay</div>
+ <div class="ctl"><button id="wPlay">Pause</button><button id="wSpeed">2x</button><button id="wSkip">Skip</button></div>
+</div>
+
+<div id="home" class="layer">
+ <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
+ <div class="hint" id="hHint" hidden><span id="hHintTxt"></span><button id="hHintDone">Done</button></div>
+ <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb main" id="hAttack">Attack</button></div>
+ <div class="sheet" id="sheet" hidden><button class="x" id="sheetX">Close</button><div id="sheetBody"></div></div>
+</div>
+
+<div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
+<button id="badge">v0.3.2 · Nov 20 2026</button>
+<button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
+<div id="toast"></div>
+
+<script>
+// base.js · the reusable base-building engine (grid, footprints, placement, wall joins, paths, seeded random).
+// No game names live here: every game hands in its own building defs, unlock table and starter template.
+// Ravenmarrow 3.0 · Nov 18 2026
+const BASE = (() => {
+'use strict';
+const W = 28, H = 28;   // grid size in tiles
+
+// seeded random: mulberry32. Every sim and every replay draws from this, never Math.random
+function rng(seed){ let a = seed >>> 0; return function(){ a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// defs: {kind: {fp:[w,h]}}; an item is {k, x, y}
+function fpOf(defs, k){ const d = defs[k]; return d && d.fp ? d.fp : [1, 1]; }
+function cells(defs, it){ const f = fpOf(defs, it.k), o = []; for (let y = 0; y < f[1]; y++) for (let x = 0; x < f[0]; x++) o.push([it.x + x, it.y + y]); return o; }
+// the grid as an array of item indexes (-1 empty)
+function grid(layout, defs, w, h){ w = w || W; h = h || H; const g = new Int16Array(w * h).fill(-1);
+ (layout.items || []).forEach((it, i) => cells(defs, it).forEach(([x, y]) => { if (x >= 0 && y >= 0 && x < w && y < h) g[y * w + x] = i; }));
+ return {w, h, g, at(x, y){ return x < 0 || y < 0 || x >= w || y >= h ? -2 : g[y * w + x]; }}; }
+// can this item sit here? (ignoring the item at index skip, the one being moved)
+function fits(layout, it, defs, skip){ const gr = grid(layout, defs);
+ return cells(defs, it).every(([x, y]) => { const v = gr.at(x, y); return v === -1 || (skip !== undefined && v === skip); }); }
+
+// walls join to wall neighbours: bit 1 north, 2 east, 4 south, 8 west
+function wallShape(layout, x, y){ const set = new Set((layout.items || []).filter(i => i.k === 'wall').map(i => i.x + ',' + i.y));
+ return (set.has(x + ',' + (y - 1)) ? 1 : 0) | (set.has((x + 1) + ',' + y) ? 2 : 0) | (set.has(x + ',' + (y + 1)) ? 4 : 0) | (set.has((x - 1) + ',' + y) ? 8 : 0); }
+
+// starter layout from a template the game supplies: {items:[{k,x,y}], ring:[x0,y0,x1,y1], gate:[[x,y],...]}
+// counts: how many walls the unlock table allows. Anything that would overlap is dropped, never stacked
+function starterLayout(defs, tpl, wallCount){
+ const L = {v:1, items:[]};
+ tpl.items.forEach(it => { const c = {k:it.k, x:it.x, y:it.y}; if (fits(L, c, defs)) L.items.push(c); });
+ const [x0, y0, x1, y1] = tpl.ring, gate = new Set((tpl.gate || []).map(p => p[0] + ',' + p[1])), ring = [];
+ for (let x = x0; x <= x1; x++){ ring.push([x, y0]); }
+ for (let y = y0 + 1; y <= y1; y++){ ring.push([x1, y]); }
+ for (let x = x1 - 1; x >= x0; x--){ ring.push([x, y1]); }
+ for (let y = y1 - 1; y > y0; y--){ ring.push([x0, y]); }
+ let n = 0; for (const [x, y] of ring){ if (n >= wallCount) break; if (gate.has(x + ',' + y)) continue; const c = {k:'wall', x, y}; if (fits(L, c, defs)){ L.items.push(c); n++; } }
+ return L; }
+
+// tile-centre of an item's footprint
+function centre(defs, it){ const f = fpOf(defs, it.k); return [it.x + f[0] / 2, it.y + f[1] / 2]; }
+
+// shortest walk on the tile grid (4 ways), passable(x, y) decides; the start and goal tiles are always allowed. Returns [[x,y],...] or null
+function path(gr, from, to, passable){
+ const w = gr.w, h = gr.h, key = (x, y) => y * w + x, prev = new Int32Array(w * h).fill(-1), seen = new Uint8Array(w * h);
+ const ok = (x, y) => x >= 0 && y >= 0 && x < w && y < h && ((x === to[0] && y === to[1]) || passable(x, y));
+ if (from[0] < 0 || from[1] < 0 || from[0] >= w || from[1] >= h) return null;
+ const q = [from]; seen[key(from[0], from[1])] = 1;
+ for (let qi = 0; qi < q.length; qi++){ const [x, y] = q[qi];
+  if (x === to[0] && y === to[1]){ const out = []; let k = key(x, y); while (k !== -1){ out.push([k % w, Math.floor(k / w)]); k = prev[k]; } return out.reverse(); }
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy; if (!ok(nx, ny) || seen[key(nx, ny)]) continue; seen[key(nx, ny)] = 1; prev[key(nx, ny)] = key(x, y); q.push([nx, ny]); } }
+ return null; }
+
+// can anything walk in from the edge of the map to touch this item? (raiders and villagers need a way in)
+function reachable(layout, defs, it){
+ const gr = grid(layout, defs), w = gr.w, h = gr.h, seen = new Uint8Array(w * h), q = [];
+ for (let x = 0; x < w; x++) for (const y of [0, h - 1]) if (gr.at(x, y) === -1 && !seen[y * w + x]){ seen[y * w + x] = 1; q.push([x, y]); }
+ for (let y = 0; y < h; y++) for (const x of [0, w - 1]) if (gr.at(x, y) === -1 && !seen[y * w + x]){ seen[y * w + x] = 1; q.push([x, y]); }
+ const touch = new Set(); const f = fpOf(defs, it.k);
+ for (let x = it.x - 1; x <= it.x + f[0]; x++) for (let y = it.y - 1; y <= it.y + f[1]; y++){ const inX = x >= it.x && x < it.x + f[0], inY = y >= it.y && y < it.y + f[1]; if ((inX && !inY) || (inY && !inX)) touch.add(x + ',' + y); }
+ for (let i = 0; i < q.length; i++){ const [x, y] = q[i]; if (touch.has(x + ',' + y)) return true;
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy; if (gr.at(nx, ny) !== -1 || seen[ny * w + nx]) continue; seen[ny * w + nx] = 1; q.push([nx, ny]); } }
+ return false; }
+// a layout the game can accept: on the grid, nothing overlapping, counts within max, every required kind present, the key building reachable
+// max: {kind: n}; need: [kinds]; key: the kind that must be reachable. Returns {ok, why, k}
+function validLayout(layout, defs, max, need, key){
+ const items = layout.items || [], seen = new Set(), count = {};
+ for (const it of items){ const f = fpOf(defs, it.k);
+  if (!Number.isInteger(it.x) || !Number.isInteger(it.y) || it.x < 0 || it.y < 0 || it.x + f[0] > W || it.y + f[1] > H) return {ok:false, why:'bounds', k:it.k};
+  for (const [x, y] of cells(defs, it)){ const c = x + ',' + y; if (seen.has(c)) return {ok:false, why:'overlap', k:it.k}; seen.add(c); }
+  count[it.k] = (count[it.k] || 0) + 1; }
+ for (const k in count) if (max[k] != null && count[k] > max[k]) return {ok:false, why:'count', k};
+ for (const k of need || []) if (!count[k]) return {ok:false, why:'missing', k};
+ if (key){ const it = items.find(i => i.k === key); if (it && !reachable(layout, defs, it)) return {ok:false, why:'sealed', k:key}; }
+ return {ok:true}; }
+
+// ---------- RAID SIM (v3.3): a raid fought on a layout, worked out tick by tick from a recipe ----------
+// The recipe holds everything the fight needs (numbers already worked out by the game), so a replay years later
+// comes out the same. Fixed 10 ticks a second, seeded random only, plain arithmetic and sqrt (same on every phone).
+// recipe: {simVer, seed, items:[{key,k,x,y,fw,fh,hp,role:'core'|'bld'|'wall'|'tower'|'trap'|'plot',range,dmg,rate}],
+//  attackers:[{look,hp,atk,def,speed,range,fly,prefer:'any'|'def',wallMult,splash}],
+//  defenders:[{look,hp,atk,def,speed,range,hero}], guard:0..1 (damage cut for defenders inside the walls)}
+// Turf (Nov 19 2026): R.deploys turns on hands-on attacks. Each attacker waits off the map until a deploy {i, x, y, t} puts it
+// at (x, y) on tick t; raidStart() runs the fight one tick at a time so a player can add deploys while it runs, and simRaid()
+// with the saved deploys plays the same fight again. Without R.deploys every line below behaves exactly as before.
+// Deploy mode also: the fight runs past the core going down (stars are scored by the game), ends when every scoring building
+// is down, when R.endAt is reached (the player pressed End), or when every attacker is placed and down. R.maxT sets the length.
+const SIM_VER = 1, DEPLOY_VER = 1, TICK = .1, MAXT = 900;
+function raidStart(R, opt){
+ opt = opt || {};
+ const dep = Array.isArray(R.deploys), maxT = R.maxT || MAXT;
+ const rand = rng(R.seed >>> 0), r4 = v => Math.round(v * 10000) / 10000;
+ const items = R.items.map((it, i) => ({i, key:it.key, k:it.k, x:it.x, y:it.y, fw:it.fw, fh:it.fh, role:it.role, max:it.hp || 0, hp:it.hp || 0, range:it.range || 0, dmg:it.dmg || 0, rate:it.rate || 1, cd:0, dealt:0, hit:new Set()}));
+ const solid = items.filter(b => b.role !== 'plot' && b.role !== 'trap');
+ const scoring = items.filter(b => b.role === 'core' || b.role === 'bld' || b.role === 'tower');
+ const totalHp = scoring.reduce((s, b) => s + b.max, 0) || 1;
+ const occ = new Int16Array(W * H).fill(-1);
+ solid.forEach(b => { for (let y = b.y; y < b.y + b.fh; y++) for (let x = b.x; x < b.x + b.fw; x++) if (x >= 0 && y >= 0 && x < W && y < H) occ[y * W + x] = b.i; });
+ const core = items.find(b => b.role === 'core');
+ // spawn: one side of the map, chosen by the seed
+ const units = [];
+ if (dep) R.attackers.forEach((a, n) => {
+  units.push({id:n, side:'a', look:a.look, x:0, y:0, hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0,
+   delay:0, wait:true, cd:Math.floor(rand() * 8), tgt:null, path:null, pi:0, mode:0, face:2, dealt:0, alive:true}); });
+ else { const side = Math.floor(rand() * 4);
+ R.attackers.forEach((a, n) => { const t = Math.floor(rand() * 16) - 8 + W / 2, e = .3;
+  const p = side === 0 ? [t, e] : side === 1 ? [W - e, t] : side === 2 ? [t, H - e] : [e, t];
+  units.push({id:n, side:'a', look:a.look, x:r4(p[0]), y:r4(p[1]), hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0,
+   delay:Math.floor(n * 3), cd:Math.floor(rand() * 8), tgt:null, path:null, pi:0, mode:0, face:0, dealt:0, alive:true}); }); }
+ const posts = [];
+ const cx = core ? core.x + core.fw / 2 : W / 2, cy = core ? core.y + core.fh + .6 : H / 2;
+ R.defenders.forEach((d, n) => { const ang = n * 7 % 12, ox = ((ang % 4) - 1.5) * .7, oy = (Math.floor(ang / 4) - .5) * .7;
+  units.push({id:100 + n, side:'d', look:d.look, hero:!!d.hero, x:r4(cx + ox), y:r4(cy + oy), px:r4(cx + ox), py:r4(cy + oy), hp:d.hp, max:d.hp, atk:d.atk, def:d.def || 0, speed:d.speed, range:d.range,
+   cd:Math.floor(rand() * 8), delay:0, tgt:null, mode:2, face:2, dealt:0, alive:true}); });
+ const guard = R.guard || 0;
+ const dist2rect = (u, b) => { const dx = Math.max(b.x - u.x, 0, u.x - (b.x + b.fw)), dy = Math.max(b.y - u.y, 0, u.y - (b.y + b.fh)); return Math.sqrt(dx * dx + dy * dy); };
+ const dist = (a, b) => Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+ const hurt = (target, amount) => { const d = Math.max(1, amount * 60 / (60 + (target.def || 0))); target.hp = r4(target.hp - d); return d; };
+ // a walk from tile s to any tile within reach of building b: free tiles cost 1, standing walls cost 6 (they get broken), buildings block
+ function route(u, b){
+  const sx = Math.max(0, Math.min(W - 1, Math.floor(u.x))), sy = Math.max(0, Math.min(H - 1, Math.floor(u.y))), N = W * H;
+  const cost = new Float64Array(N).fill(1e9), prev = new Int32Array(N).fill(-1), done = new Uint8Array(N), heap = [];
+  const push = (c, k) => { heap.push([c, k]); let i = heap.length - 1; while (i){ const p = (i - 1) >> 1; if (heap[p][0] < heap[i][0] || (heap[p][0] === heap[i][0] && heap[p][1] <= heap[i][1])) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length){ heap[0] = last; let i = 0; for (;;){ const l = 2 * i + 1, r = l + 1; let m = i;
+   if (l < heap.length && (heap[l][0] < heap[m][0] || (heap[l][0] === heap[m][0] && heap[l][1] < heap[m][1]))) m = l; if (r < heap.length && (heap[r][0] < heap[m][0] || (heap[r][0] === heap[m][0] && heap[r][1] < heap[m][1]))) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  const reach = u.range + (dep ? .05 : .5);   // deploy mode walks all the way into attack reach (the wider .5 left ranged troops parked just short)
+  cost[sy * W + sx] = 0; push(0, sy * W + sx);
+  while (heap.length){ const [c, k] = pop(); if (done[k]) continue; done[k] = 1; const x = k % W, y = (k - x) / W;
+   if (dist2rect({x:x + .5, y:y + .5}, b) <= reach){ const out = []; let q = k; while (q !== -1){ out.push([q % W + .5, Math.floor(q / W) + .5]); q = prev[q]; } return out.reverse(); }
+   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const nk = ny * W + nx, o = occ[nk];
+    let step = 1; if (o >= 0){ const ob = items[o]; if (!(ob.hp > 0)) step = 1; else if (ob.role === 'wall') step = 6; else continue; }
+    if (c + step < cost[nk]){ cost[nk] = c + step; prev[nk] = k; push(c + step, nk); } } }
+  return null; }
+ function pickTarget(u){
+  let best = null, bd = 1e9;
+  const pool = scoring.filter(b => b.hp > 0), defs = pool.filter(b => b.role === 'tower');
+  const list = u.prefer === 'def' && defs.length ? defs : pool;
+  for (const b of list){ const d = dist2rect(u, b); if (d < bd - 1e-9){ bd = d; best = b; } }
+  return best; }
+ const frames = [], shots = [];
+ let t = 0, over = null;
+ const snap = () => { if (!opt.record){ if (dep) shots.length = 0; return; } frames.push({u:units.map(u => [u.id, r4(u.x), r4(u.y), Math.max(0, Math.round(u.hp)), u.mode, u.face, u.alive && u.delay <= 0 && !u.wait ? 1 : 0]), b:items.map(b => Math.max(0, Math.round(b.hp))), s:shots.splice(0)}); };
+ // deploys waiting for their tick (sorted by tick, stable), how many are on the map, and the End tick if the player pressed End
+ const queue = dep ? R.deploys.map(d => ({i:d.i | 0, x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)})).sort((a, b) => a.t - b.t) : [];
+ let qi = 0, endAt = dep ? (R.endAt | 0) : 0;
+ const placeDue = () => { while (qi < queue.length && queue[qi].t <= t){ const d = queue[qi++], u = units[d.i];
+  if (!u || u.side !== 'a' || !u.wait){ d.skip = true; continue; }
+  u.wait = false; u.x = r4(Math.max(0, Math.min(W - .01, d.x))); u.y = r4(Math.max(0, Math.min(H - .01, d.y))); } };
+ const faceTo = (u, x, y) => { const dx = x - u.x, dy = y - u.y; u.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 0 : 2); };
+ snap();
+ t = 1;
+ function step(){
+  if (over || t > maxT) return false;
+  if (dep) placeDue();
+  const live = units.filter(u => u.alive && u.delay <= 0 && !u.wait);
+  const att = live.filter(u => u.side === 'a'), def = live.filter(u => u.side === 'd');
+  // towers fire at the nearest raider in range
+  for (const b of items){ if (b.role !== 'tower' || !(b.hp > 0)) continue; if (b.cd > 0){ b.cd--; continue; }
+   let tg = null, td = 1e9; for (const a of att){ const d = dist2rect(a, b); if (d <= b.range && d < td - 1e-9){ td = d; tg = a; } }
+   if (tg){ b.dealt += hurt(tg, b.dmg); b.cd = Math.round(b.rate / TICK); shots.push([b.x + b.fw / 2, b.y + b.fh / 2, tg.x, tg.y, 0]); } }
+  // traps hurt each raider once as they cross
+  for (const b of items){ if (b.role !== 'trap') continue; for (const a of att){ if (a.fly || b.hit.has(a.id)) continue; if (a.x >= b.x && a.x <= b.x + b.fw && a.y >= b.y && a.y <= b.y + b.fh){ b.hit.add(a.id); b.dealt += hurt(a, b.dmg); shots.push([a.x, a.y, a.x, a.y, 2]); } } }
+  // defenders: engage the nearest raider near the Hall, otherwise go back to post
+  for (const u of def){ let tg = null, td = 1e9; for (const a of att){ if (!(a.hp > 0)) continue; const d = dist(u, a), dp = Math.sqrt((a.x - u.px) * (a.x - u.px) + (a.y - u.py) * (a.y - u.py)); if (dp < 7 && d < td - 1e-9){ td = d; tg = a; } }
+   if (u.cd > 0) u.cd--;
+   if (tg){ faceTo(u, tg.x, tg.y);
+    if (td <= u.range + .35){ u.mode = 1; if (!u.cd){ u.dealt += hurt(tg, u.atk); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, tg.x, tg.y, 1]); } }
+    else { u.mode = 0; const k = Math.min(1, u.speed * TICK / td); u.x = r4(u.x + (tg.x - u.x) * k); u.y = r4(u.y + (tg.y - u.y) * k); } }
+   else { const d = Math.sqrt((u.px - u.x) * (u.px - u.x) + (u.py - u.y) * (u.py - u.y)); if (d > .05){ u.mode = 0; faceTo(u, u.px, u.py); const k = Math.min(1, u.speed * TICK / d); u.x = r4(u.x + (u.px - u.x) * k); u.y = r4(u.y + (u.py - u.y) * k); } else { u.mode = 2; u.face = 2; } } }
+  // raiders: fight a defender in their face, else walk to the target, breaking walls in the way
+  for (const u of att){ if (!(u.hp > 0)) continue; if (u.cd > 0) u.cd--;
+   let foe = null, fd = 1e9; for (const d of def){ if (!(d.hp > 0)) continue; const dd = dist(u, d); if (dd < Math.max(1.1, u.range + .3) && dd < fd - 1e-9){ fd = dd; foe = d; } }
+   if (foe){ faceTo(u, foe.x, foe.y); u.mode = 1; if (!u.cd){ u.dealt += hurt(foe, u.atk * (1 - guard)); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, foe.x, foe.y, 3]); } continue; }
+   if (!u.tgt || !(u.tgt.hp > 0)){ u.tgt = pickTarget(u); u.path = null; if (!u.tgt) continue; }
+   const b = u.tgt, d = dist2rect(u, b);
+   if (d <= u.range + .05){ u.mode = 1; faceTo(u, b.x + b.fw / 2, b.y + b.fh / 2); if (!u.cd){ const dmg = hurt(b, u.atk); u.dealt += dmg; u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, b.x + b.fw / 2, b.y + b.fh / 2, 3]);
+     if (u.splash) for (const o of scoring){ if (o !== b && o.hp > 0 && dist2rect({x:b.x + b.fw / 2, y:b.y + b.fh / 2}, o) < u.splash) hurt(o, u.atk * .4); } } continue; }
+   if (u.fly){ u.mode = 0; const tx = b.x + b.fw / 2, ty = b.y + b.fh / 2, dd = Math.sqrt((tx - u.x) * (tx - u.x) + (ty - u.y) * (ty - u.y)); faceTo(u, tx, ty); const k = Math.min(1, u.speed * TICK / dd); u.x = r4(u.x + (tx - u.x) * k); u.y = r4(u.y + (ty - u.y) * k); continue; }
+   if (!u.path){ u.path = route(u, b); u.pi = 0; if (!u.path){ u.tgt = null; continue; } }
+   const n = u.path[Math.min(u.pi, u.path.length - 1)], o = occ[Math.floor(n[1]) * W + Math.floor(n[0])];
+   if (o >= 0 && items[o].hp > 0 && items[o].role === 'wall'){ const w = items[o]; u.mode = 1; faceTo(u, n[0], n[1]); if (!u.cd){ u.dealt += hurt(w, u.atk * u.wallMult); u.cd = 8; if (!(w.hp > 0)) u.path = null; } continue; }
+   const dd = Math.sqrt((n[0] - u.x) * (n[0] - u.x) + (n[1] - u.y) * (n[1] - u.y));
+   if (dd < .06){ u.pi++; if (u.pi >= u.path.length) u.path = null; continue; }
+   u.mode = 0; faceTo(u, n[0], n[1]); const k = Math.min(1, u.speed * TICK / dd); u.x = r4(u.x + (n[0] - u.x) * k); u.y = r4(u.y + (n[1] - u.y) * k); }
+  // deaths, arrivals
+  for (const u of units){ if (u.wait) continue; if (u.delay > 0){ u.delay--; continue; } if (u.alive && !(u.hp > 0)){ u.alive = false; u.hp = 0; } }
+  for (const b of items) if (b.hp < 0) b.hp = 0;
+  if (!dep){
+   if (core && !(core.hp > 0)) over = 'core';
+   else if (!units.some(u => u.side === 'a' && (u.alive || u.delay > 0))) over = 'cleared'; }
+  else {
+   if (!scoring.some(b => b.hp > 0)) over = 'all';
+   else if (endAt && t >= endAt) over = 'end';
+   else if (qi >= queue.length && !units.some(u => u.side === 'a' && (u.wait || u.alive))) over = 'cleared'; }
+  snap();
+  t++;
+  return true;
+ }
+ // live play: put attacker i at (x, y) on the next tick. False if it is already placed or queued, or the fight is over.
+ function deploy(i, x, y){
+  const u = units[i]; if (!dep || over || t > maxT || !u || u.side !== 'a' || !u.wait) return false;
+  for (let k = qi; k < queue.length; k++) if (queue[k].i === i) return false;
+  queue.push({i, x:r4(x), y:r4(y), t}); return true; }
+ function end(){ if (dep && !over && !endAt) endAt = t; }
+ function result(){
+ const lost = scoring.reduce((s, b) => s + (b.max - Math.max(0, b.hp)), 0), pct = Math.round(100 * lost / totalHp);
+ const coreDown = !!core && !(core.hp > 0), win = !coreDown && pct < 50;
+ // the defender who did the most: a hero, a band, or a tower
+ let best = null; units.filter(u => u.side === 'd').forEach(u => { if (!best || u.dealt > best.dealt) best = {look:u.look, hero:u.hero, dealt:u.dealt}; });
+ items.filter(b => b.role === 'tower' || b.role === 'trap').forEach(b => { if (!best || b.dealt > best.dealt) best = {k:b.k, dealt:b.dealt}; });
+ const result = {simVer:SIM_VER, win, pct, coreDown, ticks:t - 1, ended:over || 'time', kills:units.filter(u => u.side === 'a' && !u.alive).length, raiders:R.attackers.length,
+  defendersLeft:units.filter(u => u.side === 'd' && u.alive).map(u => u.id - 100), defHp:units.filter(u => u.side === 'd').map(u => u.alive ? Math.round(u.hp) : 0), attHp:units.filter(u => u.side === 'a').map(u => u.alive ? Math.round(u.hp) : 0), best:best ? {look:best.look, k:best.k, hero:best.hero, dealt:Math.round(best.dealt)} : null};
+ // a fingerprint of the whole fight, for the same-recipe-same-fight test
+ let h = 2166136261 >>> 0; const mix = v => { h = Math.imul(h ^ (Math.round(v * 1000) | 0), 16777619) >>> 0; };
+ units.forEach(u => { mix(u.x); mix(u.y); mix(u.hp); mix(u.dealt); }); items.forEach(b => mix(b.hp)); mix(t);
+ result.hash = h;
+ if (dep){ result.deployVer = DEPLOY_VER; result.allDown = !scoring.some(b => b.hp > 0); result.endAt = over === 'end' ? endAt : 0;
+  result.deploys = queue.slice(0, qi).filter(d => !d.skip).map(d => ({i:d.i, x:d.x, y:d.y, t:d.t})); }
+ return result;
+ }
+ return {step, deploy, end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
+  frame:() => frames[frames.length - 1], placed:i => !!units[i] && units[i].side === 'a' && !units[i].wait};
+}
+function simRaid(R, opt){ const s = raidStart(R, opt); while (s.step()); return {result:s.result(), frames:s.frames}; }
+// where a hand drop is allowed: on the map and not on or right beside any building or fence (traps stay hidden, so they don't count)
+function canDrop(R, x, y){
+ if (!(x >= 0 && y >= 0 && x < W && y < H)) return false;
+ const ix = Math.floor(x), iy = Math.floor(y);
+ for (const b of R.items){ if (b.role === 'trap' || b.role === 'plot') continue;
+  if (ix >= b.x - 1 && ix <= b.x + b.fw && iy >= b.y - 1 && iy <= b.y + b.fh) return false; }
+ return true; }
+function dropZone(R){ const out = []; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (!canDrop(R, x + .5, y + .5)) out.push([x, y]); return out; }
+
+return {W, H, rng, path, reachable, validLayout, simRaid, raidStart, canDrop, dropZone, SIM_VER, DEPLOY_VER, TICK, fpOf, cells, grid, fits, wallShape, starterLayout, centre};
+})();
+
+
+// ===== TURF ENGINE =====
+// Game content for Turf: troops, buildings, crews and the fights built from them. The fight rules live in base.js (BASE);
+// this file only hands it numbers. Works in Node (tests) and in the page (build.py inlines it after base.js).
+const TURF = (() => {
+const B = (typeof BASE !== 'undefined') ? BASE : require('./base.js');
+
+// ---------- troops ----------
+// role notes: prefer 'def' goes for defenses first; wallMult is how hard it hits fences.
+const UNITS = {
+ brawler:{name:'Brawler', look:'brawler', hp:150, atk:15, speed:1.7, range:.7, prefer:'any', wallMult:1.4, size:1,
+  line:'Bats and fists. Cheap, fast, hits whatever is closest.'},
+ shooter:{name:'Shooter', look:'shooter', hp:70, atk:12, speed:1.45, range:3.4, prefer:'any', wallMult:.6, size:1,
+  line:'Pistol. Fires over fences. Keep him behind someone.'},
+ bruiser:{name:'Bruiser', look:'bruiser', hp:620, atk:20, speed:.95, range:.8, prefer:'def', wallMult:1.8, size:5,
+  line:'Big and slow. Walks straight at the guns and soaks the fire.'}
+};
+const ORDER = ['brawler', 'shooter', 'bruiser'];
+
+// ---------- buildings ----------
+// fp is the footprint in tiles; role is what the fight sim does with it (core, bld, tower, wall).
+const BDEFS = {
+ house:{name:'Main House', fp:[3, 3], role:'core', hp:650},
+ rowhouse:{name:'Rowhouse', fp:[2, 3], role:'bld', hp:420},
+ store:{name:'Corner Store', fp:[3, 2], role:'bld', hp:460},
+ stash:{name:'Cash Stash', fp:[2, 2], role:'bld', hp:380},
+ porch:{name:'Porch Gunner', fp:[2, 2], role:'tower', hp:420, range:5.2, dmg:10, rate:1.0},
+ roof:{name:'Rooftop Shooter', fp:[2, 2], role:'tower', hp:360, range:6.5, dmg:11, rate:1.5},
+ fence:{name:'Chain-link Fence', fp:[1, 1], role:'wall', hp:240},
+ hustle:{name:'Corner Hustle', fp:[2, 2], role:'bld', hp:300},
+ run:{name:'Supply Run', fp:[2, 2], role:'bld', hp:300},
+ supstash:{name:'Supply Stash', fp:[2, 2], role:'bld', hp:380},
+ gym:{name:'The Gym', fp:[3, 2], role:'bld', hp:480},
+ pad:{name:'Crash Pad', fp:[2, 3], role:'bld', hp:420}
+};
+
+// ---------- rival crews ----------
+const CREWS = [
+ {id:'boombox', name:'The Boombox Kings', boss:'Pops Cassette', crew:'kb_crew', bossLook:'kb_boss',
+  defender:{look:'kb_crew', hp:120, atk:7, speed:1.4, range:2.8}}
+];
+
+// ---------- the rescue: the Boombox Kings' block, the Viceroy held at the Main House ----------
+function fenceRing(x0, y0, x1, y1, gaps){
+ const out = [], skip = new Set(gaps.map(g => g.join(',')));
+ for (let x = x0; x <= x1; x++){ out.push([x, y0]); out.push([x, y1]); }
+ for (let y = y0 + 1; y < y1; y++){ out.push([x0, y]); out.push([x1, y]); }
+ return out.filter(p => !skip.has(p.join(',')));
+}
+const RESCUE_BLOCK = (() => {
+ const items = [
+  {k:'house', x:12, y:12}, {k:'rowhouse', x:9, y:8}, {k:'rowhouse', x:17, y:8}, {k:'store', x:12, y:17},
+  {k:'stash', x:9, y:15}, {k:'stash', x:18, y:15}, {k:'porch', x:12, y:9}, {k:'porch', x:16, y:12}, {k:'roof', x:15, y:15}];
+ fenceRing(7, 6, 21, 20, [[14, 6], [7, 13], [21, 13], [14, 20]]).forEach(([x, y]) => items.push({k:'fence', x, y}));
+ return items.map((it, i) => Object.assign({key:'r' + i}, it));
+})();
+
+// a fight item from a placed building: footprint and fight numbers from BDEFS
+function fightItem(it){
+ const d = BDEFS[it.k], f = d.fp;
+ return {key:it.key, k:it.k, x:it.x, y:it.y, fw:f[0], fh:f[1], hp:d.hp, role:d.role, range:d.range || 0, dmg:d.dmg || 0, rate:d.rate || 1};
+}
+// an army line-up: {brawler:6, shooter:4, bruiser:2} -> attacker list grouped by type, in ORDER
+function army(counts){
+ const list = [];
+ ORDER.forEach(k => { const u = UNITS[k]; for (let n = 0; n < (counts[k] || 0); n++) list.push({type:k, look:u.look, hp:u.hp, atk:u.atk, speed:u.speed, range:u.range, prefer:u.prefer, wallMult:u.wallMult}); });
+ return list;
+}
+const RESCUE_ARMY = {brawler:6, shooter:4, bruiser:2};
+function rescueRecipe(seed){
+ const crew = CREWS[0], d = crew.defender;
+ return {deployVer:B.DEPLOY_VER, seed:seed >>> 0, maxT:1800, guard:0, mode:'rescue',
+  items:RESCUE_BLOCK.map(fightItem),
+  attackers:army(RESCUE_ARMY),
+  defenders:[0, 1, 2].map(() => ({look:d.look, hp:d.hp, atk:d.atk, speed:d.speed, range:d.range})),
+  deploys:[]};
+}
+// stars: one for half the block down, one for the Main House down, one for everything down
+function starsFor(r){ return (r.pct >= 50 ? 1 : 0) + (r.coreDown ? 1 : 0) + (r.allDown ? 1 : 0); }
+// a report keeps the recipe (with the deploys and End tick the fight produced) so Watch can play it again
+function reportFrom(R, result){
+ return {at:0, simVer:B.SIM_VER, deployVer:B.DEPLOY_VER, mode:R.mode,
+  recipe:Object.assign({}, R, {deploys:result.deploys, endAt:result.endAt || 0}),
+  stars:starsFor(result), pct:result.pct, hash:result.hash};
+}
+
+// ---------- your block (v0.3) ----------
+// cost is [Cash, Supplies] to place one. cap is how many you may own at Main House level 1, 2, 3 and 4.
+const HOME = {
+ house:{cap:[1, 1, 1, 1], cost:[0, 0], line:'Your first roof. Level it up to open more of the lot and raise every limit.'},
+ hustle:{cap:[1, 2, 2, 3], cost:[150, 0], line:'A table on the corner. Pays Cash after every fight you run.'},
+ run:{cap:[1, 2, 2, 3], cost:[150, 0], line:'A van that knows people. Brings Supplies after every fight you run.'},
+ stash:{cap:[1, 1, 2, 2], cost:[0, 100], line:'Holds your Cash.'},
+ supstash:{cap:[1, 1, 2, 2], cost:[100, 0], line:'Holds your Supplies.'},
+ gym:{cap:[1, 1, 1, 1], cost:[200, 100], line:'Where the crew trains. Level 2 brings in Bruisers.'},
+ pad:{cap:[1, 1, 2, 2], cost:[200, 100], line:'Beds for the crew. More beds, bigger crew.'},
+ store:{cap:[0, 1, 1, 1], cost:[400, 200], line:'A corner store on your lot. 20% more Supplies from every fight.'},
+ porch:{cap:[1, 2, 3, 4], cost:[0, 200], line:'A gunner behind sandbags. Covers the ground around him.'},
+ roof:{cap:[0, 1, 2, 3], cost:[0, 350], line:'A shooter up high. Long reach, slower shots.'},
+ fence:{cap:[24, 44, 64, 90], cost:[0, 10], line:'Chain-link. Slows anyone on foot.'}
+};
+const SHOP = ['hustle', 'run', 'stash', 'supstash', 'pad', 'store', 'porch', 'roof'];
+const MAXLV = {house:4, fence:1}, HOUSE_UP = [null, [600, 400], [1500, 1000], [3500, 2500]];
+const UNLOCKS = {brawler:1, shooter:1, bruiser:2};          // the Gym level that brings each fighter in
+const TRAIN = {brawler:20, shooter:30, bruiser:150};        // Cash each
+const SIZE = {brawler:1, shooter:1, bruiser:5};             // beds each
+const START = {cash:500, sup:300, army:{brawler:6, shooter:4, bruiser:0}};
+function maxLv(k){ return MAXLV[k] || 3; }
+function trainCost(k){ return TRAIN[k]; }
+// the price of the next level as [Cash, Supplies], or null at the top
+function upgradeCost(k, lv){
+ if (lv >= maxLv(k)) return null;
+ if (k === 'house') return HOUSE_UP[lv];
+ const c = HOME[k].cost; return [0, Math.round((c[0] + c[1] + 100) * lv * 1.2 / 10) * 10];
+}
+// the open part of the lot grows a ring with every Main House level
+function lotsOpen(houseLv){ const n = Math.max(1, Math.min(4, houseLv | 0)) - 1; return {x0:10 - n, y0:9 - n, x1:18 + n, y1:17 + n}; }
+function houseLv(block){ const h = block.find(i => i.k === 'house'); return h ? h.lv || 1 : 1; }
+function count(block, k){ let n = 0; for (const i of block) if (i.k === k) n++; return n; }
+function capFor(k, lv){ const c = HOME[k] && HOME[k].cap; return c ? c[Math.max(1, Math.min(4, lv)) - 1] : 0; }
+function sumLv(block, k){ let n = 0; for (const i of block) if (i.k === k) n += i.lv || 1; return n; }
+function storeCap(block){ return {cash:1000 + 1500 * sumLv(block, 'stash'), sup:1000 + 1500 * sumLv(block, 'supstash')}; }
+function armyCap(block){ let n = 0; for (const i of block) if (i.k === 'pad') n += 14 + 6 * (i.lv || 1); return n; }
+function armySize(a){ let n = 0; for (const k of ORDER) n += (a[k] || 0) * SIZE[k]; return n; }
+function gymLv(block){ let n = 0; for (const i of block) if (i.k === 'gym') n = Math.max(n, i.lv || 1); return n; }
+function payout(block){ return {cash:60 * sumLv(block, 'hustle'), sup:40 * sumLv(block, 'run')}; }
+function lootFor(res, block){ const st = starsFor(res), bonus = count(block, 'store') ? 1.2 : 1;
+ return {cash:Math.round(320 * res.pct / 100) + 40 * st, sup:Math.round(200 * res.pct / 100 * bonus)}; }
+function starterBlock(){
+ return [['house', 13, 12], ['gym', 10, 9], ['pad', 17, 9], ['stash', 10, 15], ['run', 13, 16], ['hustle', 16, 16], ['porch', 10, 12]]
+  .map((a, i) => ({key:'b' + (i + 1), k:a[0], x:a[1], y:a[2], lv:1}));
+}
+// does building k fit with its corner at x, y: inside the open lot and on nothing else (its own old spot does not count)
+function fitsAt(block, key, k, x, y){
+ const f = BDEFS[k].fp, L = lotsOpen(houseLv(block));
+ if (x < L.x0 || y < L.y0 || x + f[0] - 1 > L.x1 || y + f[1] - 1 > L.y1) return false;
+ for (const i of block){ if (i.key === key) continue; const g = BDEFS[i.k].fp;
+  if (x < i.x + g[0] && i.x < x + f[0] && y < i.y + g[1] && i.y < y + f[1]) return false; }
+ return true;
+}
+function freeSpot(block, k){ const L = lotsOpen(houseLv(block));
+ for (let y = L.y1; y >= L.y0; y--) for (let x = L.x0; x <= L.x1; x++) if (fitsAt(block, null, k, x, y)) return [x, y];
+ return null; }
+// every building must be reachable on foot from the street: fences and buildings block, and no building may be sealed in
+function reachOk(block){
+ const W = 28, solid = new Uint8Array(W * W), seen = new Uint8Array(W * W);
+ for (const i of block){ const f = BDEFS[i.k].fp; for (let dx = 0; dx < f[0]; dx++) for (let dy = 0; dy < f[1]; dy++) solid[(i.y + dy) * W + i.x + dx] = 1; }
+ const q = [0]; seen[0] = 1;
+ while (q.length){ const c = q.pop(), x = c % W, y = (c - x) / W;
+  for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]){ if (nx < 0 || ny < 0 || nx >= W || ny >= W) continue; const n = ny * W + nx; if (seen[n] || solid[n]) continue; seen[n] = 1; q.push(n); } }
+ for (const i of block){ if (i.k === 'fence') continue; const f = BDEFS[i.k].fp; let ok = false;
+  for (let dx = -1; dx <= f[0] && !ok; dx++) for (let dy = -1; dy <= f[1] && !ok; dy++){
+   const edge = (dx === -1 || dx === f[0]) !== (dy === -1 || dy === f[1]); if (!edge) continue;
+   const x = i.x + dx, y = i.y + dy; if (x >= 0 && y >= 0 && x < W && y < W && seen[y * W + x]) ok = true; }
+  if (!ok) return false; }
+ return true;
+}
+// a saved block made safe to use: known kinds only, whole numbers, inside the lot, nothing overlapping, a Main House present
+function cleanBlock(list){
+ if (!Array.isArray(list)) return null; const out = [];
+ if (!list.some(i => i && i.k === 'house')) return null;
+ const sorted = list.filter(i => i && BDEFS[i.k] && HOME[i.k]).sort((a, b) => (a.k === 'house' ? 0 : 1) - (b.k === 'house' ? 0 : 1));
+ for (const i of sorted){ const it = {key:String(i.key || 'b' + out.length), k:i.k, x:i.x | 0, y:i.y | 0, lv:Math.max(1, Math.min(maxLv(i.k), i.lv | 0 || 1))};
+  if (out.some(o => o.key === it.key)) continue;
+  if (it.k === 'house'){ out.push(it); continue; }
+  if (fitsAt(out, it.key, it.k, it.x, it.y)) out.push(it); }
+ const h = out[0], f = BDEFS.house.fp, L = lotsOpen(h.lv); if (h.x < L.x0 || h.y < L.y0 || h.x + f[0] - 1 > L.x1 || h.y + f[1] - 1 > L.y1) return null;
+ return out;
+}
+// a loot raid on the Boombox Kings with the crew you trained
+function raidRecipe(seed, counts){
+ const crew = CREWS[0], d = crew.defender;
+ return {deployVer:B.DEPLOY_VER, seed:seed >>> 0, maxT:1800, guard:0, mode:'raid',
+  items:RESCUE_BLOCK.map(fightItem), attackers:army(counts),
+  defenders:[0, 1, 2].map(() => ({look:d.look, hp:d.hp, atk:d.atk, speed:d.speed, range:d.range})), deploys:[]};
+}
+
+return {UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
+ HOME, SHOP, UNLOCKS, SIZE, START, maxLv, trainCost, upgradeCost, lotsOpen, houseLv, count, capFor, storeCap, armyCap, armySize, gymLv, payout, lootFor,
+ starterBlock, fitsAt, freeSpot, reachOk, cleanBlock, raidRecipe};
+})();
+
+
+</script>
+<script>
+// ===== TURF PEOPLE · v2 smooth · Nov 20 2026 =====
+// Code-drawn people made of rounded shapes: limbs are capsules between real joints, heads and bodies are ellipsoids,
+// hard things (none yet) can still be boxes. One person is about 36 units tall (1 unit = 1/64 of a map tile) and faces +y.
+// person(seed, gang) rolls a look from ONE shared pool: skin tone, build, hair and clothes are drawn the same way for
+// every crew. The only thing a crew changes is its color, worn on one or two items.
+// build(spec, frame, mode, lod): lod 0 = far (body, head, weapon), 1 = mid (hands, face, kit), 2 = near (eyes, brows, small things).
+const MINI = (() => {
+const EXTRA = [], M = {};
+const def = (n, r, g, b, glow) => { M[n] = 40 + EXTRA.length; EXTRA.push([r, g, b, glow || 0]); };
+const SKIN = [[88, 57, 43], [108, 71, 51], [124, 83, 58], [150, 105, 74], [176, 128, 93], [199, 153, 114], [221, 180, 143], [237, 205, 173]];
+SKIN.forEach((c, i) => { def('s' + i, c[0], c[1], c[2]); def('sd' + i, Math.round(c[0] * .8), Math.round(c[1] * .78), Math.round(c[2] * .78)); });
+def('hBlack', 40, 34, 34); def('hDark', 62, 43, 32); def('hBrown', 90, 58, 36); def('hAuburn', 124, 54, 30); def('hBlonde', 198, 162, 98); def('hGrey', 152, 150, 148);
+def('eye', 234, 232, 226);
+def('heather', 128, 130, 137); def('cream', 222, 214, 196); def('navy', 34, 42, 74); def('ltdenim', 112, 142, 178); def('olive', 86, 92, 58);
+def('khaki', 176, 154, 112); def('brown', 98, 70, 48); def('burgundy', 112, 34, 44); def('forest', 38, 78, 56);
+def('red', 190, 44, 40); def('orange', 226, 122, 40); def('green', 60, 150, 80); def('gold', 214, 172, 60); def('silver', 182, 186, 192);
+def('tan', 188, 142, 86); def('sole', 236, 234, 228); def('pink', 222, 124, 152); def('ink', 30, 32, 38);
+def('lavD', 132, 114, 204); def('tealD', 26, 98, 98); def('jet', 38, 38, 44); def('stone', 160, 156, 148); def('wrap', 228, 224, 214);
+// colors already in ART.MATS
+Object.assign(M, {white:16, black:18, charcoal:28, denim:29, mustard:30, teal:31, lav:20, blue:21, steel:13, wood:35, glow:11, flash:12});
+
+
+function build(p, frame, mode, lod){
+ lod = lod == null ? 2 : lod;
+ const P = [];
+ const E = (c, rx, ry, rz, m, t) => { if ((t | 0) <= lod && m != null) P.push(['e', c[0], c[1], c[2], rx, ry, rz, m]); };
+ const C = (a, b, ra, rb, m, t) => { if ((t | 0) <= lod && m != null) P.push(['c', a[0], a[1], a[2], b[0], b[1], b[2], ra, rb, m]); };
+ const mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+ const add = (a, d, k) => [a[0] + d[0] * k, a[1] + d[1] * k, a[2] + d[2] * k];
+ const sk = M['s' + p.skin], sd = M['sd' + p.skin], hair = M[p.hairC], G = M[p.gang], GD = M[p.gangD] || G;
+ const huge = p.build === 'huge', heavy = p.build === 'heavy', slim = p.build === 'slim', fem = p.sex === 'f';
+ const g = huge ? 1.3 : heavy ? 1.17 : slim ? .9 : 1;                              // girth
+ const sx = (fem ? 4.1 : 4.6) * (huge ? 1.22 : heavy ? 1.1 : slim ? .95 : 1);      // shoulder joint, half width
+ const hx = (fem ? 2.15 : 1.95) * (huge ? 1.25 : heavy ? 1.12 : 1);                // hip joint, half width
+ const far = lod === 0, walk = mode === 'walk', work = mode === 'work', f = frame & 3, beat = work && !!(frame & 2);
+ const tool = p.tool, club = tool === 'bat' || tool === 'sledge', on = k => p.gangOn.indexOf(k) >= 0;
+
+ // ---------- legs: thigh angle and knee bend per leg, hips dropped so the lower foot stands on the ground ----------
+ let la, lk, ra, rk;
+ if (walk){ const W = [[.5, .1, -.42, .3], [.12, .05, .2, 1.0], [-.42, .3, .5, .1], [.2, 1.0, .12, .05]][f]; la = W[0]; lk = W[1]; ra = W[2]; rk = W[3]; }
+ else if (work){ la = .36; lk = .32; ra = -.32; rk = .12; }
+ else { la = .04; lk = .05; ra = -.03; rk = .04; }
+ const TH = 8, SH = 7.4, AZ = 2.1;
+ const legPts = (s, a, k) => { const knee = [s * (hx + .15), Math.sin(a) * TH, -Math.cos(a) * TH]; return {hip:[s * hx, 0, 0], knee, ank:[s * (hx + .3), knee[1] + Math.sin(a - k) * SH, knee[2] - Math.cos(a - k) * SH]}; };
+ const LL = legPts(-1, la, lk), RL = legPts(1, ra, rk), hipZ = AZ - Math.min(LL.ank[2], RL.ank[2]), up = q => [q[0], q[1], q[2] + hipZ];
+ const bot = p.bottom, Pm = M[bot.c], P2 = M[bot.c2 || bot.c], sh = p.shoes, SC = M[sh.c], SS = M[sh.sole || 'sole'];
+ const leg = (J, s) => {
+  const hip = up(J.hip), knee = up(J.knee), ank = up(J.ank), w = (bot.t === 'sweats' || bot.t === 'cargo') ? 1.12 : bot.t === 'leggings' ? .9 : 1;
+  C(hip, knee, 2.05 * g * w, 1.6 * g * w, Pm);
+  if (bot.t === 'shorts'){ C(knee, ank, 1.3 * g, 1.0 * g, sk); C(mix(knee, ank, .62), ank, 1.12 * g, 1.06 * g, M.white, 1); C(mix(hip, knee, .82), add(knee, [0, 0, 1], .2), 1.9 * g, 1.85 * g, Pm, 1); }
+  else { C(knee, ank, 1.5 * g * w, 1.22 * g * w, Pm);
+   if (bot.t === 'jeans' && sh.t !== 'boots') C(mix(knee, ank, .88), ank, 1.3 * g, 1.3 * g, P2, 2);
+   if (bot.t === 'cargo') E(add(mix(hip, knee, .55), [s, 0, 0], 1.75 * g), .7, 1.35, 1.7, P2, 1);
+   if (bot.t === 'sweats' || bot.t === 'track') C(add(hip, [s, 0, 0], 1.95 * g * w), add(ank, [s, 0, 0], 1.15 * g * w), .3, .3, P2, 2); }
+  const fz = ank[2] - AZ;
+  if (sh.t === 'boots' || sh.t === 'high') C(add(ank, [0, 0, 1], sh.t === 'boots' ? 3.2 : 1.8), ank, 1.82 * g * w, 1.6 * g * w, SC, 1);
+  E([ank[0], ank[1] + 1.15, fz + 1.3], 1.45 * g, 2.65, 1.3, SC);
+  E([ank[0], ank[1] + 1.2, fz + .5], 1.6 * g, 2.85, .55, SS, 1);
+  E([ank[0], ank[1] + 3.05, fz + 1.05], 1.2 * g, .85, .8, M[sh.toe] || SS, 2);
+ };
+ leg(LL, -1); leg(RL, 1);
+
+ // ---------- body ----------
+ const top = p.top, T = M[top.c], T2 = M[top.c2 || 'white'], T3 = M[top.c3 || 'ink'], TT = on('top') ? G : T;
+ const puff = top.t === 'puffer' || top.t === 'vest', bulk = puff ? 1.2 : top.t === 'hoodie' ? 1.1 : 1;
+ const bare = top.t === 'tank' || top.t === 'jersey' || top.t === 'vest';
+ const open = top.t === 'bomber' || top.t === 'flannel' || top.t === 'denimjkt' || top.t === 'suit';
+ const lean = work ? (club ? 1.1 : .6) : walk ? .5 : 0;
+ const PZ = hipZ + .6, WZ = hipZ + 4.2, CZ = hipZ + 8.2, SZ = hipZ + 10.4;
+ const ww = (fem ? 3.3 : 3.7) * g, cw = sx * .92 + .6, td = (fem ? 2.35 : 2.5) * g, belly = (heavy || huge) ? 1.22 : 1;
+ const inner = open ? T2 : TT, cry = td * 1.12 * bulk;
+ const chestF = dz => lean * .7 + cry * Math.sqrt(Math.max(.05, 1 - (dz / 3.9) * (dz / 3.9)));    // front of the chest at a height above its middle
+ E([0, 0, PZ], hx + 1.9 * g, td * 1.02, 2.7, Pm);
+ if (top.t === 'longtee' || top.t === 'hoodie' || puff) E([0, lean * .1, PZ + 1.1], hx + 2.05 * g * bulk, td * 1.08 * bulk, 2.3, inner);
+ if (puff){ const seam = on('top') ? GD : T3; E([0, lean * .3, WZ], ww * 1.08, td * belly * 1.08, 3.8, seam); E([0, lean * .7, CZ], cw * 1.1, td * 1.2, 3.8, seam);
+  for (let n = 0; n < 4; n++) E([0, lean * (.15 + .2 * n), hipZ + 2.4 + n * 2.55], (ww + (cw - ww) * n / 3) * bulk, td * (n < 2 ? belly : 1.1) * bulk, 1.62, TT, far ? 3 : 0);
+  if (far){ E([0, lean * .3, WZ], ww * bulk, td * belly * bulk, 3.9, TT); E([0, lean * .7, CZ], cw * bulk, cry, 3.9, TT); } }
+ else { E([0, lean * .3 + (belly - 1) * 1.6, WZ], ww * bulk, td * bulk * belly, 3.9, inner); E([0, lean * .7, CZ], cw * bulk, cry, 3.9, inner); }
+ if (top.t === 'vest') C([-sx + 2.2, lean, SZ + .2], [sx - 2.2, lean, SZ + .2], 1.95 * g, 1.95 * g, TT); else C([-sx + .5, lean, SZ], [sx - .5, lean, SZ], 1.75 * g * bulk, 1.75 * g * bulk, bare ? sk : inner);
+ if (fem && !puff && !far) for (const s of [-1, 1]) E([s * 1.55, chestF(.3) - 1.05, CZ + .3], 1.5, 1.2, 1.35, inner, 1);
+ const ob = top.t === 'suit' ? .3 : .8;
+ if (open){ E([0, lean * .3 - ob, WZ], ww * 1.1, td * 1.06 * belly, 4, TT); E([0, lean * .7 - ob - .05, CZ], cw * 1.09, cry * 1.03, 4.05, TT);
+  C([-sx + .4, lean - .3, SZ], [sx - .4, lean - .3, SZ], 1.9 * g, 1.9 * g, TT); E([0, lean - 1.5, SZ + 1.25], 2.4, 1.3, 1.0, top.t === 'bomber' ? T3 : TT, 1);
+  if (top.t === 'bomber') E([0, lean * .2 - .8, WZ - 3.1], ww * 1.12, td * 1.08, .8, T3, 1);
+  if (top.t === 'flannel') for (const z of [WZ - 1.2, WZ + 1.6, CZ + .6]) E([0, lean * .5 - .85, z], (z > WZ + 1 ? cw * 1.1 : ww * 1.115), td * 1.1 * (z > WZ + 1 ? 1.1 : belly), .28, T3, 2); }
+ if (top.t === 'hoodie'){ if (p.hat !== 'hood') E([0, lean - 2.7, SZ + .9], 2.9, 1.9, 2.0, TT); E([0, lean * .3 + td * bulk * .9, WZ - .6], 2.5, .6, 1.35, TT, 1);
+  E([0, lean * .1, WZ - 3.2], ww * bulk * 1.03, td * bulk * 1.05, .8, TT, 1);
+  for (const s of [-1, 1]) C([s * .8, chestF(1.9) + .1, CZ + 1.9], [s * .9, chestF(-1) + .15, CZ - 1], .16, .16, M.white, 2); }
+ if (top.t === 'track'){ E([0, lean * .7, CZ + .3], cw * 1.02, cry * 1.03, .6, T2, 1); E([0, lean - .2, SZ + 1.15], 1.9, 1.75, .9, TT, 1); E([0, lean * .1, WZ - 3.1], ww * 1.03, td * 1.05, .7, T3, 2); }
+ if (top.t === 'jersey'){ E([0, lean * .15, WZ - 3], ww * 1.03, td * 1.05, .55, T2, 1); E([0, lean * .9, SZ + .2], 2.3, 2.1, .45, T2, 2); }
+ if (top.t === 'vest') E([0, lean - .6, SZ + 1.2], 2.5, 2.0, 1.1, TT, 1);
+ if (p.ruffle){ const rf = [[-.55, 2.6, 1.15], [.6, 1.7, 1.2], [-.5, .8, 1.1], [.5, -.1, 1], [-.35, -1, .85], [.3, -1.8, .7]]; rf.forEach((q, n) => E([q[0], chestF(q[1]) + .3, CZ + q[1]], q[2], .6, .62, M.eye, n < 4 ? 1 : 2)); E([0, lean + 1.2, SZ + 1.05], 1.5, 1.1, .6, M.eye, 1); }
+ if (p.cape){ E([0, lean * .5 - td - 1.5, hipZ + 1.6], cw * 1.28, .6, 9.8, M.blue); E([0, lean - 1.7, SZ + 1.7], 2.7, 1.3, 1.8, M.blue, 1); }
+ if (p.guitar){ const gy = lean * .5 - td - 2.5; E([0, gy, hipZ + 4.4], 3, .8, 2.7, M.lavD); E([0, gy, hipZ + 7.9], 2.3, .8, 2.1, M.lavD); E([0, gy - .5, hipZ + 5.2], 1, .5, 1, M.ink, 2);
+  C([.4, gy, hipZ + 9.6], [3.6, gy, hipZ + 20], .42, .4, M.brown); E([3.8, gy, hipZ + 20.8], .75, .45, 1.1, M.ink, 1); }
+ if (p.tied) for (const z of [WZ + 1.6, CZ + .2]) E([0, lean * .5 - .3, z], cw * 1.16, cry * 1.12, .5, M.tan);
+ if (on('neck')){ E([0, lean + .15, SZ + .95], 2.0, 1.95, .85, G); E([0, chestF(1.9) + .1, CZ + 1.9], 1.55, .55, 1.45, G, 1); }
+ if (on('flag')) E([hx + 1.75 * g, .7, PZ - 1.7], .45, .95, 2.4, G, 1);
+ if (p.chain){ E([0, lean * .95, SZ + .3], 2.25, 2.15, .22, M.gold, 2); E([0, chestF(.9) + .25, CZ + .9], .5, .32, .62, M.gold, 2); }
+ if (p.pack) E([0, lean * .5 - td * bulk - 1.3, CZ - .7], 2.9, 1.7, 3.9, M[p.pack]);
+ if (p.bag){ const b0 = [sx - 1, lean + td * .7, SZ + .7], b1 = [0, chestF(-.4) + .25, CZ - .4], b2 = [-(hx + 1.5 * g), td * .8, PZ + 1.4];
+  C(b0, b1, .3, .3, M.ink, 1); C(b1, b2, .3, .3, M.ink, 1); E([-(hx + 1.9 * g), .9, PZ + .5], 1.25, 1.7, 1.6, M.ink, 1); }
+
+ // ---------- arms: shoulder, elbow and wrist are real joints, so a pose is just angles ----------
+ const sleeve = bare ? 'none' : (top.t === 'tee' || top.t === 'longtee') ? 'short' : top.t === 'flannel' ? 'rolled' : 'long';
+ const AT = TT, UA = 5.6, FA = 5.2, ag = g * (puff && !bare ? 1.25 : 1);
+ const dir = (s, phi, al) => [s * Math.sin(al), Math.sin(phi) * Math.cos(al), -Math.cos(phi) * Math.cos(al)];
+ const arm = (s, phi, al, phi2, al2) => {
+  const S = [s * sx, lean, SZ - .2], d1 = dir(s, phi, al), EL = add(S, d1, UA), d2 = dir(s, phi2, al2), WR = add(EL, d2, FA), H = add(WR, d2, 1);
+  E(S, 1.85 * ag, 1.8 * ag, 1.8 * ag, sleeve === 'none' ? sk : AT, 1);
+  if (sleeve === 'short'){ C(S, mix(S, EL, .5), 1.9 * ag, 1.62 * ag, AT); C(mix(S, EL, .35), EL, 1.3 * g, 1.1 * g, sk); }
+  else C(S, EL, 1.45 * ag, 1.2 * ag, sleeve === 'none' ? sk : AT);
+  C(EL, WR, 1.18 * ag, .92 * ag, sleeve === 'long' ? AT : sk);
+  if (sleeve === 'long' && (top.t === 'hoodie' || top.t === 'bomber' || top.t === 'track' || puff)) C(mix(EL, WR, .86), WR, 1.02 * ag, 1.02 * ag, top.t === 'hoodie' ? AT : T3, 2);
+  if (p.ruffle) E(WR, 1.3, 1.3, .8, M.white, 1);
+  if (p.wraps) C(mix(EL, WR, .55), WR, 1.02 * g, .95 * g, M.wrap, 1);
+  E(H, .95, 1, 1.15, p.wraps ? M.wrap : sk, far ? 0 : 0);
+  if (on('armband') && s > 0) C(mix(S, EL, .4), mix(S, EL, .62), 1.55 * ag, 1.5 * ag, G, 1);
+  if (p.watch && s < 0 && sleeve !== 'long') C(mix(EL, WR, .9), WR, 1.02 * g, 1.02 * g, M.gold, 2);
+  return {H, d2};
+ };
+ const swing = walk ? [.55, .1, -.5, -.1][f] : 0;
+ let A;
+ if (p.tied){ arm(-1, -.35, -.1, -.75, -.7); arm(1, -.35, -.1, -.75, -.7); }
+ else if (work && tool === 'pistol'){ A = arm(1, 1.5, -.14, 1.57, -.1); arm(-1, 1.36, -.3, 1.5, -.72); }
+ else if (work && club){ A = beat ? arm(1, 1.2, .05, 1.5, -.1) : arm(1, 3.3, .15, 3.0, 0); arm(-1, .55, .1, 1.7, -.3); }
+ else if (club){ A = arm(1, .1, .1, 2.45, 0); arm(-1, walk ? -swing : .06, .12, walk ? -swing + .5 : .3, .06); }
+ else if (walk){ A = arm(1, swing, .1, swing + .5, .05); arm(-1, -swing, .1, -swing + .5, .05); }
+ else if (p.pose === 'pocket' && top.t === 'hoodie'){ arm(1, .12, .1, .95, -.55); arm(-1, .12, .1, .95, -.55); }
+ else { A = arm(1, .06, .12, .3, .06); arm(-1, .06, .12, .3, .06); }
+ // ---------- what they carry (drawn bigger from far away so each kind reads in a crowd) ----------
+ if (A && club){ const k = far ? 1.7 : 1, pb = work ? (beat ? 1.45 : 3.9) : 3.75, d = [0, Math.sin(pb), -Math.cos(pb)], b0 = add(A.H, d, -1.3);
+  if (tool === 'bat'){ C(b0, add(A.H, d, 13.5), .36 * k, .64 * k, M.wood); E(b0, .52 * k, .52 * k, .52 * k, M.wood, 2); C(add(A.H, d, -.9), add(A.H, d, 2.2), .4, .4, M.ink, 2); }
+  else { const tip = add(A.H, d, 15.5); C(b0, tip, .4 * k, .4 * k, M.wood); P.push([tip[0] - 2 * k, tip[1] - 1.25 * k, tip[2] - 1.25 * k, 4 * k, 2.5 * k, 2.5 * k, M.steel]); } }
+ if (A && tool === 'pistol'){ const k = far ? 1.8 : 1, d = A.d2, dn = [0, d[2], -d[1]];
+  C(add(A.H, d, .2), add(A.H, d, 3.9 * k), .5 * k, .45 * k, M.steel); C(A.H, add(A.H, dn, 1.6), .42, .4, M.black, 1);
+  if (work && beat){ E(add(A.H, d, 5.2 * k), .9, 1.4, .9, M.glow); E(add(A.H, d, 6.6 * k), .45, .9, .45, M.flash, 1); } }
+
+ // ---------- head ----------
+ const HC = [0, lean * 1.15 + .25, SZ + 4.7], hr = [2.38, 2.68, 3.0];
+ C([0, lean, SZ + .9], [0, HC[1] - .2, HC[2] - 2.1], 1.3 * (heavy || huge ? 1.25 : 1), 1.15, sd, 1);
+ E(HC, hr[0], hr[1], hr[2], sk);
+ E([0, HC[1] + .42, HC[2] - 1.65], 1.95, 2.15, 1.8, sk, 1);
+ const surf = (x, dz) => HC[1] + hr[1] * Math.sqrt(Math.max(.02, 1 - (x / hr[0]) * (x / hr[0]) - (dz / hr[2]) * (dz / hr[2])));
+ const masked = on('mask'), dark = p.hairC === 'hBlonde' || p.hairC === 'hGrey' ? M.hBrown : M.hBlack;
+ for (const s of [-1, 1]){
+  E([s * hr[0] * .98, HC[1] - .2, HC[2] - .3], .45, .7, .95, sd, 1);
+  const ey = surf(1.02, -.1), ez = HC[2] - .1;
+  if (lod === 1) E([s * 1.02, ey - .06, ez], .42, .2, .34, M.hBlack, 1);
+  E([s * 1.02, ey - .1, ez], .5, .22, .33, M.eye, 2); E([s * .99, ey + .04, ez], .27, .2, .29, M.hBlack, 2);
+  E([s * 1.06, surf(1.06, .72) - .04, HC[2] + .72], .78, .22, .2, dark, 2);
+  if (p.earring) E([s * hr[0], HC[1] - .2, HC[2] - 1.35], .26, .26, .32, M.gold, 2);
+  if (p.glasses){ if (p.glasses === 'shades') E([s * 1.02, ey + .16, ez], .66, .14, .46, M.black, 1); C([s * .35, ey + .3, ez + .2], [s * 1.7, ey + .12, ez + .25], .1, .1, M.ink, 2); C([s * 1.7, ey + .12, ez + .25], [s * hr[0], HC[1] - .2, ez + .3], .09, .09, M.ink, 2); }
+ }
+ if (!masked){ E([0, surf(0, -.8) + .05, HC[2] - .8], .42, .55, .72, sk, 1); E([0, HC[1] + 2.5, HC[2] - 2.02], .85, .22, .18, p.lip ? M.burgundy : sd, 2); }
+ if (p.beard === 'full'){ E([0, HC[1] + .4, HC[2] - 2.15], 2.12, 2.28, 1.66, hair, 1); E([0, HC[1] + 2.64, HC[2] - 1.5], 1, .3, .28, hair, 2); }
+ if (p.beard === 'goatee'){ E([0, HC[1] + 2.05, HC[2] - 2.8], .85, .7, .85, hair, 1); E([0, HC[1] + 2.64, HC[2] - 1.5], 1, .3, .28, hair, 2); }
+ if (p.beard === 'stache') E([0, HC[1] + 2.66, HC[2] - 1.5], 1.05, .32, .3, hair, 1);
+ if (masked) E([0, HC[1] + .4, HC[2] - 1.55], 2.3, 2.55, 1.7, G, 1);
+
+ // ---------- hair (the top is skipped under a hat) ----------
+ const hat = p.hat, covered = hat === 'cap' || hat === 'capback' || hat === 'beanie' || hat === 'hood' || hat === 'durag' || hat === 'bucket', hs = p.hair;
+ const skull = (dz, grow, m) => E([0, HC[1] - .5, HC[2] + .75 + dz], hr[0] + .2 + grow, hr[1] + .22 + grow, hr[2] + .1 + grow * .7 - dz * .5, m);
+ if (hat !== 'hood'){
+  if (!covered){
+   if (hs === 'buzz' || hs === 'braids' || hs === 'bun' || hs === 'ponytail' || hs === 'puffs' || hs === 'locs' || hs === 'long' || hs === 'bob' || hs === 'pomp') skull(0, hs === 'buzz' ? -.05 : .08, hair);
+   if (hs === 'fade') skull(.9, 0, hair);
+   if (hs === 'curlytop'){ skull(.9, 0, hair); E([0, HC[1] + .1, HC[2] + 3], 2.25, 2.5, 1.5, hair); }
+   if (hs === 'pomp') E([0, HC[1] + 1.1, HC[2] + 2.9], 2.2, 2.3, 1.6, hair);
+   if (hs === 'afro') E([0, HC[1] - 1.6, HC[2] + 1.5], 4.2, 4.1, 3.9, hair);
+   if (hs === 'bun') E([0, HC[1] - 2, HC[2] + 3.1], 1.5, 1.5, 1.4, hair);
+   if (hs === 'puffs') for (const s of [-1, 1]) E([s * 2.6, HC[1] - 1.2, HC[2] + 2.7], 1.75, 1.75, 1.75, hair);
+   if (hs === 'braids') for (let n = 0; n < 5; n++) C([-2 + n, HC[1] + 1.6, HC[2] + 2.9 - Math.abs(n - 2) * .35], [-2.2 + n * 1.1, HC[1] - 2.9, HC[2] + 1.9 - Math.abs(n - 2) * .4], .3, .3, M.hBlack, 2);
+  } else if (hs === 'afro') E([0, HC[1] - 2, HC[2] - .2], 3.6, 3.2, 2.6, hair, 1);
+  if (hs === 'locs' || hs === 'braids'){ const n = hs === 'locs' ? 9 : 5, r = hs === 'locs' ? .55 : .4;
+   for (let k = 0; k < n; k++){ const a = Math.PI * (1.05 + .9 * k / (n - 1)), c = Math.cos(a), sn = Math.sin(a), len = (hs === 'locs' ? 6.4 : 5) + ((k * 7) % 3) * .7;
+    C([c * 2.3, HC[1] - .3 + sn * 2.5, HC[2] + 1.2], [c * 2.95, HC[1] - .4 + sn * 3.1, HC[2] + 1.2 - len], r, r * .85, hair, k % 2 ? 1 : 0); }
+   if (hs === 'locs') for (const s of [-1, 1]) C([s * 2.2, HC[1] + 1.2, HC[2] + 1.6], [s * 2.75, HC[1] + 1.5, HC[2] - 3.4], .5, .42, hair, 1); }
+  if (hs === 'long'){ E([0, HC[1] - 2.3, HC[2] - 2.7], 2.9, 1.5, 4.7, hair); for (const s of [-1, 1]) C([s * 2.35, HC[1] + .6, HC[2] + 1.4], [s * 2.9, HC[1] + .9, HC[2] - 5], .75, .6, hair, 1); }
+  if (hs === 'bob') E([0, HC[1] - .9, HC[2] - .9], 3.1, 3, 2.6, hair);
+  if (hs === 'ponytail'){ C([0, HC[1] - 2.9, HC[2] + 1.6], [0, HC[1] - 4.7, HC[2] - 3.4], .95, .45, hair); E([0, HC[1] - 3, HC[2] + 1.5], 1.05, .8, .5, M.black, 2); }
+ }
+ // ---------- hats ----------
+ const HT = on('hat') ? G : M[p.hatC || 'jet'], HT2 = on('hat') ? GD : M[p.hatC2 || p.hatC || 'jet'];
+ if (hat === 'cap' || hat === 'capback'){ E([0, HC[1] - .35, HC[2] + 1.25], hr[0] + .45, hr[1] + .45, 2.75, HT); E([0, HC[1] + (hat === 'cap' ? 3.3 : -3.7), HC[2] + .95], 2.45, 2.05, .32, HT2); E([0, HC[1] - .35, HC[2] + 4], .4, .4, .22, HT2, 2); }
+ if (hat === 'beanie'){ E([0, HC[1] - .4, HC[2] + 1.35], hr[0] + .5, hr[1] + .5, 3, HT); E([0, HC[1] - .4, HC[2] + .8], hr[0] + .74, hr[1] + .74, .85, HT2, 1); }
+ if (hat === 'bucket'){ E([0, HC[1] - .35, HC[2] + 1.3], hr[0] + .45, hr[1] + .45, 2.75, HT); E([0, HC[1] - .2, HC[2] + 1.1], 4.2, 4.4, .36, HT2); }
+ if (hat === 'durag'){ E([0, HC[1] - .5, HC[2] + .85], hr[0] + .3, hr[1] + .32, hr[2] + .05, HT); C([0, HC[1] - 2.9, HC[2] - .2], [0, HC[1] - 3.5, HC[2] - 3.6], .85, .4, HT, 1); }
+ if (hat === 'hood'){ E([0, HC[1] - 1.3, HC[2] + .3], hr[0] + .9, hr[1] + .85, hr[2] + .7, TT); E([0, HC[1] - 2.6, HC[2] + 1.2], 2.3, 2.1, 2.3, TT, 1); }
+ if (hat === 'headband'){ E([0, HC[1], HC[2] + .95], hr[0] * .953 + .3, hr[1] * .953 + .3, .58, HT);
+  C([-.4, HC[1] - 3, HC[2] + .9], [-1.5, HC[1] - 4.3, HC[2] - 1.3], .42, .22, HT2, 1); C([.3, HC[1] - 3, HC[2] + .9], [1, HC[1] - 4.6, HC[2] - .5], .42, .22, HT2, 2); }
+
+ const K = p.h / 64 * 1.06;
+ for (const q of P){ if (typeof q[0] === 'number'){ for (let k = 0; k < 6; k++) q[k] *= K; continue; } const n = q[0] === 'e' ? 6 : 8; for (let k = 1; k <= n; k++) q[k] *= K; }
+ P.seg = lod === 2 ? 10 : lod === 1 ? 7 : 5;
+ return P;
+}
+// ---------- one shared pool for every crew, plus a kit for each kind of fighter ----------
+function rng(seed){ let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const GANGS = {lav:['lav', 'lavD'], teal:['teal', 'tealD'], red:['red', 'burgundy'], gold:['mustard', 'brown'], green:['green', 'forest'], orange:['orange', 'brown'], blue:['blue', 'navy']};
+const NEUTRAL = ['jet', 'jet', 'charcoal', 'heather', 'white', 'cream', 'khaki', 'brown', 'stone', 'tan'];   // nothing here can be mistaken for a crew color
+function person(seed, gang, role){
+ const r = rng(seed * 2654435761 >>> 0), pick = a => a[Math.floor(r() * a.length)], chance = q => r() < q;
+ const g = GANGS[gang] || GANGS.lav, neutral = () => pick(NEUTRAL);
+ const p = {gang:g[0], gangD:g[1], gangOn:[]};
+ // who they are: the same roll for every crew and every kind of fighter
+ p.skin = Math.floor(r() * 8); p.sex = chance(.5) ? 'f' : 'm';
+ p.build = pick(['slim', 'avg', 'avg', 'avg', 'heavy']); p.h = (.95 + r() * .1) * (p.sex === 'f' ? .97 : 1);
+ p.hairC = pick(['hBlack', 'hBlack', 'hBlack', 'hDark', 'hDark', 'hBrown', 'hAuburn', 'hBlonde', 'hGrey']);
+ p.hair = pick(p.sex === 'f' ? ['long', 'bob', 'bun', 'ponytail', 'puffs', 'locs', 'braids', 'afro', 'fade'] : ['fade', 'fade', 'buzz', 'curlytop', 'afro', 'locs', 'braids', 'buzz', 'long']);
+ if (p.sex === 'm') p.beard = pick([null, null, null, 'full', 'goatee', 'stache']); else p.lip = chance(.4);
+ p.glasses = chance(.14) ? pick(['shades', 'clear']) : null; p.earring = chance(p.sex === 'f' ? .5 : .2); p.chain = chance(.25); p.watch = chance(.3);
+ const jeans = () => pick([{t:'jeans', c:'denim', c2:'ltdenim'}, {t:'jeans', c:'ltdenim', c2:'eye'}, {t:'jeans', c:'ink', c2:'charcoal'}, {t:'jeans', c:'jet', c2:'charcoal'}]);
+ const cargo = () => pick([{t:'cargo', c:'olive', c2:'forest'}, {t:'cargo', c:'khaki', c2:'brown'}, {t:'cargo', c:'jet', c2:'charcoal'}, {t:'cargo', c:'stone', c2:'heather'}]);
+ const soft = t => ({t, c:pick(['heather', 'jet', 'charcoal', 'stone']), c2:pick(['white', 'ink', 'silver'])});
+ const low = () => pick([{t:'low', c:'white', sole:'sole', toe:'sole'}, {t:'low', c:'jet', sole:'sole'}, {t:'low', c:'heather', sole:'sole'}, {t:'high', c:'white', sole:'sole'}, {t:'high', c:'jet', sole:'sole'}]);
+ const boots = () => pick([{t:'boots', c:'tan', sole:'brown', toe:'tan'}, {t:'boots', c:'jet', sole:'ink', toe:'jet'}]);
+ p.hatC = pick(['jet', 'charcoal', 'heather', 'stone']); p.hatC2 = p.hatC;
+ if (role === 'brawler'){            // bare arms, wrapped hands, crew-color tank and headband, a bat
+  if (p.build === 'heavy') p.build = 'avg';
+  p.top = {t:pick(['tank', 'tank', 'jersey']), c:'jet', c2:'white'}; p.gangOn = ['top', 'hat']; p.hat = 'headband'; p.wraps = true;
+  p.bottom = pick([soft('sweats'), soft('shorts'), jeans()]); p.shoes = low(); p.tool = 'bat'; p.glasses = null;
+ } else if (role === 'shooter'){     // crew-color hoodie with the hood up or a cap, a bag across the chest, a pistol
+  if (p.build === 'heavy') p.build = 'avg';
+  p.top = {t:'hoodie', c:'jet'}; p.gangOn = ['top']; p.hat = pick(['hood', 'hood', 'cap', 'capback']); p.bag = true;
+  p.bottom = pick([jeans(), jeans(), cargo(), soft('track')]); p.shoes = low(); p.tool = 'pistol';
+ } else if (role === 'bruiser'){     // huge, a crew-color puffer vest over bare arms, a beanie, work boots, a sledgehammer
+  p.build = 'huge'; p.h = 1.17 + r() * .05;
+  p.top = {t:'vest', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', 'beanie', 'durag', null]); if (p.hair !== 'locs' && p.hair !== 'braids' && !p.hat) p.hair = 'buzz';
+  p.bottom = pick([cargo(), cargo(), jeans()]); p.shoes = boots(); p.tool = 'sledge';
+ } else {                            // everyone else on the block
+  const tt = pick(['tee', 'longtee', 'hoodie', 'hoodie', 'puffer', 'bomber', 'track', 'jersey', 'flannel', 'denimjkt', 'tank']);
+  p.top = {t:tt, c:neutral(), c2:pick(['white', 'cream', 'heather', 'jet']), c3:'ink'};
+  if (tt === 'denimjkt') p.top.c = pick(['denim', 'ltdenim', 'jet']);
+  if (tt === 'flannel'){ p.top.c = pick(['brown', 'heather', 'khaki', 'charcoal']); p.top.c3 = p.top.c === 'charcoal' ? 'heather' : 'ink'; }
+  p.bottom = pick(tt === 'jersey' || tt === 'tank' ? [soft('shorts'), soft('sweats'), jeans()] : [jeans(), jeans(), cargo(), soft('sweats'), soft('track'), soft('shorts'), p.sex === 'f' ? {t:'leggings', c:'jet'} : jeans()]);
+  p.shoes = chance(.25) ? boots() : low();
+  p.hat = pick([null, null, null, null, 'cap', 'capback', 'beanie', 'durag', 'headband', 'bucket', tt === 'hoodie' ? 'hood' : null]);
+  if (chance(.12)) p.pack = pick(['jet', 'khaki', 'charcoal']);
+  if (chance(.3)) p.pose = 'pocket';
+  const big = ['neck'];
+  if (p.hat && p.hat !== 'hood') big.push('hat', 'hat');
+  if (tt === 'tee' || tt === 'longtee' || tt === 'hoodie' || tt === 'track' || tt === 'jersey' || tt === 'tank' || tt === 'puffer') big.push('top', 'top', 'top');
+  p.gangOn.push(pick(big)); if (chance(.5)) p.gangOn.push(pick(['armband', 'flag']));
+ }
+ return p;
+}
+// ---------- named people, and a cache so a fight does not rebuild the same pose every frame ----------
+const VICEROY = {skin:4, sex:'m', build:'slim', h:1.06, hairC:'hBlack', hair:'pomp', beard:'stache', earring:true, gang:'lav', gangD:'lavD', gangOn:[],
+ top:{t:'suit', c:'lav', c2:'cream', c3:'blue'}, bottom:{t:'slacks', c:'lav'}, shoes:{t:'boots', c:'blue', sole:'ink', toe:'blue'}, ruffle:true, cape:true, guitar:true};
+const NAMED = {viceroy:VICEROY, viceroy_tied:Object.assign({}, VICEROY, {guitar:false, tied:true})};
+const SPECS = new Map(), CACHE = new Map();
+// a look is a name ('viceroy') or 'm|seed|crew color|role'
+function spec(look){ let p = SPECS.get(look); if (!p){ if (NAMED[look]) p = NAMED[look]; else { const a = String(look).split('|'); p = person(+a[1] || 1, a[2] || 'lav', a[3] || null); } SPECS.set(look, p); } return p; }
+function fig(look, frame, mode, lod){
+ const k = look + '|' + (frame & 3) + '|' + mode + '|' + lod; let b = CACHE.get(k);
+ if (!b){ if (CACHE.size > 1200) CACHE.clear(); b = build(spec(look), frame & 3, mode, lod); CACHE.set(k, b); }
+ return b; }
+return {EXTRA, M, build, person, GANGS, spec, fig};
+})();
+
+
+// ===== TURF ART =====
+// Everything drawn in code: buildings, fences, the street around the block and the people, as lit boxes for village-iso.js.
+// A box is [x, y, z, w, d, h, material]; a building is drawn in its own footprint with its front facing +y (toward the camera).
+const ART = (() => {
+const PEOPLE = (typeof MINI !== 'undefined') ? MINI : require('./figs.js');
+
+const MATS = [ // [r, g, b, glow 0..1]
+ [43, 45, 49, 0], [37, 39, 43, 0], [55, 56, 60, 0], [138, 132, 122, 0],      // 0 asphalt, 1 asphalt dark, 2 asphalt patch, 3 sidewalk
+ [138, 59, 46, 0], [100, 42, 34, 0], [92, 104, 114, 0], [185, 178, 166, 0],  // 4 brick, 5 brick dark, 6 siding, 7 concrete
+ [88, 86, 84, 0], [242, 162, 58, .7], [48, 44, 46, 0], [242, 162, 58, 1],    // 8 curb, 9 orange (tracer, life bar), 10 roof tar, 11 sodium glow
+ [255, 236, 170, 1], [58, 60, 64, 0], [52, 70, 40, 0], [40, 56, 32, 0],      // 12 tracer, 13 steel, 14 yard grass, 15 grass dark
+ [214, 210, 202, 0], [30, 40, 52, 0], [12, 12, 14, 0], [255, 190, 104, .85],  // 16 white trim, 17 dark glass, 18 black, 19 lit window
+ [185, 163, 255, .08], [79, 107, 255, .1], [140, 34, 30, .9], [44, 32, 26, 0], // 20 lavender, 21 viceroy blue, 22 ember, 23 dark brown
+ [128, 124, 130, 0], [176, 122, 90, 0], [30, 24, 22, 0], [112, 74, 52, 0],    // 24 smoke, 25 skin, 26 black hair, 27 skin deep
+ [52, 54, 60, 0], [52, 70, 104, 0], [204, 160, 48, 0], [40, 140, 140, 0],     // 28 crew charcoal, 29 denim, 30 boombox mustard, 31 boombox teal
+ [80, 230, 120, .85], [240, 64, 52, .85], [154, 163, 168, 0], [150, 118, 80, 0], // 32 fits, 33 blocked, 34 chain-link, 35 plywood
+ [150, 134, 96, 0], [110, 36, 40, 0], [214, 170, 130, 0], [255, 90, 140, .8]    // 36 sandbag, 37 car maroon, 38 skin light, 39 neon pink
+];
+
+// ---------- buildings ----------
+function blocks(k, lv, shape){
+ const B = [], L = [], S = [], box = (x, y, z, w, d, h, m) => B.push([x, y, z, w, d, h, m]);
+ const win = (x, y, z, w, h, lit) => { box(x - .03, y, z - .03, w + .06, .03, h + .06, 16); box(x, y + .01, z, w, .03, h, lit ? 19 : 17); };
+ const sideWin = (x, y, z, d, h, lit) => { box(x, y - .03, z - .03, .03, d + .06, h + .06, 16); box(x + .01, y, z, .03, d, h, lit ? 19 : 17); };
+ let top = 1;
+ const sup = k === 'supstash'; if (sup) k = 'stash'; if (k === 'pad') k = 'rowhouse';
+ if (k === 'house'){ // the Main House: two-story brick, flat roof with a parapet, stoop and porch lamp, a boombox on the step
+  box(.25, .2, 0, 2.5, 2.3, 1.9, 4); box(.2, .15, 1.9, 2.6, 2.4, .12, 5);                       // walls, parapet cap
+  box(.3, .25, 2.02, 2.4, .1, .14, 5); box(.3, 2.35, 2.02, 2.4, .1, .14, 5); box(.3, .25, 2.02, .1, 2.2, .14, 5); box(2.6, .25, 2.02, .1, 2.2, .14, 5);
+  box(.4, .4, 1.92, 2.2, 2, .06, 10); box(1.9, .7, 2.0, .4, .35, .25, 13); box(1.95, .72, 2.25, .3, .3, .03, 8);  // roof tar, AC unit
+  box(.25, 2.5, .62, 2.5, .03, .06, 5); box(.25, 2.5, 1.25, 2.5, .03, .08, 16);                  // brick bands
+  win(.5, 2.5, .25, .45, .3, true); win(1.9, 2.5, .25, .45, .3, false); win(.5, 2.5, 1.35, .45, .38, true); win(1.25, 2.5, 1.35, .45, .38, false); win(1.9, 2.5, 1.35, .45, .38, true);
+  sideWin(2.75, .6, .3, .45, .3, false); sideWin(2.75, 1.4, .3, .45, .3, true); sideWin(2.75, .6, 1.35, .45, .38, true); sideWin(2.75, 1.4, 1.35, .45, .38, false);
+  box(1.2, 2.5, 0, .55, .04, .78, 23); box(1.17, 2.5, .78, .61, .05, .06, 16); box(1.62, 2.54, .35, .04, .02, .06, 9);   // door, lintel, knob
+  box(1.0, 2.5, 0, 1, .45, .08, 7); box(1.05, 2.55, .08, .9, .35, .08, 7); box(1.1, 2.6, .16, .8, .25, .06, 7);      // stoop steps
+  box(1.0, 2.88, .06, .05, .05, .55, 13); box(1.95, 2.88, .06, .05, .05, .55, 13); box(1.0, 2.88, .58, 1, .05, .04, 13);  // railing
+  box(.98, 2.52, .9, .1, .08, .12, 13); box(1.0, 2.58, .9, .06, .04, .08, 11); L.push([1.03, 2.75, 1.0, 2.2]);             // porch lamp
+  box(1.55, 2.62, .22, .3, .14, .17, 18); box(1.58, 2.75, .26, .09, .02, .09, 30); box(1.73, 2.75, .26, .09, .02, .09, 30); box(1.6, 2.62, .39, .26, .03, .03, 13);  // boombox
+  top = 2.2;
+ } else if (k === 'rowhouse'){ // a narrow brick rowhouse, cornice on top, fire escape on the side
+  box(.15, .15, 0, 1.7, 2.6, 2.3, lv === 1 ? 5 : 4); box(.1, .1, 2.3, 1.8, 2.7, .1, 16); box(.1, 2.62, 2.15, 1.8, .14, .15, 16);  // walls, cornice
+  box(.2, .2, 2.4, 1.6, 2.5, .04, 10);
+  for (const z of [.3, 1.0, 1.65]){ win(.35, 2.75, z, .4, .42, (z * 10 | 0) % 2 === 0); win(1.2, 2.75, z, .4, .42, z > 1.5); }
+  box(.85, 2.75, 0, .32, .04, .62, 23); box(.8, 2.75, 0, .45, .3, .07, 7);
+  box(1.85, .5, .9, .25, 1.4, .04, 13); box(1.85, .5, 1.6, .25, 1.4, .04, 13); box(2.06, .5, .9, .03, 1.4, .3, 13); box(2.06, .5, 1.6, .03, 1.4, .3, 13);  // fire escape
+  box(1.88, .6, .9, .2, .06, .7, 13);
+  top = 2.45;
+ } else if (k === 'store'){ // the corner store: teal awning, neon sign, a lit window full of shelves
+  box(.15, .15, 0, 2.7, 1.6, 1.25, 6); box(.1, .1, 1.25, 2.8, 1.7, .12, 16); box(.2, .2, 1.37, 2.6, 1.5, .04, 10);
+  box(.3, 1.75, .12, 1.4, .03, .75, 19); for (const z of [.3, .55]) box(.32, 1.74, z, 1.36, .05, .03, 23);   // window and shelves
+  box(1.95, 1.75, 0, .5, .04, .9, 17); box(2.18, 1.79, .4, .04, .02, .1, 13);                               // glass door
+  for (let i = 0; i < 6; i++) box(.15 + i * .45, 1.75, .98, .45, .45, .06, i % 2 ? 16 : 31);              // striped awning
+  box(.6, 1.77, 1.05, .9, .04, .16, 18); box(.66, 1.8, 1.08, .78, .02, .1, 39); L.push([1.05, 2.1, 1.1, 1.6]);   // neon sign
+  box(2.85, .4, .2, .04, 1.0, .6, 17);
+  top = 1.45;
+ } else if (k === 'stash'){ // a cinderblock garage: roll-up door half open, a crate of cash inside
+  box(.12, .12, 0, 1.76, 1.6, .95, 7); box(.08, .08, .95, 1.84, 1.68, .08, 8);
+  box(.35, 1.72, .38, 1.3, .03, .57, 13); for (let z = .45; z < .95; z += .1) box(.35, 1.74, z, 1.3, .02, .02, 8);   // roll-up door
+  box(.4, 1.55, 0, 1.2, .15, .38, 18); box(.65, 1.45, 0, .7, .3, .25, 35); box(.7, 1.6, .25, .6, .1, .04, sup ? 36 : 32);
+  if (sup){ box(.2, 1.8, 0, .32, .3, .3, 35); box(.24, 1.84, .3, .26, .24, .22, 36); box(1.5, 1.82, 0, .3, .28, .26, 35); }        // dark gap, crate, cash
+  box(1.65, 1.72, .8, .15, .08, .1, 13); box(1.68, 1.78, .82, .09, .04, .05, 11); L.push([1.72, 1.95, .85, 1.3]);
+  top = 1.05;
+ } else if (k === 'porch'){ // a porch gunner: a sandbag nest on a slab (the gunman is a person, placed by the game at POSTS.porch)
+  box(.1, .1, 0, 1.8, 1.8, .08, 7);
+  const bag = (x, y, w, d) => { box(x, y, .08, w, d, .14, 36); box(x + .03, y + .03, .22, w - .06, d - .06, .12, 36); box(x + .06, y + .06, .34, w - .12, d - .12, .08, 36); };
+  bag(.2, 1.35, 1.6, .38); bag(1.42, .35, .38, 1.0); bag(.2, .35, .38, 1.0);
+  top = .9;
+ } else if (k === 'roof'){ // a rooftop shooter: a narrow three-story walk-up, water tank (the shooter stands at POSTS.roof)
+  box(.2, .2, 0, 1.6, 1.6, 2.9, 5); box(.15, .15, 2.9, 1.7, 1.7, .1, 16); box(.25, .25, 3.0, 1.5, 1.5, .03, 10);
+  for (const z of [.35, 1.2, 2.05]){ win(.4, 1.8, z, .38, .45, z < 1); win(1.15, 1.8, z, .38, .45, z > 2); sideWin(1.8, .55, z, .4, .45, z > 1 && z < 2); }
+  box(.75, 1.8, 0, .4, .04, .7, 23);
+  box(.3, .3, 3.0, .08, .08, .45, 13); box(.75, .3, 3.0, .08, .08, .45, 13); box(.3, .75, 3.0, .08, .08, .45, 13); box(.75, .75, 3.0, .08, .08, .45, 13);
+  box(.25, .25, 3.45, .65, .65, .5, 35); box(.22, .22, 3.95, .71, .71, .08, 10);                                 // water tank
+  top = 3.6;
+ } else if (k === 'gym'){ // the Gym: a cinderblock box with the door rolled up, a heavy bag inside, a barbell out front
+  box(.15, .15, 0, 2.7, 1.55, 1.3, 7); box(.1, .1, 1.3, 2.8, 1.65, .1, 8); box(.2, .2, 1.4, 2.6, 1.45, .04, 10);
+  box(.15, 1.7, 1.0, 2.7, .03, .12, 9);                                                              // painted stripe
+  box(.4, 1.7, 0, 1.3, .03, .85, 18); box(.4, 1.72, .85, 1.3, .03, .1, 13);                           // open bay, rolled door
+  box(.98, 1.6, .25, .16, .16, .5, 37); box(1.04, 1.66, .75, .04, .04, .12, 13);                      // heavy bag on its chain
+  win(2.0, 1.7, .7, .55, .3, true); sideWin(2.85, .5, .7, .7, .3, false);
+  box(1.95, 2.05, .09, .75, .04, .04, 13); for (const x of [1.95, 2.02, 2.6, 2.67]) box(x, 1.98, 0, .05, .18, .22, 18);   // barbell
+  box(1.9, 1.75, .88, .12, .08, .1, 13); L.push([1.96, 2.0, .9, 1.5]);
+  top = 1.5;
+ } else if (k === 'hustle'){ // the Corner Hustle: a folding table under a striped tarp, a cooler and a crate
+  box(.15, .15, 0, 1.7, 1.7, .05, 7);
+  for (const [x, y] of [[.3, .4], [1.65, .4], [.3, 1.55], [1.65, 1.55]]) box(x, y, .05, .05, .05, 1.05, 13);
+  for (let i = 0; i < 4; i++) box(.25 + i * .36, .35, 1.1, .36, 1.3, .05, i % 2 ? 16 : 31);
+  box(.5, 1.0, .42, 1.0, .5, .04, 16); for (const [x, y] of [[.52, 1.02], [1.44, 1.02], [.52, 1.44], [1.44, 1.44]]) box(x, y, .05, .04, .04, .37, 13);   // table
+  box(.6, 1.1, .46, .2, .14, .05, 32); box(.9, 1.15, .46, .2, .14, .05, 32); box(1.2, 1.1, .46, .16, .2, .1, 35);                                       // cash and goods
+  box(.45, .5, .05, .4, .3, .28, 21); box(.45, .5, .33, .4, .3, .04, 16); box(1.2, .5, .05, .35, .35, .3, 35);                                           // cooler, crate
+  box(.95, .95, 1.0, .08, .08, .08, 11); L.push([1.0, 1.2, .95, 1.6]);
+  top = 1.2;
+ } else if (k === 'run'){ // the Supply Run: a box van backed in, doors open, crates on the ground
+  box(.3, .25, .16, 1.0, 1.25, .78, 16); box(.3, .25, .94, 1.0, 1.25, .04, 8);                        // cargo box
+  box(.34, 1.5, .16, .92, .34, .5, 6); box(.36, 1.52, .66, .88, .3, .2, 17); box(.34, 1.84, .16, .92, .05, .2, 13);   // cab, windshield, bumper
+  for (const [x, y] of [[.24, .45], [1.22, .45], [.24, 1.45], [1.22, 1.45]]) box(x, y, 0, .14, .32, .3, 18);          // wheels
+  box(.3, .2, .16, .06, .06, .78, 13); box(1.24, .2, .16, .06, .06, .78, 13); box(.34, .22, .2, .92, .03, .7, 18);    // open back
+  box(1.45, .3, 0, .36, .36, .3, 35); box(1.5, .35, .3, .26, .26, .24, 35); box(1.45, .8, 0, .34, .34, .28, 36); box(1.5, 1.3, 0, .3, .3, .2, 35);
+  box(.4, 1.86, .3, .1, .03, .08, 12); box(1.1, 1.86, .3, .1, .03, .08, 12);
+  top = 1.05;
+ } else if (k === 'fence'){ // chain-link: posts, top rail and mesh, joined toward its neighbours (shape bits from wallShape)
+  const sh = shape || 0, h = .62, post = (x, y) => { box(x - .04, y - .04, 0, .08, .08, h + .04, 13); box(x - .05, y - .05, h, .1, .1, .04, 13); };
+  post(.5, .5);
+  const run = (x, y, w, d) => { box(x, y, .06, w, d, h - .08, 34); box(x - .005, y - .005, h - .04, w + .01, d + .01, .03, 13); };
+  if (sh & 1) run(.48, 0, .04, .5); if (sh & 4) run(.48, .5, .04, .5); if (sh & 2) run(.5, .48, .5, .04); if (sh & 8) run(0, .48, .5, .04);
+  if (!sh) run(.15, .48, .7, .04);
+  top = .7;
+ }
+ return {boxes:B, lights:L, smoke:S, top};
+}
+// a building knocked down: brick and board scattered on the slab
+function rubble(fw, fh, k){
+ const B = [], m = k === 'store' ? 6 : k === 'stash' ? 7 : k === 'fence' ? 34 : 4;
+ if (k === 'fence'){ B.push([.2, .4, 0, .6, .1, .05, 34]); B.push([.45, .45, 0, .08, .08, .1, 13]); return B; }
+ B.push([.1, .1, 0, fw - .2, fh - .2, .06, 8]);
+ for (let i = 0; i < fw * fh * 3; i++){ const a = (i * 37 % 97) / 97, b = (i * 61 % 89) / 89; B.push([.2 + a * (fw - .6), .2 + b * (fh - .6), .06, .22 + (i % 3) * .08, .16 + (i % 2) * .1, .08 + (i % 4) * .05, i % 5 === 0 ? 35 : m]); }
+ B.push([fw * .4, fh * .3, .06, .1, fh * .5, .12, 23]);
+ return B;
+}
+
+// ---------- the street around the block ----------
+// tile(x, y): the ground material for one grid tile. edge(): every box outside the grid (sidewalks, row houses, lamps, cars).
+function tile(x, y){
+ const inYard = x >= 7 && x <= 21 && y >= 6 && y <= 20, walk = x >= 5 && x <= 23 && y >= 4 && y <= 22;
+ if (inYard){ const r = ((x * 73856093) ^ (y * 19349663)) >>> 0; return r % 7 === 0 ? 15 : (r % 3 === 0 ? 7 : 14); }
+ if (walk) return 3;
+ const r = ((x * 2654435761) ^ (y * 40503)) >>> 0; return r % 9 === 0 ? 2 : (r % 4 === 0 ? 1 : 0);
+}
+function edge(){
+ const B = [], L = [], box = (x, y, z, w, d, h, m) => B.push([x, y, z, w, d, h, m]);
+ // curb lines around the sidewalk, lane dashes on the street
+ box(4.95, 3.95, 0, 19.1, .1, .1, 8); box(4.95, 22.95, 0, 19.1, .1, .1, 8); box(4.95, 3.95, 0, .1, 19.1, .1, 8); box(23.95, 3.95, 0, .1, 19.1, .1, 8);
+ for (let i = 0; i < 28; i += 2){ box(i + .2, 1.95, .02, .9, .1, .01, 16); box(i + .2, 25.95, .02, .9, .1, .01, 16); box(1.95, i + .2, .02, .1, .9, .01, 16); box(25.95, i + .2, .02, .1, .9, .01, 16); }
+ // streetlights at the sidewalk corners and midpoints: sodium glow pooling on the street
+ [[5.3, 4.3], [23.7, 4.3], [5.3, 22.7], [23.7, 22.7], [14.5, 4.3], [14.5, 22.7], [5.3, 13.5], [23.7, 13.5]].forEach(([x, y]) => {
+  box(x - .05, y - .05, 0, .1, .1, 1.6, 13); box(x - .05, y - .05, 1.6, .5, .1, .06, 13); box(x + .3, y - .08, 1.5, .22, .16, .1, 13); box(x + .32, y - .06, 1.46, .18, .12, .04, 11);
+  L.push([x + .4, y, 1.3, 3.2]); });
+ // parked cars along the far curbs
+ const car = (x, y, rot, m) => { if (rot){ box(x, y, .1, .8, 1.7, .35, m); box(x + .08, y + .4, .45, .64, .8, .28, m); box(x + .1, y + .42, .47, .6, .76, .22, 17);
+   [[x - .03, y + .2], [x + .73, y + .2], [x - .03, y + 1.25], [x + .73, y + 1.25]].forEach(([a, b]) => box(a, b, 0, .1, .28, .26, 18)); }
+  else { box(x, y, .1, 1.7, .8, .35, m); box(x + .4, y + .08, .45, .8, .64, .28, m); box(x + .42, y + .1, .47, .76, .6, .22, 17);
+   [[x + .2, y - .03], [x + .2, y + .73], [x + 1.25, y - .03], [x + 1.25, y + .73]].forEach(([a, b]) => box(a, b, 0, .28, .1, .26, 18)); } };
+ car(9, 2.7, 0, 37); car(17.5, 2.7, 0, 13); car(3, 9, 1, 29); car(25.2, 16, 1, 37); car(20, 24.5, 0, 6);
+ // the rest of the neighborhood: row houses facing the street on every side, past the map edge
+ const row = (x, y, w, d, face, n) => { for (let i = 0; i < n; i++){ const hgt = 1.6 + ((i * 7 + x * 3) % 5) * .25, m = (i + x) % 3 === 0 ? 5 : (i % 2 ? 4 : 6);
+   const ox = face === 'x' ? x : x + i * w, oy = face === 'x' ? y + i * d : y; box(ox, oy, 0, face === 'x' ? 2.4 : w - .1, face === 'x' ? d - .1 : 2.4, hgt, m); box(ox - .05, oy - .05, hgt, (face === 'x' ? 2.4 : w - .1) + .1, (face === 'x' ? d - .1 : 2.4) + .1, .1, 16);
+   if (i % 2 === 0) L.push([ox + (face === 'x' ? 1.2 : w / 2), oy + (face === 'x' ? d / 2 : 1.2), hgt * .5, 1]); } };
+ row(-2, -3.2, 2.2, 0, 'y', 15); row(-2, 28.8, 2.2, 0, 'y', 15); row(-3.2, -1, 0, 2.2, 'x', 14); row(28.8, -1, 0, 2.2, 'x', 14);
+ return {boxes:B, lights:L};
+}
+
+// ---------- people ----------
+// People are built in figs.js (MINI). detail: 0 far, 1 mid, 2 near.
+function figure(look, frame, mode, detail){ return PEOPLE.fig(look, frame, mode, detail == null ? 1 : detail); }
+
+// where a defender stands on a building: [x, y, z] inside its footprint
+const POSTS = {porch:[1.0, .9, .08], roof:[1.25, 1.3, 3.03]};
+return {MATS:MATS.concat(PEOPLE.EXTRA), blocks, rubble, tile, edge, figure, POSTS};
+})();
+
+
+</script>
+<script>
+// village-iso.js · Turf copy (from Ravenmarrow v3.3, Nov 18 2026) · Nov 19 2026
+// Turf additions, all optional so the Ravenmarrow behaviour is unchanged when they are not used:
+//  scene.tile(x, y) picks each ground tile's material; scene.edge {boxes, lights} replaces the pine ring outside the grid;
+//  mount opts.palette sets the sky colours, opts.shotMats the tracer colours, opts.onGround(x, y) gets taps on open ground in a live battle;
+//  battle({live:true}) keeps playing while frames are still being added (VIL.battleEnd() lets it finish); VIL.flashZone(tiles) shows the no-drop zone.
+// The village seen the way The Keep's Isometric mode sees its world: an orthographic camera at a fixed slant, every
+// building made of lit blocks, a real shadow map from the sun or the blood moon, warm torch light pooling on the ground,
+// and fog closing in at the edges. It only draws what it is handed (parts made of boxes), so another game can reuse it.
+// Loaded on demand when the Village tab opens. window.VIL: mount, update, unmount, setHour, stats, project.
+(function(){
+'use strict';
+const PITCH = 35 * Math.PI / 180, YAW = 45 * Math.PI / 180;
+const MAXL = 16, SHADOW = 1536;
+
+// ---------- small math ----------
+function mul(a, b){ const o = new Float32Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++){ let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; } return o; }
+function ortho(l, r, b, t, n, f){ return new Float32Array([2 / (r - l), 0, 0, 0, 0, 2 / (t - b), 0, 0, 0, 0, -2 / (f - n), 0, -(r + l) / (r - l), -(t + b) / (t - b), -(f + n) / (f - n), 1]); }
+function norm(v){ const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
+function cross(a, b){ return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function dot(a, b){ return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+function lookAt(e, c, up){ const z = norm([e[0] - c[0], e[1] - c[1], e[2] - c[2]]), x = norm(cross(up, z)), y = cross(z, x);
+ return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, e), -dot(y, e), -dot(z, e), 1]); }
+function inv(a){ const o = new Float32Array(16);
+ const b00 = a[0] * a[5] - a[1] * a[4], b01 = a[0] * a[6] - a[2] * a[4], b02 = a[0] * a[7] - a[3] * a[4], b03 = a[1] * a[6] - a[2] * a[5],
+  b04 = a[1] * a[7] - a[3] * a[5], b05 = a[2] * a[7] - a[3] * a[6], b06 = a[8] * a[13] - a[9] * a[12], b07 = a[8] * a[14] - a[10] * a[12],
+  b08 = a[8] * a[15] - a[11] * a[12], b09 = a[9] * a[14] - a[10] * a[13], b10 = a[9] * a[15] - a[11] * a[13], b11 = a[10] * a[15] - a[11] * a[14];
+ let d = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06; if (!d) return o; d = 1 / d;
+ o[0] = (a[5] * b11 - a[6] * b10 + a[7] * b09) * d; o[1] = (a[2] * b10 - a[1] * b11 - a[3] * b09) * d; o[2] = (a[13] * b05 - a[14] * b04 + a[15] * b03) * d; o[3] = (a[10] * b04 - a[9] * b05 - a[11] * b03) * d;
+ o[4] = (a[6] * b08 - a[4] * b11 - a[7] * b07) * d; o[5] = (a[0] * b11 - a[2] * b08 + a[3] * b07) * d; o[6] = (a[14] * b02 - a[12] * b05 - a[15] * b01) * d; o[7] = (a[8] * b05 - a[10] * b02 + a[11] * b01) * d;
+ o[8] = (a[4] * b10 - a[5] * b08 + a[7] * b06) * d; o[9] = (a[1] * b08 - a[0] * b10 - a[3] * b06) * d; o[10] = (a[12] * b04 - a[13] * b02 + a[15] * b00) * d; o[11] = (a[9] * b02 - a[8] * b04 - a[11] * b00) * d;
+ o[12] = (a[5] * b07 - a[4] * b09 - a[6] * b06) * d; o[13] = (a[0] * b09 - a[1] * b07 + a[2] * b06) * d; o[14] = (a[13] * b01 - a[12] * b03 - a[14] * b00) * d; o[15] = (a[8] * b03 - a[9] * b01 + a[10] * b00) * d;
+ return o; }
+function xform(m, p){ const x = p[0], y = p[1], z = p[2], w = m[3] * x + m[7] * y + m[11] * z + m[15];
+ return [(m[0] * x + m[4] * y + m[8] * z + m[12]) / w, (m[1] * x + m[5] * y + m[9] * z + m[13]) / w, (m[2] * x + m[6] * y + m[10] * z + m[14]) / w]; }
+function hash(x, y){ let h = (x * 374761393 + y * 668265263) >>> 0; h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; }
+
+// ---------- shaders ----------
+const VS = `#version 300 es
+layout(location=0) in vec3 aP; layout(location=1) in vec3 aN; layout(location=2) in float aM; layout(location=3) in float aAO;
+uniform mat4 uVP; uniform mat4 uLVP;
+out vec3 vW; out vec3 vN; flat out int vM; out float vAO; out vec4 vL;
+void main(){ vW = aP; vN = aN; vM = int(aM + .5); vAO = aAO; vL = uLVP * vec4(aP, 1.0); gl_Position = uVP * vec4(aP, 1.0); }`;
+const FS = `#version 300 es
+precision highp float; precision highp sampler2DShadow;
+in vec3 vW; in vec3 vN; flat in int vM; in float vAO; in vec4 vL;
+uniform vec4 uMat[96]; uniform float uGrid; uniform vec3 uAmb; uniform vec3 uSky; uniform vec3 uSunC; uniform vec3 uSunD; uniform vec3 uBg; uniform vec2 uCtr;
+uniform int uNL; uniform vec4 uLP[${MAXL}]; uniform float uTime; uniform float uTorch; uniform sampler2DShadow uSh; uniform float uFlick;
+out vec4 o;
+float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float shade(){ vec3 p = vL.xyz / vL.w * .5 + .5; if (p.x < 0. || p.y < 0. || p.x > 1. || p.y > 1.) return 1.;
+ float b = .0018, s = 0.; vec2 t = vec2(1.0 / ${SHADOW}.0);
+ for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) s += texture(uSh, vec3(p.xy + vec2(i, j) * t, p.z - b));
+ return s / 9.; }
+void main(){
+ int mi = vM; bool smoothM = mi >= 128; if (smoothM) mi -= 128;
+ vec4 m = uMat[mi]; vec3 base = m.rgb;
+ // a little per-block grain so big faces are not flat (not on people: it would swim as they move)
+ if (!smoothM) base *= .92 + .16 * hash(floor(vW.xy * 8.0) + floor(vW.z * 8.0));
+ vec3 n = normalize(vN);
+ float ndl = max(dot(n, uSunD), 0.0), sh = ndl > 0. ? shade() : 0.;
+ vec3 lit = uAmb * (.62 + .38 * n.z) + uSky * max(n.z, 0.) * .25 + uSunC * ndl * sh;
+ vec3 warm = vec3(0.);
+ for (int i = 0; i < ${MAXL}; i++){ if (i >= uNL) break; vec3 d = uLP[i].xyz - vW; float dist = length(d); float q = dist / uLP[i].w;
+  if (q < 1.){ float k = (1. - q); k *= k; float f = 1. + uFlick * (.12 * sin(uTime * 9. + float(i) * 3.1) + .08 * sin(uTime * 23. + float(i)));
+   warm += vec3(1.0, .62, .3) * k * f * (.35 + .65 * max(dot(n, d / max(dist, .001)), 0.)) * uTorch; } }
+ vec3 c = base * (lit * vAO + warm) + base * m.a * 1.15;
+ // edit mode: faint tile lines on the open ground
+ if (uGrid > 0. && n.z > .9 && vW.z < .08 && vW.x > 0. && vW.y > 0. && vW.x < 28. && vW.y < 28.){ vec2 g = abs(fract(vW.xy) - .5); float e = smoothstep(.47, .5, max(g.x, g.y)); c = mix(c, vec3(.85, .7, .4) * (.35 + .65 * uAmb.r), e * .55); }
+ // fog: the forest edge sinks into the dark
+ float r = length(vW.xy - uCtr); float f = smoothstep(13.0, 24.0, r);
+ c = mix(c, uBg, f);
+ o = vec4(pow(c, vec3(.94)), 1.0);
+}`;
+const VS_D = `#version 300 es
+layout(location=0) in vec3 aP; uniform mat4 uLVP; void main(){ gl_Position = uLVP * vec4(aP, 1.0); }`;
+const FS_D = `#version 300 es
+precision mediump float; out vec4 o; void main(){ o = vec4(1.0); }`;
+
+// ---------- state ----------
+let canvas = null, gl = null, host = null, labelLayer = null, P = null, PD = null, shTex = null, shFb = null;
+let geo = null, dyn = null, lastScene = null, lost = false;
+const cam = {tx:14, ty:14, zoom:9.5, minZ:.85, maxZ:22, fitted:false};  // Turf: .85 gets close enough to read a face  // v3.4: minZ 2.4 lets a finger get close enough to read faces and kit
+const st = {dirty:true, raf:0, last:0, t0:performance.now(), frames:0, fpsT:0, fps:0, verts:0, hour:null, mounted:false, onTap:null, reduce:false, labels:[], parts:[], lights:[], smokeSrc:[], puffs:[], cost:8, visible:true, actors:[], anim:null, canAnim:null, battle:null, sel:null};
+
+function compile(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+function program(vs, fs, names){ const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, vs)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+ if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; names.forEach(n => u[n] = gl.getUniformLocation(p, n)); return {p, u}; }
+
+function initGL(){
+ gl = canvas.getContext('webgl2', {antialias:true, alpha:false, preserveDrawingBuffer:false, powerPreference:'default'});
+ if (!gl) return false;
+ P = program(VS, FS, ['uGrid', 'uVP', 'uLVP', 'uMat', 'uAmb', 'uSky', 'uSunC', 'uSunD', 'uBg', 'uCtr', 'uNL', 'uLP', 'uTime', 'uTorch', 'uSh', 'uFlick']);
+ PD = program(VS_D, FS_D, ['uLVP']);
+ shTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, shTex);
+ gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, SHADOW, SHADOW);
+ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
+ shFb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, shFb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, shTex, 0);
+ gl.drawBuffers([gl.NONE]); gl.readBuffer(gl.NONE); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+ geo = null; dyn = null;
+ return true;
+}
+
+// ---------- geometry: boxes to faces ----------
+// faces: top, +x, -x, +y, -y (no bottoms, nothing sits under the ground)
+const FACES = [[0, 0, 1], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]];
+function pushBox(V, I, b, ox, oy){
+ const x0 = b[0] + ox, y0 = b[1] + oy, z0 = b[2], x1 = x0 + b[3], y1 = y0 + b[4], z1 = z0 + b[5], m = b[6];
+ const low = z0 < .2 ? .62 : .82; // contact shading where a block meets the ground
+ const quads = [
+  [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]],
+  [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]],
+  [[x0, y1, z0], [x0, y0, z0], [x0, y0, z1], [x0, y1, z1]],
+  [[x1, y1, z0], [x0, y1, z0], [x0, y1, z1], [x1, y1, z1]],
+  [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]]];
+ for (let f = 0; f < 5; f++){ const q = quads[f], n = FACES[f], base = V.length / 8;
+  for (let k = 0; k < 4; k++){ const p = q[k], ao = f === 0 ? 1 : (p[2] === z0 ? low : 1); V.push(p[0], p[1], p[2], n[0], n[1], n[2], m, ao); }
+  I.push(base, base + 1, base + 2, base, base + 2, base + 3); }
+}
+// ---------- Turf: smooth shapes for people ----------
+// A figure is a list of pieces: a box [x, y, z, w, d, h, mat], an ellipsoid ['e', cx, cy, cz, rx, ry, rz, mat],
+// or a capsule ['c', ax, ay, az, bx, by, bz, ra, rb, mat] (a rounded limb from a to b). list.seg sets how round.
+function pushEll(V, I, p, seg){
+ const cx = p[1], cy = p[2], cz = p[3], rx = p[4], ry = p[5], rz = p[6], m = p[7] + 128, rings = Math.max(3, Math.round(seg * .6)), base = V.length / 8;
+ for (let r = 0; r <= rings; r++){ const th = Math.PI * r / rings, sn = Math.sin(th), z = Math.cos(th);
+  for (let k = 0; k <= seg; k++){ const ph = 2 * Math.PI * k / seg, x = sn * Math.cos(ph), y = sn * Math.sin(ph);
+   let nx = x / rx, ny = y / ry, nz = z / rz; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+   V.push(cx + x * rx, cy + y * ry, cz + z * rz, nx, ny, nz, m, .8 + .2 * (nz * .5 + .5)); } }
+ for (let r = 0; r < rings; r++) for (let k = 0; k < seg; k++){ const a = base + r * (seg + 1) + k, b = a + seg + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
+}
+function pushCap(V, I, p, seg){
+ const ax = p[1], ay = p[2], az = p[3], ra = p[7], rb = p[8], m = p[9] + 128;
+ let dx = p[4] - ax, dy = p[5] - ay, dz = p[6] - az; const L = Math.hypot(dx, dy, dz) || 1e-6; dx /= L; dy /= L; dz /= L;
+ let ux, uy, uz; if (Math.abs(dz) < .92){ ux = -dy; uy = dx; uz = 0; } else { ux = 1 - dx * dx; uy = -dx * dy; uz = -dx * dz; }
+ const ul = Math.hypot(ux, uy, uz) || 1; ux /= ul; uy /= ul; uz /= ul;
+ const vx = dy * uz - dz * uy, vy = dz * ux - dx * uz, vz = dx * uy - dy * ux;       // v = d x u
+ const hr = seg >= 8 ? 3 : 2, base = V.length / 8, st = [];
+ for (let k = 0; k <= hr; k++){ const th = Math.PI / 2 * (1 - k / hr); st.push([-ra * Math.sin(th), ra * Math.cos(th), -Math.sin(th), Math.cos(th), 0]); }
+ for (let k = 0; k <= hr; k++){ const th = Math.PI / 2 * (k / hr); st.push([L + rb * Math.sin(th), rb * Math.cos(th), Math.sin(th), Math.cos(th), 1]); }
+ for (const q of st){ const t = q[0], r = q[1], na = q[2], nr = q[3];
+  for (let k = 0; k <= seg; k++){ const ph = 2 * Math.PI * k / seg, c = Math.cos(ph), sn = Math.sin(ph), ox = ux * c + vx * sn, oy = uy * c + vy * sn, oz = uz * c + vz * sn;
+   const nz = dz * na + oz * nr;
+   V.push(ax + dx * t + ox * r, ay + dy * t + oy * r, az + dz * t + oz * r, dx * na + ox * nr, dy * na + oy * nr, nz, m, .8 + .2 * (nz * .5 + .5)); } }
+ for (let r = 0; r < st.length - 1; r++) for (let k = 0; k < seg; k++){ const a = base + r * (seg + 1) + k, b = a + seg + 1; I.push(a, a + 1, b, a + 1, b + 1, b); }
+}
+const MESH = new WeakMap();
+function figMesh(P){
+ let M = MESH.get(P); if (M) return M;
+ const V = [], I = [], seg = P.seg || 8;
+ for (const p of P){ if (p[0] === 'e') pushEll(V, I, p, seg); else if (p[0] === 'c') pushCap(V, I, p, seg); else { const n = V.length; pushBox(V, I, p, 0, 0); for (let k = n + 6; k < V.length; k += 8) V[k] += 128; } }
+ M = {v:new Float32Array(V), i:I}; MESH.set(P, M); return M;
+}
+// draw a figure at (ox, oy, oz) turned to face f (0 +y, 1 +x, 2 -y, 3 -x). The mesh is built once per pose and reused.
+function pushFig(V, I, P, ox, oy, oz, f){
+ if (!P || !P.length) return; const M = figMesh(P), v = M.v, base = V.length / 8;
+ for (let k = 0; k < v.length; k += 8){ let x = v[k], y = v[k + 1], nx = v[k + 3], ny = v[k + 4];
+  for (let r = 0; r < f; r++){ let t = x; x = y; y = -t; t = nx; nx = ny; ny = -t; }
+  V.push(x + ox, y + oy, v[k + 2] + oz, nx, ny, v[k + 5], v[k + 6], v[k + 7]); }
+ const ix = M.i; for (let k = 0; k < ix.length; k++) I.push(base + ix[k]);
+}
+function upload(target, V, I){
+ if (!target){ target = {vao:gl.createVertexArray(), vb:gl.createBuffer(), ib:gl.createBuffer(), n:0}; }
+ gl.bindVertexArray(target.vao);
+ gl.bindBuffer(gl.ARRAY_BUFFER, target.vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.DYNAMIC_DRAW);
+ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, target.ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(I), gl.DYNAMIC_DRAW);
+ const S = 32; gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, S, 0);
+ gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, S, 12);
+ gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 1, gl.FLOAT, false, S, 24);
+ gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 1, gl.FLOAT, false, S, 28);
+ gl.bindVertexArray(null); target.n = I.length; return target;
+}
+
+// the ground, paths and the forest ring around the grid; scene.ground: {w, h, path:Set('x,y'), clear:Set('x,y'), seed}
+function groundBoxes(sc){
+ const B = [], w = sc.w, h = sc.h, path = sc.path || new Set(), clear = sc.clear || new Set(), busy = sc.busy || new Set();
+ B.push([-26, -26, -.06, w + 52, h + 52, .04, 15]);
+ for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){
+  const k = x + ',' + y, r = hash(x + 7, y + 3);
+  const m = sc.tile ? sc.tile(x, y) : path.has(k) ? 3 : (r < .18 ? 1 : r > .9 ? 2 : 0);
+  B.push([x, y, -.02, 1, 1, .04 + (path.has(k) ? 0 : r * .02), m]);
+  if (!sc.tile && !path.has(k) && !busy.has(k) && !clear.has(k) && r > .975) B.push([x + .3, y + .4, 0, .25, .2, .12, 7]); // a stray stone
+ }
+ if (sc.edge){ sc.edge.boxes.forEach(b => B.push(b)); return B; }
+ // pines outside the walls and beyond the grid
+ const tree = (x, y, s) => { B.push([x - .07 * s, y - .07 * s, 0, .14 * s, .14 * s, .45 * s, 23]);
+  for (let i = 0; i < 4; i++){ const r = (.62 - i * .14) * s; B.push([x - r, y - r, (.35 + i * .32) * s, r * 2, r * 2, .3 * s, i % 2 ? 15 : 14]); } };
+ for (let y = -9; y < h + 9; y++) for (let x = -9; x < w + 9; x++){
+  const inGrid = x >= 0 && y >= 0 && x < w && y < h, k = x + ',' + y;
+  if (inGrid && (path.has(k) || clear.has(k) || busy.has(k))) continue;
+  const ring = sc.ring, inside = ring && x >= ring[0] - 1 && y >= ring[1] - 1 && x <= ring[2] + 1 && y <= ring[3] + 1;
+  if (inside) continue;
+  const r = hash(x * 3 + 11, y * 5 + 2), d = Math.max(0, Math.hypot(x - w / 2, y - h / 2) - 11);
+  if (Math.hypot(x - w / 2, y - h / 2) > 24) continue;
+  if (r < Math.min(.5, .14 + d * .05)) tree(x + .5 + (hash(x, y) - .5) * .5, y + .5 + (hash(y, x) - .5) * .5, .8 + hash(x + 1, y + 9) * .7);
+ }
+ return B;
+}
+
+function build(sc){
+ const V = [], I = [];
+ groundBoxes(sc).forEach(b => pushBox(V, I, b, 0, 0));
+ let hasAnim = false; st.lights = []; st.smokeSrc = []; st.labels.forEach(l => l.el.remove()); st.labels = []; st.parts = [];
+ if (sc.edge && sc.edge.lights) sc.edge.lights.forEach(L => st.lights.push(L));
+ (sc.parts || []).forEach(p => {
+  if (st.drag && st.drag.key === p.key){ st.drag.part = p; }
+  else if (p.anim && !st.reduce){ hasAnim = true; if (!st.anim || st.anim.part.id !== p.id) st.anim = {part:p, t:0, dur:3}; }
+  else p.boxes.forEach(b => pushBox(V, I, b, p.x, p.y));
+  (p.lights || []).forEach(L => st.lights.push([L[0] + p.x, L[1] + p.y, L[2], L[3]]));
+  (p.smoke || []).forEach(s => st.smokeSrc.push([s[0] + p.x, s[1] + p.y, s[2]]));
+  if (p.tap) st.parts.push({id:p.id, key:p.key, x0:p.x, y0:p.y, x1:p.x + p.fw, y1:p.y + p.fh, top:p.top || 1, boxes:p.boxes.concat([[-.12, -.12, 0, p.fw + .24, p.fh + .24, .14, 0]])});
+  if (p.label){ const el = document.createElement('div'); el.className = 'vlab' + (p.labelCls ? ' ' + p.labelCls : ''); el.innerHTML = p.label; el.dataset.b = p.id; labelLayer.appendChild(el);
+   st.labels.push({el, key:p.key, empty:/empty/.test(p.labelCls || ''), x:p.x + p.fw / 2, y:p.y + p.fh / 2, z:(p.top || 1) + .2}); }
+ });
+ if (!hasAnim) st.anim = null;
+ geo = upload(geo, V, I); st.verts = V.length / 8; st.dirty = true;
+}
+
+// ---------- time of day: the sun by day, a blood moon by night ----------
+function sky(){
+ const d = new Date(), h = st.hour != null ? st.hour : d.getHours() + d.getMinutes() / 60;
+ // day weight: 0 at night, 1 at midday, soft at dawn and dusk
+ const day = Math.max(0, Math.min(1, Math.min((h - 5.5) / 2, (19.5 - h) / 2)));
+ const t = (h - 6) / 12 * Math.PI, sunD = norm([-Math.cos(t) * .8 - .2, .55, Math.max(.35, Math.sin(t)) * 1.2]);
+ const moonD = norm([-.55, .35, .9]);
+ const L = (a, b) => a.map((v, i) => v + (b[i] - v) * day);
+ const P = st.palette; if (P) return {day, dir:norm(L(moonD, sunD)), sunC:L(P.sunC[0], P.sunC[1]), amb:L(P.amb[0], P.amb[1]), sky:L(P.sky[0], P.sky[1]), bg:L(P.bg[0], P.bg[1]), torch:P.torch[0] + (P.torch[1] - P.torch[0]) * day};
+ return {day, dir:norm(L(moonD, sunD)), sunC:L([.52, .2, .24], [1.0, .86, .7]), amb:L([.17, .16, .26], [.42, .41, .46]), sky:L([.12, .05, .08], [.34, .36, .44]),
+  bg:L([.035, .02, .03], [.12, .1, .09]), torch:1.25 - .75 * day};
+}
+
+// ---------- camera ----------
+function camMats(){
+ const asp = canvas.width / canvas.height, hh = cam.zoom, hw = hh * asp;
+ const dir = [Math.cos(PITCH) * Math.sin(YAW), Math.cos(PITCH) * Math.cos(YAW), Math.sin(PITCH)], c = [cam.tx, cam.ty, 0];
+ const eye = [c[0] + dir[0] * 60, c[1] + dir[1] * 60, dir[2] * 60];
+ const V = lookAt(eye, c, [0, 0, 1]), Pm = ortho(-hw, hw, -hh, hh, 1, 140);
+ return {VP:mul(Pm, V), dir, eye};
+}
+function lightMat(dir){
+ // Turf: zoomed in close, the shadow map covers only the area around the view, so shadows on people stay sharp
+ const near = cam.zoom < 5, half = near ? Math.max(6, cam.zoom * 2.6) : 24;
+ const c = near ? [Math.round(cam.tx * 2) / 2, Math.round(cam.ty * 2) / 2, 0] : [14, 14, 0], e = [c[0] + dir[0] * 50, c[1] + dir[1] * 50, c[2] + dir[2] * 50];
+ return mul(ortho(-half, half, -half, half, 1, 120), lookAt(e, c, Math.abs(dir[2]) > .98 ? [0, 1, 0] : [0, 0, 1]));
+}
+function project(wx, wy, wz){ const m = camMats(), p = xform(m.VP, [wx, wy, wz]), r = canvas.getBoundingClientRect();
+ return [(p[0] * .5 + .5) * r.width, (1 - (p[1] * .5 + .5)) * r.height]; }
+function placeLabels(){ if (!st.labels.length) return; const m = camMats(), r = canvas.getBoundingClientRect();
+ st.labels.forEach(l => { const p = xform(m.VP, [l.x, l.y, l.z]); l.el.style.transform = `translate(${((p[0] * .5 + .5) * r.width).toFixed(1)}px, ${((1 - (p[1] * .5 + .5)) * r.height).toFixed(1)}px)`; }); }
+// the whole walled village fits the width: half of the ring's diagonal, a little margin
+function fit(){ const r = canvas.getBoundingClientRect(), asp = (r.width || 1) / (r.height || 1); cam.tx = 14; cam.ty = 14; cam.zoom = 15 / Math.max(.4, asp); cam.maxZ = Math.max(cam.zoom, 12); clampCam(); st.dirty = true; }
+function clampCam(){ cam.zoom = Math.max(cam.minZ, Math.min(cam.maxZ, cam.zoom)); cam.tx = Math.max(4, Math.min(24, cam.tx)); cam.ty = Math.max(4, Math.min(25, cam.ty)); }
+
+// a tap: the nearest tappable footprint box the ray passes through
+function pick(px, py){ const p = pickPart(px, py); return p ? p.id : null; }
+function pickPart(px, py){
+ // v3.4.1: the round badge and name over a building are what a thumb aims for (on an empty plot they are most of what you see).
+ // A tap right on a label (16 px) picks that building; otherwise the ray decides, and a label within 34 px catches taps the ray misses.
+ let lb = null, ld = 1e9;  // the wide 34 px catch is only for unbuilt plots, so open ground elsewhere still double-taps to fit
+ if (!st.edit && !st.battle && st.labels.length){ const m0 = camMats(), r0 = canvas.getBoundingClientRect();
+  for (const l of st.labels){ const q = xform(m0.VP, [l.x, l.y, l.z]), sx = (q[0] * .5 + .5) * r0.width, sy = (1 - (q[1] * .5 + .5)) * r0.height - 4, d = Math.hypot(sx - px, sy - py); if (d < ld){ ld = d; lb = l; } } }
+ const byLabel = lb ? st.parts.find(q => q.key === lb.key) : null;
+ if (byLabel && ld < 16) return byLabel;
+ const ray = pickRay(px, py); if (ray) return ray;
+ return byLabel && ld < 34 && lb.empty ? byLabel : null;
+}
+function pickRay(px, py){
+ const r = canvas.getBoundingClientRect(), m = camMats(), iv = inv(m.VP);
+ const nx = (px / r.width) * 2 - 1, ny = 1 - (py / r.height) * 2;
+ const a = xform(iv, [nx, ny, -1]), b = xform(iv, [nx, ny, 1]), d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+ // ray against a box: entry t or Infinity
+ const hit = (lo, hi) => { let t0 = 0, t1 = 1; for (let k = 0; k < 3; k++){ if (Math.abs(d[k]) < 1e-9){ if (a[k] < lo[k] || a[k] > hi[k]) return Infinity; continue; }
+  let u = (lo[k] - a[k]) / d[k], v = (hi[k] - a[k]) / d[k]; if (u > v){ const s = u; u = v; v = s; } t0 = Math.max(t0, u); t1 = Math.min(t1, v); if (t0 > t1) return Infinity; } return t0; };
+ let best = null, bt = Infinity, padBest = null, padT = Infinity;
+ for (const p of st.parts){
+  if (hit([p.x0 - .4, p.y0 - .4, 0], [p.x1 + .4, p.y1 + .4, p.top + .3]) === Infinity) continue;   // quick reject
+  const pad = p.boxes[p.boxes.length - 1];
+  for (const q of p.boxes){ const lo = [q[0] + p.x0 - .04, q[1] + p.y0 - .04, q[2]], hi = [lo[0] + q[3] + .08, lo[1] + q[4] + .08, q[2] + q[5] + .04], t = hit(lo, hi);
+   if (q === pad){ if (t < padT){ padT = t; padBest = p; } continue; }   // the ground pad only counts when no real box was hit, so it never steals from a neighbour
+   if (t < bt){ bt = t; best = p; } }
+ }
+ if (!best) best = padBest;
+ return best;
+}
+// ---------- smoke: a few grey blocks drifting up from chimneys ----------
+function stepSmoke(dt){
+ if (st.reduce) { st.puffs.length = 0; return; }
+ st.smokeSrc.forEach((s, i) => { s.acc = (s.acc || hash(i, 3)) + dt; if (s.acc > .7){ s.acc = 0; if (st.puffs.length < 70) st.puffs.push({x:s[0], y:s[1], z:s[2], age:0, sz:.1 + Math.random() * .05}); } });
+ st.puffs.forEach(p => { p.age += dt; p.z += dt * .35; p.x -= dt * .12; p.y += dt * .05; });
+ st.puffs = st.puffs.filter(p => p.age < 3.2);
+}
+// ---------- actors: block people walking routes, working, standing guard ----------
+// an actor: {route:[[x,y,z],...], fig(frame, mode, torch)->boxes, speed, waitEnd:[s,s], workEnd:[bool,bool], torch, loop}
+function rot(B, f){ // f: 0 faces +y, 1 faces +x, 2 faces -y, 3 faces -x
+ if (!f) return B; return B.map(b => { let [x, y, z, w, d, h, m] = b; for (let i = 0; i < f; i++){ const nx = y, ny = -(x + w); x = nx; y = ny; const t = w; w = d; d = t; } return [x, y, z, w, d, h, m]; }); }
+function setActors(list){ st.actors = (list || []).filter(a => a.route && a.route.length).map((a, i) => Object.assign({seg:0, t:0, dir:1, wait:Math.random() * 2, face:0, anim:Math.random() * 4, mode:'idle'}, a)); st.dirty = true; }
+function stepActors(dt){
+ for (const a of st.actors){
+  a.anim += dt;
+  const R = a.route;
+  if (R.length < 2){ a.mode = a.drill ? 'work' : 'idle'; a.pos = R[0]; a.face = a.faceAt || 0; continue; }
+  if (a.wait > 0){ a.wait -= dt; a.mode = a.working ? 'work' : 'idle'; continue; }
+  const i = a.seg, j = i + a.dir, p = R[i], q = R[j], len = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]) || .001;
+  a.t += dt * (a.speed || .9) / len; a.mode = 'walk';
+  const dx = q[0] - p[0], dy = q[1] - p[1]; a.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 0 : 2);
+  if (a.t >= 1){ a.t = 0; a.seg = j;
+   const end = a.seg === R.length - 1 ? 1 : a.seg === 0 ? 0 : -1;
+   if (end >= 0){ a.dir = end === 1 ? -1 : 1; a.wait = a.waitEnd ? a.waitEnd[end] * (.7 + Math.random() * .6) : 0; a.working = !!(a.workEnd && a.workEnd[end]);
+    if (a.working && a.workFace != null && end === 1) a.face = a.workFace; }
+  }
+  const s = R[a.seg], n = R[Math.min(R.length - 1, Math.max(0, a.seg + a.dir))], t = a.wait > 0 ? 0 : a.t;
+  a.pos = [s[0] + (n[0] - s[0]) * t, s[1] + (n[1] - s[1]) * t, s[2] + (n[2] - s[2]) * t];
+ }
+}
+// the building being raised: scaffold poles, then its blocks rise from the ground up
+function animBoxes(){
+ const A = st.anim; if (!A) return [];
+ const p = A.part, k = Math.min(1, A.t / A.dur), top = p.top || 1, cut = top * k, out = [];
+ p.boxes.forEach(b => { if (b[2] >= cut) return; out.push([b[0] + p.x, b[1] + p.y, b[2], b[3], b[4], Math.min(b[5], cut - b[2]), b[6]]); });
+ if (k < 1){ const sh = top + .2, x0 = p.x - .05, y0 = p.y - .05, x1 = p.x + p.fw - .05, y1 = p.y + p.fh - .05;
+  [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => out.push([x, y, 0, .07, .07, sh, 5]));
+  for (let z = .35; z < sh; z += .45){ out.push([x0, y0, z, p.fw, .05, .04, 5]); out.push([x0, y1, z, p.fw, .05, .04, 5]); out.push([x0, y0, z, .05, p.fh, .04, 5]); out.push([x1, y0, z, .05, p.fh, .04, 5]); }
+  // two builders hammering at the front
+  const fr = Math.floor(A.t * 6); [[p.x + p.fw * .3, p.y + p.fh + .25], [p.x + p.fw * .7, p.y + p.fh + .25]].forEach(([x, y], i) => rot(st.fig ? st.fig('villager', fr + i * 2, 'work', false) : [], 2).forEach(b => out.push([b[0] + x, b[1] + y, b[2], b[3], b[4], b[5], b[6]])));
+ }
+ return out;
+}
+function stepAnim(dt){
+ const A = st.anim; if (!A) return;
+ if (st.canAnim && !st.canAnim()) return;      // wait until nothing covers the village
+ A.t += dt;
+ if (A.t > .3 && Math.random() < dt * 6 && st.puffs.length < 70) st.puffs.push({x:A.part.x + Math.random() * A.part.fw, y:A.part.y + A.part.fh, z:.05, age:1.2, sz:.05 + Math.random() * .04});
+ if (A.t >= A.dur){ A.part.anim = false; st.anim = null; if (lastScene) build(lastScene); }
+}
+// ---------- battle replay: a recorded raid played back on the map ----------
+// opts: {frames, tick, units:{id:{look, max}}, items:[{key,x,y,fw,fh,top,max}], speed, onTick(i), onEnd()}
+function battleStep(dt){
+ const Bt = st.battle; if (!Bt || Bt.done) return;
+ if (st.canAnim && !st.canAnim()) return;
+ const prev = Math.floor(Bt.t / Bt.tick); Bt.t += dt * Bt.speed;
+ let i = Math.floor(Bt.t / Bt.tick);
+ if (i >= Bt.frames.length - 1){ i = Bt.frames.length - 1; Bt.t = i * Bt.tick; }
+ for (let k = prev + 1; k <= i; k++){ const f = Bt.frames[k]; if (f && f.s) f.s.forEach(s => Bt.shots.push({s, age:0})); }
+ Bt.shots.forEach(x => x.age += dt * Bt.speed); Bt.shots = Bt.shots.filter(x => x.age < .35);
+ // fire and smoke on badly hurt buildings
+ const f = Bt.frames[i]; Bt.items.forEach((it, j) => { const hp = f.b[j]; if (it.max && hp > 0 && hp < it.max * .5 && Math.random() < dt * Bt.speed * 3 && st.puffs.length < 90) st.puffs.push({x:it.x + it.fw * (.3 + Math.random() * .4), y:it.y + it.fh * (.3 + Math.random() * .4), z:it.top * .7, age:0, sz:.12 + Math.random() * .06}); });
+ // the camera drifts after the fighting until you take over with a finger
+ if (Bt.follow){ let sx = 0, sy = 0, n = 0; f.u.forEach(u => { if (u[6] && u[0] < 100){ sx += u[1]; sy += u[2]; n++; } });
+  if (n){ const tx = (sx / n) * .7 + 14 * .3, ty = (sy / n) * .7 + 14 * .3, k = Math.min(1, dt * 1.2); cam.tx += (tx - cam.tx) * k; cam.ty += (ty - cam.ty) * k; cam.zoom += (Bt.zoom - cam.zoom) * k; clampCam(); st.dirty = true; } }
+ if (i !== Bt.last){ Bt.last = i; Bt.onTick && Bt.onTick(i); }
+ if (Bt.zoneT > 0){ Bt.zoneT -= dt; st.dirty = true; }
+ if (Bt.live) return;
+ if (i >= Bt.frames.length - 1 && !Bt.done){ Bt.done = true; Bt.endT = setTimeout(() => { if (st.battle === Bt){ st.battle = null; Bt.onEnd && Bt.onEnd(); } }, 900); }
+}
+function battleBoxes(V, I){
+ const Bt = st.battle; if (!Bt) return;
+ const i = Math.min(Bt.frames.length - 1, Math.floor(Bt.t / Bt.tick)), j = Math.min(Bt.frames.length - 1, i + 1), a = Bt.frames[i], b = Bt.frames[j], k = Bt.t / Bt.tick - i;
+ const nb = {}; b.u.forEach(u => nb[u[0]] = u);
+ for (const u of a.u){ if (!u[6]) continue; const n = nb[u[0]] || u, x = u[1] + (n[1] - u[1]) * k, y = u[2] + (n[2] - u[2]) * k, meta = Bt.units[u[0]] || {};
+  if (cam.zoom < 6 && Math.hypot(x - cam.tx, y - cam.ty) > cam.zoom * 2.6 + 1.5) continue;   // Turf: zoomed in, people far off screen are not drawn
+  const mode = u[4] === 0 ? 'walk' : u[4] === 1 ? 'work' : 'idle', fr = Math.floor(Bt.t * (mode === 'walk' ? 7 : 4));
+  pushFig(V, I, st.fig(meta.look, fr, mode, false), x, y, 0, u[5]);
+  if (meta.max && u[3] < meta.max){ const w = .44, fr2 = Math.max(0, u[3] / meta.max), z = meta.fly ? 1.32 : (meta.barZ || .72);   // a life bar over the head
+   pushBox(V, I, [x - w / 2, y, z, w, .05, .05, 13], 0, 0); pushBox(V, I, [x - w / 2, y - .005, z + .002, w * fr2, .06, .05, meta.side === 'a' ? 33 : 32], 0, 0); }
+ }
+ Bt.items.forEach((it, n) => { if (!it.max) return; const hp = a.b[n]; if (hp >= it.max || hp <= 0) return; const w = Math.min(1.6, it.fw * .7), z = it.top + .25, cx = it.x + it.fw / 2 - w / 2, cy = it.y + it.fh / 2;
+  pushBox(V, I, [cx, cy, z, w, .07, .06, 13], 0, 0); pushBox(V, I, [cx, cy - .005, z + .002, w * hp / it.max, .08, .06, 9], 0, 0); });
+ for (const sh of Bt.shots){ const [x0, y0, x1, y1, kd] = sh.s, p = Math.min(1, sh.age / .3);
+  if (kd === 2){ for (let q = 0; q < 4; q++) pushBox(V, I, [x0 - .2 + q * .12, y0 - .05, 0, .05, .05, .2 * (1 - p), 33], 0, 0); continue; }
+  const sm = st.shotMats;
+  if (sm){ const far = Math.hypot(x1 - x0, y1 - y0) || 1, q = Math.min(1, sh.age / Math.min(.16, .05 + far * .022)), q0 = Math.max(0, q - .55 / far), za = kd === 0 ? 1.0 : .44, zb = .36; if (q >= 1 && sh.age > .2) continue;
+   pushCap(V, I, ['c', x0 + (x1 - x0) * q0, y0 + (y1 - y0) * q0, za + (zb - za) * q0, x0 + (x1 - x0) * q, y0 + (y1 - y0) * q, za + (zb - za) * q, .005, .014, sm[kd]], 5); continue; }
+  const x = x0 + (x1 - x0) * p, y = y0 + (y1 - y0) * p, z = .9 * (1 - p) + .35 + Math.sqrt(Math.max(0, p * (1 - p))) * .8;
+  pushBox(V, I, [x - .04, y - .04, z, .08, .08, .08, kd === 3 ? 12 : kd === 1 ? 9 : 23], 0, 0); }
+ if (Bt.zone && Bt.zoneT > 0){ for (const [zx, zy] of Bt.zone) pushBox(V, I, [zx + .06, zy + .06, .01, .88, .88, .02, 33], 0, 0); }
+}
+function battleLights(){ const Bt = st.battle; if (!Bt) return []; return Bt.shots.filter(s => s.s[4] === 3).slice(0, 6).map(s => { const p = Math.min(1, s.age / .3); return [s.s[0] + (s.s[2] - s.s[0]) * p, s.s[1] + (s.s[3] - s.s[1]) * p, .6, 1.2]; }); }
+
+// v3.4 figures carry fine detail (eyes, teeth, buckles); zoomed out it is too small to see, so it is skipped to save the phone some work
+function lod(bs){ if (cam.zoom < 6.5) return bs; return bs.filter(b => b[3] > .03 || b[4] > .03 || b[5] > .045); }
+function dynGeo(){
+ const V = [], I = [];
+ st.puffs.forEach(p => { const s = p.sz * (1 + Math.min(p.age, 1.2) * .6) * Math.max(.2, 1 - Math.max(0, p.age - 1.2) / 2.4); pushBox(V, I, [p.x - s / 2, p.y - s / 2, p.z, s, s, s, 24], 0, 0); });
+ st.dynLights = [];
+ for (const a of st.actors){ if (!a.pos) continue;
+  const fr = a.mode === 'walk' ? Math.floor(a.anim * 7) : a.mode === 'work' ? Math.floor(a.anim * (a.drill ? 2.5 : 3.2)) : 0;
+  pushFig(V, I, a.fig(fr, a.mode, a.torch), a.pos[0], a.pos[1], a.pos[2], a.face);
+  if (a.torch) st.dynLights.push([a.pos[0], a.pos[1], a.pos[2] + .5, 1.6]); }
+ animBoxes().forEach(b => pushBox(V, I, b, 0, 0));
+ battleBoxes(V, I); st.dynLights = st.dynLights.concat(battleLights());
+ const D = st.drag; if (D && D.part){ const p = D.part, lift = .14, m = D.ok ? 32 : 33;
+  p.boxes.forEach(b => pushBox(V, I, [b[0] + D.x, b[1] + D.y, b[2] + lift, b[3], b[4], b[5], b[6]], 0, 0));
+  const fw = p.fw, fh = p.fh, t = .08, z = .03;
+  [[0, 0, fw, t], [0, fh - t, fw, t], [0, 0, t, fh], [fw - t, 0, t, fh]].forEach(([x, y, w, d]) => pushBox(V, I, [D.x + x, D.y + y, z, w, d, .03, m], 0, 0));
+  pushBox(V, I, [D.x + .1, D.y + .1, .01, fw - .2, fh - .2, .015, m], 0, 0); }
+ editMarks(V, I);
+ dyn = upload(dyn, V, I);
+}
+
+// v3.4 placement marks: while a building is picked or dragged, every tower's reach is drawn on the ground
+// (bright for the picked tower, dim gold for the rest) and the picked footprint gets a teal outline
+function ringDashes(V, I, x0, y0, fw, fh, r, m){
+ const seg = [], L = (fw + fh) * 2 + 2 * Math.PI * r, n = Math.max(24, Math.round(L / .42));
+ for (let i = 0; i < n; i++){ let d = (i + .5) / n * L, px, py;
+  const e = [[fw, 0], [r * Math.PI / 2, 1], [fh, 2], [r * Math.PI / 2, 3], [fw, 4], [r * Math.PI / 2, 5], [fh, 6], [r * Math.PI / 2, 7]];
+  for (const [len, k] of e){ if (d > len){ d -= len; continue; }
+   const a = d / r;
+   if (k === 0){ px = x0 + d; py = y0 - r; } else if (k === 1){ px = x0 + fw + Math.sin(a) * r; py = y0 - Math.cos(a) * r; }
+   else if (k === 2){ px = x0 + fw + r; py = y0 + d; } else if (k === 3){ px = x0 + fw + Math.cos(a) * r; py = y0 + fh + Math.sin(a) * r; }
+   else if (k === 4){ px = x0 + fw - d; py = y0 + fh + r; } else if (k === 5){ px = x0 - Math.sin(a) * r; py = y0 + fh + Math.cos(a) * r; }
+   else if (k === 6){ px = x0 - r; py = y0 + fh - d; } else { px = x0 - Math.cos(a) * r; py = y0 - Math.sin(a) * r; }
+   break; }
+  if (px == null) continue; pushBox(V, I, [px - .07, py - .07, .03, .14, .14, .03, m], 0, 0); } }
+function editMarks(V, I){
+ const E = st.edit; if (!E || !E.h || E.mode !== 'move') return;
+ const D = st.drag, act = D ? D.key : st.sel; if (act == null) return;
+ for (const p of st.parts){ const r = E.h.ring ? E.h.ring(p.key) : 0; if (!(r > 0)) continue;
+  const fw = p.x1 - p.x0, fh = p.y1 - p.y0, here = D && D.key === p.key, x0 = here ? D.x : p.x0, y0 = here ? D.y : p.y0;
+  ringDashes(V, I, x0, y0, fw, fh, r, p.key === act ? 12 : 9); }
+ if (!D){ const p = st.parts.find(q => q.key === act); if (p){ const fw = p.x1 - p.x0, fh = p.y1 - p.y0, t = .07, z = .14;
+  [[0, 0, fw, t], [0, fh - t, fw, t], [0, 0, t, fh], [fw - t, 0, t, fh]].forEach(([x, y, w, d]) => pushBox(V, I, [p.x0 + x - .04, p.y0 + y - .04, z, w + .08, d + .08, .04, 12], 0, 0)); } }
+}
+
+// ---------- draw ----------
+function draw(now){
+ if (!gl || lost || !geo) return;
+ const S = sky(), m = camMats(), LVP = lightMat(S.dir);
+ dynGeo();
+ // shadow pass
+ gl.bindFramebuffer(gl.FRAMEBUFFER, shFb); gl.viewport(0, 0, SHADOW, SHADOW); gl.clear(gl.DEPTH_BUFFER_BIT);
+ gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
+ gl.useProgram(PD.p); gl.uniformMatrix4fv(PD.u.uLVP, false, LVP);
+ gl.bindVertexArray(geo.vao); gl.drawElements(gl.TRIANGLES, geo.n, gl.UNSIGNED_INT, 0);
+ if (dyn && dyn.n){ gl.bindVertexArray(dyn.vao); gl.drawElements(gl.TRIANGLES, dyn.n, gl.UNSIGNED_INT, 0); }
+ gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+ // main pass
+ gl.viewport(0, 0, canvas.width, canvas.height);
+ gl.clearColor(S.bg[0], S.bg[1], S.bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+ gl.useProgram(P.p); const u = P.u;
+ gl.uniformMatrix4fv(u.uVP, false, m.VP); gl.uniformMatrix4fv(u.uLVP, false, LVP);
+ gl.uniform4fv(u.uMat, st.mats); gl.uniform1f(u.uGrid, st.edit ? 1 : 0); gl.uniform3fv(u.uAmb, S.amb); gl.uniform3fv(u.uSky, S.sky); gl.uniform3fv(u.uSunC, S.sunC); gl.uniform3fv(u.uSunD, S.dir);
+ gl.uniform3fv(u.uBg, S.bg); gl.uniform2f(u.uCtr, 14, 14); gl.uniform1f(u.uTime, (now - st.t0) / 1000); gl.uniform1f(u.uTorch, S.torch); gl.uniform1f(u.uFlick, st.reduce ? 0 : 1);
+ // the lights nearest the camera's focus
+ const Ls = st.lights.concat(st.dynLights || []).sort((a, b) => Math.hypot(a[0] - cam.tx, a[1] - cam.ty) - Math.hypot(b[0] - cam.tx, b[1] - cam.ty)).slice(0, MAXL), lp = new Float32Array(MAXL * 4);
+ Ls.forEach((L, i) => lp.set(L, i * 4)); gl.uniform1i(u.uNL, Ls.length); gl.uniform4fv(u.uLP, lp);
+ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, shTex); gl.uniform1i(u.uSh, 0);
+ gl.bindVertexArray(geo.vao); gl.drawElements(gl.TRIANGLES, geo.n, gl.UNSIGNED_INT, 0);
+ if (dyn && dyn.n){ gl.bindVertexArray(dyn.vao); gl.drawElements(gl.TRIANGLES, dyn.n, gl.UNSIGNED_INT, 0); }
+ gl.bindVertexArray(null);
+ if (host) host.style.background = `rgb(${S.bg.map(v => Math.round(v * 255)).join(',')})`;
+}
+function loop(now){
+ if (!st.mounted) return;
+ if (!canvas.isConnected){ st.mounted = false; return; }
+ st.raf = requestAnimationFrame(loop);
+ // nothing to draw when the app is in the background, the tab is hidden, or the village is scrolled out of sight
+ if (document.hidden || !canvas.offsetWidth || !st.visible) return;
+ // idle animation (torch flicker, smoke) runs at about 24 fps, slower if frames are expensive on this phone
+ const dt = Math.min(.1, (now - (st.last || now)) / 1000), animate = !st.reduce, idleGap = Math.max(st.battle ? 30 : 42, st.cost * 4), due = st.dirty || (animate && now - st.last >= idleGap);
+ if (!due) return;
+ stepSmoke(dt); if (!st.reduce) stepActors(dt); else st.actors.forEach(a => { if (!a.pos){ const R = a.route, e = R[R.length - 1]; a.pos = e; a.mode = 'idle'; a.face = a.workFace || 0; } }); stepAnim(dt); battleStep(dt); st.last = now;
+ if (st.dirty) placeLabels();
+ st.dirty = false; const t0 = performance.now(); draw(now); st.cost = st.cost * .8 + (performance.now() - t0) * .2;
+ st.frames++; if (now - st.fpsT > 1000){ st.fps = Math.round(st.frames * 1000 / (now - st.fpsT)); st.frames = 0; st.fpsT = now; }
+}
+
+// ---------- input: drag pans, pinch and wheel zoom, a short still touch taps ----------
+const ptr = new Map(); let pinch0 = 0, zoom0 = 0, mid0 = null, downAt = 0, moved = 0, downXY = null, lastTapAt = 0;
+// the ground point under a screen point (z = 0), used so a drag or pinch keeps the ground under the fingers
+function groundAt(px, py){ const r = canvas.getBoundingClientRect(), iv = inv(camMats().VP), nx = (px / r.width) * 2 - 1, ny = 1 - (py / r.height) * 2;
+ const a = xform(iv, [nx, ny, -1]), b = xform(iv, [nx, ny, 1]), t = a[2] / (a[2] - b[2]); return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
+function local(e){ const r = canvas.getBoundingClientRect(); return [e[0] - r.left, e[1] - r.top]; }
+let lastPaint = null;
+function tileAt(cx, cy){ const g = groundAt(...local([cx, cy])); return [Math.floor(g[0]), Math.floor(g[1]), g]; }
+function onDown(e){ try { canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); } catch (err){} ptr.set(e.pointerId, [e.clientX, e.clientY]);
+ if (st.battle) st.battle.follow = false;
+ if (st.edit && ptr.size === 1){
+  const E = st.edit, r = canvas.getBoundingClientRect();
+  if (E.mode === 'move'){ const p = pickPart(e.clientX - r.left, e.clientY - r.top);
+   if (p && E.h.movable(p.key)){ const [, , g] = tileAt(e.clientX, e.clientY); st.drag = {key:p.key, ox:g[0] - p.x0, oy:g[1] - p.y0, x:p.x0, y:p.y0, x0:p.x0, y0:p.y0, ok:true}; st.sel = p.key; if (E.h.select) E.h.select(p.key, p.x0, p.y0); if (lastScene) build(lastScene); moved = 99; return; } }
+  else if (E.mode === 'paint' || E.mode === 'erase'){ const [x, y] = tileAt(e.clientX, e.clientY); lastPaint = x + ',' + y; E.h[E.mode](x, y); moved = 99; return; }
+ }
+ if (st.drag && ptr.size === 2){ const D = st.drag; st.drag = null; if (st.edit && st.edit.h.select) st.edit.h.select(D.key, D.x0, D.y0); if (lastScene) build(lastScene); }
+ if (ptr.size === 1){ downAt = performance.now(); moved = 0; downXY = [e.clientX, e.clientY]; const r = canvas.getBoundingClientRect(); window.VIL.lastPick = pick(e.clientX - r.left, e.clientY - r.top); }
+ if (ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); zoom0 = cam.zoom; mid0 = groundAt(...local([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2])); moved = 99; } }
+function onMove(e){ if (!ptr.has(e.pointerId)) return; let prev = ptr.get(e.pointerId), cur = [e.clientX, e.clientY];
+ if (st.drag && ptr.size === 1){ ptr.set(e.pointerId, cur); const [, , g] = tileAt(cur[0], cur[1]), D = st.drag, x = Math.round(g[0] - D.ox), y = Math.round(g[1] - D.oy);
+  if (x !== D.x || y !== D.y){ D.x = x; D.y = y; D.ok = st.edit.h.canPlace(D.key, x, y); st.dirty = true; if (st.edit.h.hover) st.edit.h.hover(D.key, x, y, D.ok); } return; }
+ if (st.edit && (st.edit.mode === 'paint' || st.edit.mode === 'erase') && ptr.size === 1){ ptr.set(e.pointerId, cur); const [x, y] = tileAt(cur[0], cur[1]), k = x + ',' + y; if (k !== lastPaint){ lastPaint = k; st.edit.h[st.edit.mode](x, y); } return; }
+ if (ptr.size === 1){
+  // grab the ground: whatever was under the finger stays under the finger
+  const far = downXY ? Math.hypot(cur[0] - downXY[0], cur[1] - downXY[1]) : 99;
+  if (moved < 10 && far < 12){ ptr.set(e.pointerId, cur); return; }       // v3.4.1 tap slop: under 12 px from the press, stay put
+  if (moved < 10 && downXY){ moved = 10; prev = downXY.slice(); }                     // first real move: pan from the press point so nothing jumps
+  const g0 = groundAt(...local(prev)), g1 = groundAt(...local(cur)); ptr.set(e.pointerId, cur);
+  moved += Math.abs(cur[0] - prev[0]) + Math.abs(cur[1] - prev[1]);
+  cam.tx += g0[0] - g1[0]; cam.ty += g0[1] - g1[1]; clampCam(); st.dirty = true; return; }
+ ptr.set(e.pointerId, cur);
+ if (ptr.size === 2 && pinch0){ const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), mid = local([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+  // zoom toward the point between the fingers, and let the two fingers pan together
+  cam.zoom = zoom0 * pinch0 / d; clampCam(); const after = groundAt(...mid);
+  cam.tx += mid0[0] - after[0]; cam.ty += mid0[1] - after[1]; clampCam(); st.dirty = true; } }
+function onUp(e){ const was = ptr.size; ptr.delete(e.pointerId);
+ if (st.drag && was === 1){ const D = st.drag; st.drag = null; lastPaint = null;
+  if (D.ok && (D.x !== D.x0 || D.y !== D.y0)){ st.edit.h.place(D.key, D.x, D.y); if (st.edit && st.edit.h.select) st.edit.h.select(D.key, D.x, D.y); }
+  else { if (!D.ok) st.edit.h.reject(D.key); if (st.edit.h.select) st.edit.h.select(D.key, D.x0, D.y0); if (lastScene) build(lastScene); } return; }
+ lastPaint = null;
+ if (ptr.size < 2){ pinch0 = 0; zoom0 = cam.zoom; }
+ if (ptr.size === 1){ const [k, v] = [...ptr.entries()][0]; ptr.set(k, v); }  // the finger left behind keeps panning from where it is
+ if (was === 1 && moved < 10 && performance.now() - downAt < 700){
+  if (st.battle && st.battle.live && st.onGround){ const g = groundAt(...local([e.clientX, e.clientY])); st.onGround(g[0], g[1]); return; }
+  const now = performance.now(), r = canvas.getBoundingClientRect(), id = pick(e.clientX - r.left, e.clientY - r.top);
+  if (st.edit && st.edit.mode === 'move'){ const p = pickPart(e.clientX - r.left, e.clientY - r.top); st.sel = p ? p.key : null; st.dirty = true; if (st.edit.h.select) st.edit.h.select(st.sel, p ? p.x0 : 0, p ? p.y0 : 0); if (p) return; }
+  if (!id && now - lastTapAt < 350){ fit(); lastTapAt = 0; return; }           // double-tap empty ground: back to the whole village
+  lastTapAt = now; if (id && st.onTap) st.onTap(id); } }
+function onWheel(e){ e.preventDefault(); const p = local([e.clientX, e.clientY]), g0 = groundAt(...p); cam.zoom *= Math.exp(e.deltaY * .0012); clampCam(); const g1 = groundAt(...p); cam.tx += g0[0] - g1[0]; cam.ty += g0[1] - g1[1]; clampCam(); st.dirty = true; }
+function resize(){ if (!canvas || !host) return; const r = host.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+ const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr)); if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; } st.dirty = true; }
+
+// ---------- public ----------
+function mount(el, opts){
+ opts = opts || {};
+ if (!canvas){
+  canvas = document.createElement('canvas'); canvas.className = 'vilcv';
+  labelLayer = document.createElement('div'); labelLayer.className = 'vlabs';
+  try { if (!initGL()) { canvas = null; return false; } } catch (err){ console.warn('village renderer', err); canvas = null; gl = null; return false; }
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; });
+  canvas.addEventListener('webglcontextrestored', () => { try { initGL(); lost = false; if (lastScene) build(lastScene); st.dirty = true; } catch (err){ console.warn(err); } });
+  canvas.addEventListener('pointerdown', onDown); canvas.addEventListener('pointermove', onMove); canvas.addEventListener('pointerup', onUp); canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('wheel', onWheel, {passive:false});
+  window.addEventListener('resize', resize);
+  if (window.IntersectionObserver){ new IntersectionObserver(es => { st.visible = es[es.length - 1].isIntersecting; if (st.visible) st.dirty = true; }).observe(canvas); }
+ }
+ if (lost) return false;
+ host = el; host.appendChild(canvas); host.appendChild(labelLayer);
+ st.onTap = opts.onTap || null; st.onGround = opts.onGround || null; st.palette = opts.palette || null; st.shotMats = opts.shotMats || null; st.reduce = !!opts.reduce; st.fig = opts.figure || null; st.canAnim = opts.canAnimate || null;
+ st.mats = new Float32Array(96 * 4); (opts.mats || []).forEach((m, i) => { if (i < 96) st.mats.set([m[0] / 255, m[1] / 255, m[2] / 255, m[3] || 0], i * 4); });
+ st.mounted = true; resize(); if (!cam.fitted){ fit(); cam.fitted = true; } cancelAnimationFrame(st.raf); st.last = 0; st.raf = requestAnimationFrame(loop);
+ return true;
+}
+function update(scene){ lastScene = scene; if (!gl || lost) return; build(scene); setActors(scene.actors); }
+function unmount(){ st.mounted = false; cancelAnimationFrame(st.raf); if (canvas && canvas.parentNode) canvas.parentNode.removeChild(canvas); if (labelLayer && labelLayer.parentNode) labelLayer.parentNode.removeChild(labelLayer); host = null; }
+window.VIL = {mount, update, unmount, project,
+ setHour(h){ st.hour = h; st.dirty = true; },
+ getHour(){ return st.hour; },
+ battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; st.dirty = true; },
+ battleSpeed(s){ if (st.battle) st.battle.speed = s; },
+ battleEnd(){ if (st.battle) st.battle.live = false; },
+ flashZone(tiles){ if (st.battle){ st.battle.zone = tiles; st.battle.zoneT = 1.2; st.dirty = true; } },
+ battleSkip(){ const Bt = st.battle; if (!Bt) return; clearTimeout(Bt.endT); st.battle = null; Bt.onEnd && Bt.onEnd(); },
+ battleInfo(){ const Bt = st.battle; return Bt ? {i:Math.floor(Bt.t / Bt.tick), n:Bt.frames.length, speed:Bt.speed, done:Bt.done} : null; },
+ edit(mode, handlers){ st.edit = mode ? {mode, h:handlers || (st.edit && st.edit.h)} : null; st.drag = null; st.sel = null; if (host) host.classList.toggle('editing', !!mode); st.dirty = true; },
+ select(key){ st.sel = key == null ? null : key; st.dirty = true; },
+ dragState(){ return st.drag ? {key:st.drag.key, x:st.drag.x, y:st.drag.y, ok:st.drag.ok} : null; },
+ stats(){ return {fps:st.fps, verts:st.verts, lights:st.lights.length, lost, zoom:cam.zoom, actors:st.actors.length, moving:st.actors.filter(a => a.mode === 'walk').length, working:st.actors.filter(a => a.mode === 'work').length, building:st.anim ? +(st.anim.t / st.anim.dur).toFixed(2) : null}; },
+ view(v){ if (v){ Object.assign(cam, v); clampCam(); st.dirty = true; } return {tx:cam.tx, ty:cam.ty, zoom:cam.zoom}; },
+ pick(px, py){ return pick(px, py); },
+ fit(){ fit(); return {tx:cam.tx, ty:cam.ty, zoom:cam.zoom}; },
+ loseContext(){ const ext = gl && gl.getExtension('WEBGL_lose_context'); if (ext){ ext.loseContext(); setTimeout(() => ext.restoreContext(), 300); return true; } return false; }};
+})();
+
+</script>
+<script>
+const VER = '0.3.2', BUILD_DATE = 'Nov 20 2026';
+// ===== TURF UI =====
+// Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
+(function(){
+'use strict';
+const B = BASE, T = TURF, $ = id => document.getElementById(id);
+const SAVE_KEY = 'turf.save.v1';
+const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false};
+const GANG_PICK = ['lav', 'teal', 'red', 'green', 'orange', 'blue'];   // gold belongs to the Boombox Kings
+
+// ---------- save (guarded: a phone that blocks storage still plays, it just forgets) ----------
+let memSave = null;
+function loadSave(){
+ let raw = null; try { raw = localStorage.getItem(SAVE_KEY); } catch (e){}
+ let s = {}; try { s = raw ? JSON.parse(raw) || {} : (memSave || {}); } catch (e){ s = {}; }
+ const out = Object.assign(JSON.parse(JSON.stringify(DEFAULT_SAVE)), s);
+ const okRep = r => r && r.recipe && ['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r.recipe[k]));
+ out.reports = Array.isArray(out.reports) ? out.reports.filter(okRep).slice(0, 10) : [];
+ // anything a save holds is checked before use: a block that fits the rules, whole numbers, a color that exists
+ out.block = T.cleanBlock(out.block);
+ if (!out.army || typeof out.army !== 'object') out.army = {}; T.ORDER.forEach(k => out.army[k] = Math.max(0, Math.min(99, out.army[k] | 0)));
+ out.cash = Math.max(0, Math.min(999999, out.cash | 0)); out.sup = Math.max(0, Math.min(999999, out.sup | 0)); out.nk = Math.max(20, out.nk | 0);
+ if (GANG_PICK.indexOf(out.color) < 0) out.color = 'lav';
+ return out;
+}
+function saveGame(){ memSave = save; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e){} }
+let save = loadSave();
+
+// ---------- toast ----------
+let toastT = 0;
+function toast(msg, ms, onTap){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); t.classList.toggle('act', !!onTap); t.onclick = onTap || null;
+ clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on', 'act'), ms || 1800); }
+$('badge').onclick = () => toast('Turf v' + VER + ' · ' + BUILD_DATE);
+
+// ---------- layers ----------
+function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); }
+
+// ---------- the wordmark: TURF in chunky blocks, like the buildings ----------
+function wordmark(){
+ const G = {T:['11111', '00100', '00100', '00100', '00100'], U:['10001', '10001', '10001', '10001', '01110'], R:['11110', '10001', '11110', '10010', '10001'], F:['11111', '10000', '11110', '10000', '10000']};
+ let s = '', x = 0;
+ for (const ch of 'TURF'){ G[ch].forEach((row, y) => [...row].forEach((c, i) => { if (c === '1'){ const px = x + i * 10, py = y * 10;
+   s += `<rect x="${px + 2}" y="${py + 2}" width="9" height="9" fill="#5a2620"/><rect x="${px}" y="${py}" width="9" height="9" fill="${ch === 'U' ? '#b9a3ff' : '#f2a23a'}"/>`; } })); x += 58; }
+ return `<svg viewBox="0 0 232 52" role="img" aria-label="Turf">${s}</svg>`;
+}
+$('title').querySelector('h1').innerHTML = wordmark();
+
+// ---------- troop icons for the bar: the same person the game draws, seen from the front as flat shapes ----------
+function miniIcon(look, size){
+ const P = MINI.fig(look, 0, 'idle', 1), cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1), px = Math.round(size * d);
+ cv.width = cv.height = px; cv.style.width = cv.style.height = size + 'px'; cv.setAttribute('aria-hidden', 'true');
+ const c = cv.getContext('2d'), col = m => { const q = ART.MATS[m] || [120, 120, 120]; return 'rgb(' + q[0] + ',' + q[1] + ',' + q[2] + ')'; };
+ const S = px / .8, ox = px * .56, oy = px * .985;
+ const items = P.map(q => ({q, y:typeof q[0] === 'number' ? q[1] + q[4] / 2 : q[0] === 'e' ? q[2] : (q[2] + q[5]) / 2})).sort((a, b) => a.y - b.y);
+ for (const it of items){ const q = it.q;
+  if (q[0] === 'e'){ c.fillStyle = col(q[7]); c.beginPath(); c.ellipse(ox - q[1] * S, oy - q[3] * S, q[4] * S, q[6] * S, 0, 0, 7); c.fill(); }
+  else if (q[0] === 'c'){ c.strokeStyle = col(q[9]); c.lineCap = 'round'; c.lineWidth = (q[7] + q[8]) * S; c.beginPath(); c.moveTo(ox - q[1] * S, oy - q[3] * S); c.lineTo(ox - q[4] * S, oy - q[6] * S); c.stroke(); }
+  else { c.fillStyle = col(q[6]); c.fillRect(ox - (q[0] + q[3]) * S, oy - (q[2] + q[5]) * S, q[3] * S, q[5] * S); } }
+ return cv;
+}
+const iconLook = k => 'm|' + {brawler:3, shooter:8, bruiser:21}[k] + '|' + MY_CREW + '|' + k;
+
+// ---------- the map: 3D renderer, or a flat canvas when WebGL2 is missing ----------
+const PALETTE = {sunC:[[.46, .44, .62], [1.0, .9, .76]], amb:[[.27, .27, .36], [.46, .46, .5]], sky:[[.07, .07, .13], [.33, .36, .44]], bg:[[.05, .05, .08], [.15, .16, .19]], torch:[1.35, .55]};
+const EDGE = ART.edge();
+let gl3d = false;
+const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+// people get simpler as the camera pulls back: full detail up close, body blocks only when the whole block is on screen
+function detail(){ const z = gl3d ? VIL.view().zoom : 9; return z < 3.4 ? 2 : z < 8 ? 1 : 0; }
+function figFn(look, frame, mode){ return ART.figure(look, frame, mode, detail()); }
+let MY_CREW = save.color;
+function mountMap(){
+ gl3d = !!(window.VIL && VIL.mount($('stage'), {mats:ART.MATS, figure:figFn, palette:PALETTE, shotMats:[9, 9, 22, 12], reduce, onGround, onTap:() => {}}));
+ if (!gl3d){ $('fb').style.display = 'block'; $('nogl').style.display = 'block';
+  if (location.protocol !== 'https:' && location.protocol !== 'http:') $('noglMsg').textContent = "Opened from a file, so the 3D block may not draw. Open Turf from its web address for the full look."; setTimeout(() => $('nogl').style.display = 'none', 6000); FB.init(); }
+}
+
+// scene parts from a block: buildings standing, or rubble once they are knocked down. The block on screen is either a rival's or your own.
+let BLOCK = [], PARTS = [], RUBBLE = [], fenceSet = new Set(), blockKind = 'enemy', crewColor = 'gold', vicOn = true, lastDown = '';
+function fenceShape(x, y){ return (fenceSet.has(x + ',' + (y - 1)) ? 1 : 0) | (fenceSet.has((x + 1) + ',' + y) ? 2 : 0) | (fenceSet.has(x + ',' + (y + 1)) ? 4 : 0) | (fenceSet.has((x - 1) + ',' + y) ? 8 : 0); }
+function setBlock(list, kind){
+ BLOCK = list; blockKind = kind; crewColor = kind === 'home' ? MY_CREW : 'gold';
+ fenceSet = new Set(BLOCK.filter(i => i.k === 'fence').map(i => i.x + ',' + i.y));
+ PARTS = BLOCK.map((it, n) => { const d = T.BDEFS[it.k], a = ART.blocks(it.k, n % 2, it.k === 'fence' ? fenceShape(it.x, it.y) : 0);
+  return {id:it.key, key:it.key, k:it.k, x:it.x, y:it.y, fw:d.fp[0], fh:d.fp[1], boxes:a.boxes, lights:a.lights, smoke:a.smoke, top:a.top, tap:kind === 'home'}; });
+ RUBBLE = kind === 'home' ? [] : PARTS.map(p => Object.assign({}, p, {boxes:ART.rubble(p.fw, p.fh, p.k), lights:[], smoke:[], top:.3}));
+ lastDown = 'x';
+}
+setBlock(T.RESCUE_BLOCK, 'enemy');
+let viceroyFree = false;
+function viceroyActor(){
+ if (!viceroyFree) return {route:[[12.35, 15.35, 0]], fig:(fr, mode) => figFn('viceroy_tied', fr, 'idle'), faceAt:0};
+ return {route:[[12.35, 15.35, 0], [12.35, 16.5, 0], [14.5, 16.5, 0], [14.5, 21.4, 0]], fig:(fr, mode) => figFn('viceroy', fr, mode), speed:1.1, waitEnd:[1.5, 4]};
+}
+// the part of the yard your Main House level has not opened yet is left as a dark, empty lot
+function homeTile(x, y){ const L = T.lotsOpen(T.houseLv(BLOCK));
+ if (x >= 7 && x <= 21 && y >= 6 && y <= 20 && (x < L.x0 || x > L.x1 || y < L.y0 || y > L.y1)){ const r = ((x * 73856093) ^ (y * 19349663)) >>> 0; return r % 3 === 0 ? 23 : (r % 5 === 0 ? 15 : 1); }
+ return ART.tile(x, y); }
+const HANG = {house:2, gym:2, pad:1, hustle:1};   // how many of your people stand out front
+function solidAt(x, y){ return BLOCK.some(i => { const f = T.BDEFS[i.k].fp; return x >= i.x && x < i.x + f[0] && y >= i.y && y < i.y + f[1]; }); }
+function sceneFor(down){
+ const home = blockKind === 'home', parts = PARTS.map((p, i) => down && down[i] ? RUBBLE[i] : p), actors = !home && vicOn ? [viceroyActor()] : [];
+ // the people on the porches and the roof: they stand at their post until their building falls
+ PARTS.forEach((p, i) => { const post = ART.POSTS[p.k]; if (!post || (down && down[i])) return; const look = 'm|' + (900 + i) + '|' + crewColor + '|shooter';
+  actors.push({route:[[p.x + post[0], p.y + post[1], post[2]]], faceAt:0, fig:fr => figFn(look, 0, 'work')}); });
+ if (home) PARTS.forEach((p, i) => { for (let j = 0; j < (HANG[p.k] || 0); j++){ const x = p.x + .55 + j * .95, y = p.y + p.fh + .4; if (solidAt(Math.floor(x), Math.floor(y))) continue;
+   const look = 'm|' + (300 + i * 7 + j) + '|' + MY_CREW + '|' + T.ORDER[(i + j) % 2]; actors.push({route:[[x, y, 0]], faceAt:0, fig:fr => figFn(look, fr, 'idle')}); } });
+ return {w:28, h:28, tile:home ? homeTile : ART.tile, edge:EDGE, parts, actors};
+}
+function paint(down){ const key = down ? down.join('') : ''; if (key === lastDown && gl3d) return; lastDown = key;
+ if (gl3d) VIL.update(sceneFor(down)); else FB.scene(down); }
+
+// ---------- flat fallback map (no WebGL2): top-down tiles, buildings and people ----------
+const FB = (() => {
+ let cv, cx, down = null, frame = null, zoneT = 0, zone = null;
+ const col = m => { const c = ART.MATS[m] || [80, 80, 80]; return `rgb(${c[0]},${c[1]},${c[2]})`; };
+ 
+ function size(){ const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); cv.width = r.width * d; cv.height = r.height * d; }
+ function view(){ const s = Math.min(cv.width, cv.height) / 28, ox = (cv.width - s * 28) / 2, oy = (cv.height - s * 28) / 2; return {s, ox, oy}; }
+ function draw(){
+  if (!cv) return; const {s, ox, oy} = view(); cx.fillStyle = '#0e0f12'; cx.fillRect(0, 0, cv.width, cv.height);
+  for (let y = 0; y < 28; y++) for (let x = 0; x < 28; x++){ cx.fillStyle = col((blockKind === 'home' ? homeTile : ART.tile)(x, y)); cx.fillRect(ox + x * s, oy + y * s, s + .5, s + .5); }
+  if (zone && zoneT > 0){ cx.fillStyle = 'rgba(240,64,52,.35)'; zone.forEach(([x, y]) => cx.fillRect(ox + x * s, oy + y * s, s, s)); }
+  PARTS.forEach((p, i) => { const dead = down && down[i]; cx.fillStyle = dead ? '#3a3633' : p.k === 'fence' ? '#9aa3a8' : p.k === 'porch' || p.k === 'roof' ? '#cca030' : p.k === 'house' ? '#8a3b2e' : p.k === 'gym' || p.k === 'stash' || p.k === 'supstash' ? '#8f8a80' : p.k === 'hustle' || p.k === 'run' ? '#2f8c8c' : '#6a3a30';
+   const pad = p.k === 'fence' ? s * .3 : s * .08; cx.fillRect(ox + p.x * s + pad, oy + p.y * s + pad, p.fw * s - pad * 2, p.fh * s - pad * 2); });
+  if (frame) frame.u.forEach(u => { if (!u[6]) return; const meta = units[u[0]] || {}; cx.fillStyle = meta.side === 'd' ? '#cca030' : '#b9a3ff'; cx.beginPath(); cx.arc(ox + u[1] * s, oy + u[2] * s, s * (meta.type === 'bruiser' ? .42 : .3), 0, 7); cx.fill(); });
+  if (blockKind === 'enemy' && vicOn){ cx.fillStyle = viceroyFree ? '#b9a3ff' : '#6f60b0'; cx.fillRect(ox + 12 * s, oy + 15 * s, s * .7, s * .7); }
+  if (blockKind === 'home'){ const q = PARTS.find(p => p.key === homeSel); if (q){ cx.strokeStyle = '#ffecaa'; cx.lineWidth = Math.max(2, s * .12); cx.strokeRect(ox + q.x * s, oy + q.y * s, q.fw * s, q.fh * s); } }
+ }
+ function loop(){ requestAnimationFrame(loop); if (zoneT > 0) zoneT -= 1 / 60; draw(); }
+ return {
+  init(){ cv = $('fb'); cx = cv.getContext('2d'); size(); window.addEventListener('resize', size);
+   cv.addEventListener('pointerup', e => { const r = cv.getBoundingClientRect(), d = cv.width / r.width, {s, ox, oy} = view(); onGround(((e.clientX - r.left) * d - ox) / s, ((e.clientY - r.top) * d - oy) / s); });
+   loop(); },
+  scene(d){ down = d; }, frame(f){ frame = f; }, flash(z){ zone = z; zoneT = 1.2; }
+ };
+})();
+
+// ---------- story cards ----------
+let storyQ = [], storyDone = null;
+function story(lines, done){ storyQ = lines.slice(); storyDone = done; show('story'); cam('viceroy'); nextCard(); }
+function nextCard(){ if (!storyQ.length){ const d = storyDone; storyDone = null; d && d(); return; } $('card').querySelector('.say').textContent = storyQ.shift(); }
+// the Viceroy's portrait is a picture file (viceroy.png) uploaded beside the page; until it is there, the card shows no picture
+(function(){ const im = $('faceImg'), box = $('card').querySelector('.face'); im.onload = () => { box.hidden = false; }; im.onerror = () => { box.hidden = true; }; im.src = 'viceroy.png'; })();
+$('story').addEventListener('click', nextCard);
+const INTRO = ["Well, well. A face I don't know, on a night I could use one.",
+ "Those Boombox boys have me boxed in. Clear me a path and I'll make it worth your while.",
+ "Pick your crew below. Tap the street to send them in."];
+const WIN = "Darling, that was a performance. You've earned a roof. Come see me.";
+const LOSE = "Not tonight. Catch your breath and run it again. I'm not going anywhere.";
+const NEXT = "The house on the next block is yours now. Pick your colors and build it up. Then go collect what the Boombox boys owe us.";
+
+// ---------- the attack ----------
+let R = null, sim = null, units = {}, items = [], counts = {}, sel = null, queued = {}, raf = 0, acc = 0, lastT = 0, coreAt = 0, finished = false, zone = null, lastReport = null;
+// every fighter is one person: the look is rolled from the fight's seed, so a replay shows the same faces
+function meta(Rx){ const u = {}, base = (Rx.seed % 99991) * 37;
+ Rx.attackers.forEach((a, i) => u[i] = {look:'m|' + (base + i + 1) + '|' + MY_CREW + '|' + a.type, type:a.type, max:a.hp, side:'a', barZ:a.type === 'bruiser' ? .9 : .76});
+ Rx.defenders.forEach((d, i) => u[100 + i] = {look:'m|' + (base + 500 + i) + '|' + (Rx.crewColor || 'gold') + '|shooter', type:'shooter', max:d.hp, side:'d', barZ:.76});
+ const it = Rx.items.map(b => { const p = PARTS.find(q => q.key === b.key); return {key:b.key, x:b.x, y:b.y, fw:b.fw, fh:b.fh, top:p ? p.top : 1, max:b.role === 'wall' ? 0 : b.hp}; }); return {u, it}; }
+function buildBar(){
+ const bar = $('bar'); bar.innerHTML = '';
+ T.ORDER.forEach(k => { if (!counts[k]) return; const b = document.createElement('button'); b.className = 'troop'; b.dataset.k = k;
+  b.innerHTML = `<span class="n">x${counts[k]}</span><span class="nm">${T.UNITS[k].name}</span>`; b.insertBefore(miniIcon(iconLook(k), 74), b.lastChild);
+  b.onclick = e => { e.stopPropagation(); if (!counts[k]) return; sel = k; refreshBar(); }; bar.appendChild(b); });
+ refreshBar();
+}
+function refreshBar(){ $('bar').querySelectorAll('.troop').forEach(b => { const k = b.dataset.k; b.classList.toggle('sel', k === sel); b.classList.toggle('out', !counts[k]); b.querySelector('.n').textContent = 'x' + counts[k]; }); }
+function startAttack(recipe){
+ R = recipe; setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = R.mode === 'rescue'; if (gl3d) VIL.edit(null);
+ sim = B.raidStart(R, {record:true}); finished = false; coreAt = 0; queued = {}; acc = 0; lastT = 0; viceroyFree = false; lastDown = 'x';
+ counts = {}; R.attackers.forEach(a => counts[a.type] = (counts[a.type] || 0) + 1); sel = T.ORDER.find(k => counts[k]) || null;
+ const m = meta(R); units = m.u; items = m.it; zone = B.dropZone(R);
+ paint(null); buildBar(); setStars($('hudStars'), 0); $('pct').textContent = '0%'; $('clock').textContent = clock(0);
+ $('tip').style.opacity = 1; $('tip').textContent = 'Pick a troop, then tap the street';
+ if (gl3d) VIL.battle({live:true, frames:sim.frames, tick:B.TICK, units, items, speed:1, follow:false});
+ cam('attack');
+ if (gl3d && !sidewaysTold && innerWidth < innerHeight){ sidewaysTold = true; setTimeout(() => toast('Turn your phone sideways to see the whole block', 2600), 400); }
+ show('hud'); cancelAnimationFrame(raf); raf = requestAnimationFrame(run);
+}
+function run(now){
+ raf = requestAnimationFrame(run);
+ const dt = Math.min(.25, (now - (lastT || now)) / 1000); lastT = now; acc += dt;   // rAF pauses with the screen off, so a locked phone pauses the fight
+ let n = 0; while (acc >= B.TICK && n < 4 && !finished){ acc -= B.TICK; n++; if (!sim.step()){ finish(); break; } afterTick(); }
+ if (sim.done() && !finished) finish();
+}
+function afterTick(){
+ const f = sim.frame(); if (!gl3d) FB.frame(f);
+ const t = sim.tick() - 1; $('clock').textContent = clock(t);
+ const down = items.map((b, i) => b.max > 0 ? f.b[i] <= 0 : f.b[i] <= 0);
+ paint(down);
+ let lost = 0, total = 0; items.forEach((b, i) => { if (!b.max) return; total += b.max; lost += b.max - Math.max(0, f.b[i]); });
+ const pct = Math.round(100 * lost / (total || 1)), coreI = R.items.findIndex(b => b.role === 'core'), coreDown = f.b[coreI] <= 0;
+ $('pct').textContent = pct + '%'; setStars($('hudStars'), (pct >= 50 ? 1 : 0) + (coreDown ? 1 : 0) + (pct >= 100 ? 1 : 0));
+ if (coreDown && !coreAt){ coreAt = t; if (R.mode === 'rescue'){ viceroyFree = true; lastDown = 'x'; paint(down); toast('The Viceroy is free'); } }
+ if (coreAt && R.mode === 'rescue' && t - coreAt === 25) sim.end();   // the rescue wraps up a moment after the house falls
+}
+function clock(t){ const left = Math.max(0, Math.ceil((R ? R.maxT : 1800) / 10 - t / 10)); return Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); }
+function setStars(el, n){ el.querySelectorAll('i').forEach((s, i) => s.classList.toggle('on', i < n)); }
+function onGround(x, y){
+ if ($('home').classList.contains('on')){ homeGround(x, y); return; }
+ if (!sim || finished || !$('hud').classList.contains('on')) return;
+ if (!sel || !counts[sel]){ $('bar').classList.remove('nudge'); void $('bar').offsetWidth; $('bar').classList.add('nudge'); toast('Pick a troop first'); return; }
+ if (!B.canDrop(R, x, y)){ if (gl3d) VIL.flashZone(zone); else FB.flash(zone); toast('Too close to their block. Drop on the street.'); return; }
+ const i = R.attackers.findIndex((a, j) => a.type === sel && !queued[j] && !sim.placed(j));
+ if (i < 0 || !sim.deploy(i, x, y)) return;
+ queued[i] = 1; counts[sel]--; if (!counts[sel]) sel = T.ORDER.find(k => counts[k]) || null; refreshBar();
+ $('tip').style.opacity = 0;
+}
+$('endBtn').onclick = e => { e.stopPropagation(); if (sim && !finished) sim.end(); };
+function finish(){
+ if (finished) return; finished = true; cancelAnimationFrame(raf); if (gl3d) VIL.battleEnd();
+ const res = sim.result(), stars = T.starsFor(res), won = R.mode === 'rescue' ? res.coreDown : stars > 0;
+ lastReport = T.reportFrom(R, res); lastReport.at = Date.now();
+ save.tries++; save.best = Math.max(save.best, stars); if (won && R.mode === 'rescue') save.rescued = true;
+ if (R.mode === 'raid' && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
+  R.attackers.forEach((a, j) => { if (queued[j] || sim.placed(j)) save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); });
+  const loot = T.lootFor(res, save.block), p = T.payout(save.block); lastReport.gain = addRes(loot.cash + p.cash, loot.sup + p.sup); }
+ save.reports.unshift(lastReport); save.reports = save.reports.slice(0, 10); saveGame();
+ setTimeout(() => showResult(res, stars, won), 900);
+}
+function showResult(res, stars, won){
+ const raid = !!(lastReport && lastReport.recipe.mode === 'raid'), g = lastReport && lastReport.gain;
+ $('resTitle').textContent = raid ? (won ? 'You hit the Boombox Kings' : 'They held the block') : (won ? 'The Viceroy is out' : 'They held the house');
+ setStars($('resStars'), stars); $('resPct').textContent = res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash and ' + g.sup + ' Supplies.' : '');
+ const again = () => raid ? startAttack(T.raidRecipe(seed(), save.army)) : startAttack(T.rescueRecipe(seed()));
+ $('resNext').textContent = raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
+ $('resNext').onclick = () => raid ? toHome() : won ? story([WIN, NEXT], toHome) : again();
+ $('resAgain').textContent = raid ? 'Hit them again' : 'Run it again'; $('resAgain').onclick = again;
+ $('resAgain').style.display = (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
+ show('result');
+}
+$('resWatch').onclick = () => watch(lastReport);
+function seed(){ return (Date.now() ^ (Math.random() * 4294967296)) >>> 0; }
+
+// ---------- Watch: the saved recipe fought again, frame by frame ----------
+let wSpeed = 1, wPaused = false, wFrames = null, wI = 0, wRaf = 0;
+function watch(rep){
+ if (!rep) return; const Rw = JSON.parse(JSON.stringify(rep.recipe)); setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = Rw.mode === 'rescue'; if (gl3d) VIL.edit(null);
+ const out = B.simRaid(Rw, {record:true}), m = meta(Rw);
+ wFrames = out.frames; units = m.u; items = m.it; viceroyFree = false; lastDown = 'x'; paint(null); wSpeed = 1; wPaused = false;
+ $('wPlay').textContent = 'Pause'; $('wSpeed').textContent = '2x'; $('watchLbl').textContent = 'Replay · ' + rep.stars + (rep.stars === 1 ? ' star' : ' stars');
+ const onTick = i => { const f = wFrames[i], down = items.map((b, j) => f.b[j] <= 0), coreI = Rw.items.findIndex(b => b.role === 'core');
+  if (vicOn && f.b[coreI] <= 0 && !viceroyFree){ viceroyFree = true; lastDown = 'x'; } paint(down); };
+ show('watch'); cam('watch');
+ if (gl3d){ VIL.battle({frames:wFrames, tick:B.TICK, units, items, speed:1, follow:true, zoom:VIL.view().zoom, onTick, onEnd:endWatch}); }
+ else { wI = 0; cancelAnimationFrame(wRaf); let a = 0, lt = 0; const step = now => { wRaf = requestAnimationFrame(step); const dt = Math.min(.25, (now - (lt || now)) / 1000); lt = now; if (wPaused) return; a += dt * wSpeed;
+   while (a >= B.TICK){ a -= B.TICK; wI++; if (wI >= wFrames.length){ cancelAnimationFrame(wRaf); endWatch(); return; } FB.frame(wFrames[wI]); onTick(wI); } }; wRaf = requestAnimationFrame(step); }
+}
+function endWatch(){ if (!$('watch').classList.contains('on')) return; if (lastReport) showResult({pct:lastReport.pct}, lastReport.stars, lastReport.recipe.mode === 'rescue' ? lastReport.stars >= 2 : lastReport.stars > 0); else toTitle(); }
+$('wPlay').onclick = () => { wPaused = !wPaused; $('wPlay').textContent = wPaused ? 'Play' : 'Pause'; if (gl3d) VIL.battleSpeed(wPaused ? 0 : wSpeed); };
+$('wSpeed').onclick = () => { wSpeed = wSpeed === 1 ? 2 : 1; $('wSpeed').textContent = wSpeed === 1 ? '2x' : '1x'; if (gl3d && !wPaused) VIL.battleSpeed(wSpeed); };
+$('wSkip').onclick = () => { if (gl3d) VIL.battleSkip(); else { cancelAnimationFrame(wRaf); endWatch(); } };
+
+// ---------- camera framing for each screen (3D only; the flat map always shows the whole grid) ----------
+// zoom is half the view height in tiles, so a tall phone needs a bigger zoom to fit the same width. Held upright, the attack
+// opens on the near corner of the block (the south and east streets) at a size where people read; turned sideways the whole block fits.
+function cam(k){ if (!gl3d) return; const r = $('stage').getBoundingClientRect(), asp = (r.width || 1) / (r.height || 1), tall = asp < 1;
+ const L = T.lotsOpen(save.block ? T.houseLv(save.block) : 1), n = L.x1 - L.x0 + 1;
+ const C = {home:{tx:(L.x0 + L.x1 + 1) / 2 + .4, ty:(L.y0 + L.y1 + 1) / 2 + .6, zoom:tall ? Math.max(5.2, n * .6 / asp) : n * .42 + 1.6}, title:{tx:14, ty:14.6, zoom:Math.max(10.5, 13 / asp)}, viceroy:{tx:12.9, ty:15.9, zoom:1.15},
+  attack:tall ? {tx:17.2, ty:19.2, zoom:Math.max(7.6, 6.6 / asp)} : {tx:14.4, ty:15.6, zoom:7.6}, watch:tall ? {tx:15.5, ty:17.5, zoom:Math.max(7.6, 7.6 / asp)} : {tx:14.2, ty:15.2, zoom:7.6}}[k];
+ VIL.view(C); }
+let sidewaysTold = false;
+// ---------- full screen: one tap hides the browser bars (Android Chrome and desktop; an iPhone only gets this by installing the app) ----------
+const fsEl = document.documentElement, fsCan = !!(fsEl.requestFullscreen || fsEl.webkitRequestFullscreen);
+const standalone = !!((window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches)) || navigator.standalone);
+const fsOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function fsEnter(){ try { const p = (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl); if (p && p.catch) p.catch(() => {}); } catch (e){} }
+function fsLeave(){ try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e){} }
+$('fsBtn').hidden = !fsCan || standalone;
+$('fsBtn').onclick = e => { e.stopPropagation(); if (fsOn()){ save.fs = false; fsLeave(); } else { save.fs = true; fsEnter(); } saveGame(); };
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { const t = fsOn() ? 'Leave full screen' : 'Full screen'; $('fsBtn').querySelector('span').textContent = t; $('fsBtn').setAttribute('aria-label', t); }));
+// ---------- title ----------
+function toTitle(){
+ if (gl3d){ VIL.battle(null); VIL.edit(null); } setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = true; viceroyFree = !!save.rescued; paint(null);
+ $('goBtn').textContent = save.rescued ? 'Go to your block' : 'Start';
+ $('watchBtn').hidden = !save.reports.length;
+ show('title'); cam('title');
+}
+$('goBtn').onclick = () => { if (save.fs && fsCan && !standalone && !fsOn()) fsEnter(); if (save.rescued) toHome(); else story(INTRO, () => startAttack(T.rescueRecipe(seed()))); };
+$('watchBtn').onclick = () => { lastReport = save.reports[0]; try { watch(lastReport); } catch (e){ save.reports = []; saveGame(); toTitle(); toast("That replay can't be played"); } };
+
+// ---------- your block: build, level up, train a crew ----------
+let homeSel = null, fenceMode = null, sheetKind = null, firstHome = false;
+const item = key => save.block ? save.block.find(i => i.key === key) : null;
+const costText = c => !c ? '' : (c[0] ? c[0] + ' Cash' : '') + (c[0] && c[1] ? ' + ' : '') + (c[1] ? c[1] + ' Supplies' : '') || 'Free';
+const has = c => save.cash >= c[0] && save.sup >= c[1];
+function pay(c){ save.cash -= c[0]; save.sup -= c[1]; }
+// stashes cap what you can hold; returns what actually went in
+function addRes(cash, sup){ const cap = T.storeCap(save.block), c0 = save.cash, s0 = save.sup;
+ save.cash = Math.max(c0, Math.min(cap.cash, c0 + cash)); save.sup = Math.max(s0, Math.min(cap.sup, s0 + sup)); return {cash:save.cash - c0, sup:save.sup - s0}; }
+function gangHex(c){ const m = ART.MATS[MINI.M[MINI.GANGS[c][0]]] || [185, 163, 255]; return 'rgb(' + m[0] + ',' + m[1] + ',' + m[2] + ')'; }
+function homeHud(){
+ const cap = T.storeCap(save.block); $('hCash').textContent = save.cash; $('hSup').textContent = save.sup;
+ $('hCash').parentNode.classList.toggle('full', save.cash >= cap.cash); $('hSup').parentNode.classList.toggle('full', save.sup >= cap.sup);
+ $('hArmy').textContent = T.armySize(save.army) + '/' + T.armyCap(save.block); $('hCrew').querySelector('.ic').style.background = gangHex(MY_CREW);
+ const hint = $('hHint'); hint.hidden = !fenceMode;
+ if (fenceMode){ const left = T.capFor('fence', T.houseLv(save.block)) - T.count(save.block, 'fence');
+  $('hHintTxt').textContent = fenceMode === 'paint' ? (gl3d ? 'Drag to lay fence. ' : 'Tap to lay fence. ') + left + ' left.' : (gl3d ? 'Drag over fence to take it down.' : 'Tap fence to take it down.'); }
+}
+function homePaint(){ setBlock(save.block, 'home'); if (gl3d){ VIL.update(sceneFor(null)); VIL.select(homeSel); } else FB.scene(null); homeHud(); }
+function setEdit(){ if (gl3d){ VIL.edit(fenceMode || 'move', HANDLERS); VIL.select(homeSel); } }
+const HANDLERS = {
+ movable:key => key === homeSel && !fenceMode,
+ canPlace:(key, x, y) => { const it = item(key); return !!it && T.fitsAt(save.block, key, it.k, x, y); },
+ place:(key, x, y) => moveTo(key, x, y),
+ reject:() => toast("It doesn't fit there"),
+ select:key => selectItem(key == null ? null : key, true),
+ ring:key => { if (key !== homeSel) return 0; const it = item(key), d = it && T.BDEFS[it.k]; return d && d.range || 0; },
+ paint:(x, y) => fenceAt(x, y, true), erase:(x, y) => fenceAt(x, y, false)
+};
+function selectItem(key, fromMap){
+ if (!$('home').classList.contains('on')) return;
+ homeSel = key && item(key) ? key : null; if (!fromMap && gl3d) VIL.select(homeSel);
+ if (homeSel) openSheet('info'); else if (sheetKind === 'info') closeSheet();
+}
+function moveTo(key, x, y){ const it = item(key); if (!it) return; const ox = it.x, oy = it.y; it.x = x; it.y = y;
+ if (!T.reachOk(save.block)){ it.x = ox; it.y = oy; toast('That would wall something in'); } else saveGame();
+ homePaint(); }
+function fenceAt(x, y, add){
+ const b = save.block, i = b.findIndex(q => q.k === 'fence' && q.x === x && q.y === y);
+ if (add){ if (i >= 0) return; const c = T.HOME.fence.cost;
+  if (!T.fitsAt(b, null, 'fence', x, y)) return;
+  if (T.count(b, 'fence') >= T.capFor('fence', T.houseLv(b))){ toast('No more fence at this house level'); return; }
+  if (!has(c)){ toast('Fence costs ' + costText(c) + ' a piece'); return; }
+  b.push({key:'f' + x + '_' + y, k:'fence', x, y, lv:1});
+  if (!T.reachOk(b)){ b.pop(); toast('That would wall something in'); return; }
+  pay(c); }
+ else { if (i < 0) return; b.splice(i, 1); addRes(0, T.HOME.fence.cost[1]); }
+ saveGame(); homePaint();
+}
+function buy(k){
+ const b = save.block, c = T.HOME[k].cost, lv = T.houseLv(b);
+ if (T.count(b, k) >= T.capFor(k, lv)){ toast(T.capFor(k, lv) ? 'Level up the Main House for more' : 'Opens at Main House level 2'); return; }
+ if (!has(c)){ toast('Needs ' + costText(c)); return; }
+ const spot = T.freeSpot(b, k); if (!spot){ toast('No room on the lot. Move things or level up the Main House.'); return; }
+ const it = {key:'b' + (save.nk++), k, x:spot[0], y:spot[1], lv:1}; b.push(it);
+ if (!T.reachOk(b)){ b.pop(); toast('No spot that leaves a way in. Move a fence first.'); return; }
+ pay(c); saveGame(); homeSel = it.key; homePaint(); openSheet('info'); focusOn(it.x + 1, it.y + 1);
+ toast(gl3d ? 'Placed. Drag it where you want it.' : 'Placed. Tap an open spot to move it.', 2400);
+}
+function levelUp(key){
+ const it = item(key); if (!it) return; const c = T.upgradeCost(it.k, it.lv); if (!c) return;
+ if (!has(c)){ toast('Needs ' + costText(c)); return; }
+ pay(c); it.lv++; saveGame(); homePaint(); openSheet('info');
+ if (it.k === 'house'){ cam('home'); toast('The lot got bigger. New limits on everything.', 2600); } else toast(T.BDEFS[it.k].name + ' is level ' + it.lv);
+}
+function train(k, n){
+ const a = save.army;
+ if (n < 0){ if (a[k] > 0){ a[k]--; saveGame(); } }
+ else {
+  if (T.gymLv(save.block) < T.UNLOCKS[k]){ toast('Level the Gym to ' + T.UNLOCKS[k] + ' first'); return; }
+  if (T.armySize(a) + T.SIZE[k] > T.armyCap(save.block)){ toast('No beds left. Level up the Crash Pad.'); return; }
+  const c = [T.trainCost(k), 0]; if (!has(c)){ toast('Needs ' + costText(c)); return; }
+  pay(c); a[k]++; saveGame(); }
+ homeHud(); openSheet('crew');
+}
+function setColor(c){ if (!MINI.GANGS[c] || c === 'gold') return; save.color = MY_CREW = c; saveGame(); homePaint(); openSheet('crew'); }
+function statLine(it){
+ const k = it.k, lv = it.lv, b = save.block;
+ if (k === 'house'){ const L = T.lotsOpen(lv), n = L.x1 - L.x0 + 1; return 'Your lot is ' + n + ' by ' + n + '.' + (lv < T.maxLv(k) ? ' The next level opens ' + (n + 2) + ' by ' + (n + 2) + '.' : ''); }
+ if (k === 'hustle') return 'Pays ' + 60 * lv + ' Cash after every fight.';
+ if (k === 'run') return 'Brings ' + 40 * lv + ' Supplies after every fight.';
+ if (k === 'stash') return 'Holds ' + 1500 * lv + ' Cash. You can hold ' + T.storeCap(b).cash + ' in all.';
+ if (k === 'supstash') return 'Holds ' + 1500 * lv + ' Supplies. You can hold ' + T.storeCap(b).sup + ' in all.';
+ if (k === 'pad') return 'Sleeps ' + (14 + 6 * lv) + '.';
+ if (k === 'gym') return 'Trains ' + T.ORDER.filter(u => T.UNLOCKS[u] <= lv).map(u => T.UNITS[u].name + 's').join(', ') + '.';
+ if (k === 'porch' || k === 'roof') return 'Reaches ' + T.BDEFS[k].range + ' tiles. Guards the block once rivals can hit back.';
+ if (k === 'fence') return T.count(b, 'fence') + ' of ' + T.capFor('fence', T.houseLv(b)) + ' pieces up.';
+ return '';
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[c]));
+function openSheet(kind){
+ const body = $('sheetBody'); let h = ''; sheetKind = kind;
+ if (kind === 'info'){ const it = item(homeSel); if (!it){ closeSheet(); return; } const d = T.BDEFS[it.k], c = T.upgradeCost(it.k, it.lv);
+  h = '<h3>' + esc(d.name) + (it.k === 'fence' ? '' : '<span>Level ' + it.lv + '</span>') + '</h3><p>' + esc(T.HOME[it.k].line) + '</p><p class="stat">' + esc(statLine(it)) + '</p>';
+  if (it.k === 'fence') h += '<button class="btn" data-act="unfence">Take it down, ' + T.HOME.fence.cost[1] + ' Supplies back</button>';
+  else { h += c ? '<button class="btn main' + (has(c) ? '' : ' no') + '" data-act="up">Level up for ' + costText(c) + '</button>' : '<p class="stat">Top level.</p>';
+   h += '<p>' + (gl3d ? 'Drag it to move it.' : 'Tap an open spot to move it there.') + '</p>'; } }
+ else if (kind === 'shop'){ const b = save.block, lv = T.houseLv(b);
+  h = '<h3>Build</h3><div class="rows">';
+  const fn = T.count(b, 'fence'), fc = T.capFor('fence', lv);
+  h += '<div class="row"><span class="mid"><span class="nm">Chain-link Fence</span><br><span class="sub">' + fn + ' of ' + fc + ' up. ' + T.HOME.fence.cost[1] + ' Supplies a piece.</span></span><button class="mini" data-act="lay">Lay</button><button class="mini" data-act="pull">Take down</button></div>';
+
+  T.SHOP.forEach(k => { const n = T.count(b, k), cap = T.capFor(k, lv), c = T.HOME[k].cost, off = n >= cap || !has(c);
+   h += '<button class="row' + (off ? ' no' : '') + '" data-buy="' + k + '"><span class="mid"><span class="nm">' + esc(T.BDEFS[k].name) + '</span><br><span class="sub">' + esc(T.HOME[k].line) + '</span></span><span class="pr">' + (cap ? n + ' of ' + cap + '<br>' + costText(c) : 'House level 2') + '</span></button>'; });
+  h += '</div>'; }
+ else if (kind === 'crew'){ const a = save.army, g = T.gymLv(save.block);
+  h = '<h3>Your crew<span>' + T.armySize(a) + ' of ' + T.armyCap(save.block) + ' beds</span></h3><p>Colors are the only thing that marks your people.</p><div class="sw">';
+  GANG_PICK.forEach(c => { h += '<button data-col="' + c + '" class="' + (c === MY_CREW ? 'on' : '') + '" style="background:' + gangHex(c) + '" aria-label="' + c + '"></button>'; });
+  h += '</div><div class="rows">';
+  T.ORDER.forEach(k => { const u = T.UNITS[k], open = g >= T.UNLOCKS[k];
+   h += '<div class="row' + (open ? '' : ' no') + '" data-unit="' + k + '"><span class="mid"><span class="nm">' + esc(u.name) + ' x' + (a[k] || 0) + '</span><br><span class="sub">' + (open ? esc(u.line) + ' ' + T.SIZE[k] + (T.SIZE[k] === 1 ? ' bed.' : ' beds.') : 'Comes in at Gym level ' + T.UNLOCKS[k] + '.') + '</span></span>'
+    + (open ? '<button class="mini" data-train="' + k + '" data-n="-1" aria-label="Let one ' + esc(u.name) + ' go">-</button><button class="mini" data-train="' + k + '" data-n="1">+ ' + T.trainCost(k) + '</button>' : '') + '</div>'; });
+  h += '</div>'; }
+ body.innerHTML = h;
+ if (kind === 'crew') body.querySelectorAll('[data-unit]').forEach(r => r.insertBefore(miniIcon(iconLook(r.dataset.unit), 64), r.firstChild));
+ $('sheet').hidden = false; $('home').classList.add('sheeton');
+}
+function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); }
+$('sheetX').onclick = () => { const was = sheetKind; closeSheet(); if (was === 'info'){ homeSel = null; if (gl3d) VIL.select(null); else FB.scene(null); } };
+$('sheetBody').addEventListener('click', e => {
+ const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col]'); if (!t) return;
+ if (t.dataset.buy) buy(t.dataset.buy);
+ else if (t.dataset.train) train(t.dataset.train, +t.dataset.n);
+ else if (t.dataset.col) setColor(t.dataset.col);
+ else if (t.dataset.act === 'up') levelUp(homeSel);
+ else if (t.dataset.act === 'unfence'){ const it = item(homeSel); if (it){ homeSel = null; closeSheet(); fenceAt(it.x, it.y, false); } }
+ else if (t.dataset.act === 'lay' || t.dataset.act === 'pull'){ fenceMode = t.dataset.act === 'lay' ? 'paint' : 'erase'; homeSel = null; closeSheet(); setEdit(); homeHud();
+  if (gl3d) toast('Two fingers move the map while you work on fence', 2600); }
+});
+$('hHintDone').onclick = () => { fenceMode = null; setEdit(); homeHud(); };
+$('hBuild').onclick = () => openSheet('shop');
+$('hTrain').onclick = $('hCrew').onclick = () => openSheet('crew');
+$('hAttack').onclick = () => { if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; } startAttack(T.raidRecipe(seed(), save.army)); };
+// the flat map has no dragging: tap a building to pick it, then tap an open spot to move it there
+function homeGround(gx, gy){
+ const x = Math.floor(gx), y = Math.floor(gy);
+ if (fenceMode){ fenceAt(x, y, fenceMode === 'paint'); return; }
+ const p = PARTS.find(q => x >= q.x && x < q.x + q.fw && y >= q.y && y < q.y + q.fh);
+ if (p){ selectItem(p.key); FB.scene(null); return; }
+ const it = item(homeSel); if (it && T.fitsAt(save.block, it.key, it.k, x, y)){ moveTo(it.key, x, y); return; }
+ selectItem(null);
+}
+// slide the camera so a spot on the lot sits clear of the sheet
+function focusOn(x, y){ if (!gl3d) return; const v = VIL.view(), r = $('stage').getBoundingClientRect(), tall = r.width < r.height;
+ const p = VIL.project(x, y, 0), a = VIL.project(x + 1, y, 0), b = VIL.project(x, y + 1, 0); if (!p || !a || !b) return;
+ const ex = p[0] - (tall ? r.width * .5 : r.width * .27), ey = p[1] - (tall ? r.height * .36 : r.height * .5);
+ const j11 = a[0] - p[0], j21 = a[1] - p[1], j12 = b[0] - p[0], j22 = b[1] - p[1], det = j11 * j22 - j12 * j21; if (!det) return;
+ VIL.view({tx:v.tx + (j22 * ex - j12 * ey) / det, ty:v.ty + (-j21 * ex + j11 * ey) / det, zoom:v.zoom}); }
+function toHome(){
+ if (!save.block){ save.block = T.starterBlock(); save.cash = T.START.cash; save.sup = T.START.sup; save.army = Object.assign({}, T.START.army); save.nk = 20; saveGame(); firstHome = true; }
+ if (gl3d) VIL.battle(null); homeSel = null; fenceMode = null; closeSheet(); show('home'); homePaint(); setEdit(); cam('home');
+ if (firstHome){ firstHome = false; openSheet('crew'); }
+}
+
+// ---------- updates: a new build on the server prompts a reload ----------
+function checkUpdate(){
+ fetch('sw.js', {cache:'no-store'}).then(r => r.ok ? r.text() : '').then(t => { const m = t.match(/turf-v([\d.]+)/); if (m && m[1] !== VER){ toast('New version ' + m[1] + ', tap to reload', 12000, () => location.reload()); if ('serviceWorker' in navigator) swUpdate(); } }).catch(() => {});
+}
+function bust(){
+ // the version buster: if the page on the server is newer than this copy, load it once
+ try { if (sessionStorage.getItem('turf.bust') === VER) return; } catch (e){}
+ fetch(location.pathname, {cache:'no-store'}).then(r => r.ok ? r.text() : '').then(t => { const m = t.match(/<meta name="build" content="([^"]+)"/);
+  if (m && m[1] !== VER){ try { sessionStorage.setItem('turf.bust', VER); } catch (e){} location.replace(location.pathname + '?v=' + m[1]); } }).catch(() => {});
+}
+// ask the browser to look for a newer service worker now, not whenever it gets around to it
+function swUpdate(){ try { navigator.serviceWorker.getRegistration().then(r => { if (r) r.update().catch(() => {}); }).catch(() => {}); } catch (e){} }
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').then(swUpdate).catch(() => {});
+if (location.protocol.startsWith('http')){ bust(); checkUpdate(); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); }); }
+
+// ---------- go ----------
+mountMap(); toTitle();
+// test hook (used by the headless proof): read-only peeks at the fight
+window.TURF_TEST = {block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
+ state:() => ({screen:['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on')), tick:sim ? sim.tick() : 0, counts:Object.assign({}, counts), sel, finished, gl3d, reports:save.reports.length}),
+ toScreen:(x, y, z) => gl3d ? VIL.project(x, y, z || 0) : null, result:() => sim ? sim.result() : null};
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="build" content="__VER__">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#16171b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Turf</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="fb"></canvas></div>
+
+<div id="title" class="layer">
+ <div class="mark"><h1 aria-label="Turf"></h1><p>One house on one block. Take the rest of it.</p></div>
+ <button class="go" id="goBtn">Start</button>
+ <button class="alt" id="watchBtn" hidden>Watch last fight</button>
+</div>
+
+<div id="story" class="layer">
+ <div class="card" id="card"><div class="face" hidden><img id="faceImg" alt="The Viceroy" width="96" height="96"></div><div><div class="who">The Viceroy</div><div class="say"></div><span class="tap">Tap to continue</span></div></div>
+</div>
+
+<div id="hud" class="layer">
+ <div class="top">
+  <div class="clock" id="clock">3:00</div>
+  <div class="score"><div class="stars" id="hudStars"><i></i><i></i><i></i></div><b id="pct">0%</b></div>
+  <button class="end" id="endBtn">End</button>
+ </div>
+ <div class="tip" id="tip">Pick a troop, then tap the street</div>
+ <div class="bar" id="bar"></div>
+</div>
+
+<div id="result" class="layer">
+ <div class="panel"><h2 id="resTitle"></h2><div class="stars" id="resStars"><i></i><i></i><i></i></div><div class="pct" id="resPct"></div>
+  <div class="acts"><button class="btn main" id="resNext"></button><button class="btn" id="resWatch">Watch the fight</button><button class="btn" id="resAgain">Run it again</button></div></div>
+</div>
+
+<div id="watch" class="layer">
+ <div class="lbl" id="watchLbl">Replay</div>
+ <div class="ctl"><button id="wPlay">Pause</button><button id="wSpeed">2x</button><button id="wSkip">Skip</button></div>
+</div>
+
+<div id="home" class="layer">
+ <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
+ <div class="hint" id="hHint" hidden><span id="hHintTxt"></span><button id="hHintDone">Done</button></div>
+ <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb main" id="hAttack">Attack</button></div>
+ <div class="sheet" id="sheet" hidden><button class="x" id="sheetX">Close</button><div id="sheetBody"></div></div>
+</div>
+
+<div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
+<button id="badge">v__VER__ · __DATE__</button>
+<button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
+<div id="toast"></div>
+
+<script>
+__ENGINE__
+</script>
+<script>
+__ART__
+</script>
+<script>
+__VIL__
+</script>
+<script>
+const VER = '__VER__', BUILD_DATE = '__DATE__';
+__UI__
+</script>
+</body>
+</html>
