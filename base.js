@@ -89,7 +89,15 @@ function raidStart(R, opt){
  opt = opt || {};
  const dep = Array.isArray(R.deploys), maxT = R.maxT || MAXT;
  const rand = rng(R.seed >>> 0), r4 = v => Math.round(v * 10000) / 10000;
- const items = R.items.map((it, i) => ({i, key:it.key, k:it.k, x:it.x, y:it.y, fw:it.fw, fh:it.fh, role:it.role, max:it.hp || 0, hp:it.hp || 0, range:it.range || 0, dmg:it.dmg || 0, rate:it.rate || 1, cd:0, dealt:0, hit:new Set()}));
+ // Turf fighters (Nov 20 2026): every rule below switches on only from a field Ravenmarrow never sets, so its fights do not change.
+ // heal/healR (Street Medic), bomb (Breacher), jump (Biker), lootMult (Snatcher), prefer 'res'|'wall'; item.loot marks loot buildings.
+ // R.rules >= 2 (Turf recipes) also lets fliers pass over defenders on foot.
+ const xtra = a => ({heal:a.heal || 0, healR:a.healR || 0, bomb:!!a.bomb, jump:!!a.jump, lootMult:a.lootMult || 1, ab:a.ability || null, abUsed:false, rageT:0, rageM:1, ghostT:0, holdT:0});
+ // Turf items and boss abilities (Nov 22 2026): deploys may also carry {c:item, x, y, t} (an item cast, limited by R.kit and defined
+ // by R.spells) and {ab:1, i, t} (attacker i uses its ability once). Ravenmarrow never sends either, so none of this runs for it.
+ const spells = R.spells || {}, kitLeft = Object.assign({}, R.kit || {}), zones = [];
+ const rules = R.rules | 0;
+ const items = R.items.map((it, i) => ({i, key:it.key, k:it.k, x:it.x, y:it.y, fw:it.fw, fh:it.fh, role:it.role, max:it.hp || 0, hp:it.hp || 0, range:it.range || 0, dmg:it.dmg || 0, rate:it.rate || 1, loot:!!it.loot, cd:0, dealt:0, hit:new Set(), offT:0}));
  const solid = items.filter(b => b.role !== 'plot' && b.role !== 'trap');
  const scoring = items.filter(b => b.role === 'core' || b.role === 'bld' || b.role === 'tower');
  const totalHp = scoring.reduce((s, b) => s + b.max, 0) || 1;
@@ -99,21 +107,26 @@ function raidStart(R, opt){
  // spawn: one side of the map, chosen by the seed
  const units = [];
  if (dep) R.attackers.forEach((a, n) => {
-  units.push({id:n, side:'a', look:a.look, x:0, y:0, hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0,
+  units.push({id:n, side:'a', look:a.look, x:0, y:0, hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0, ...xtra(a),
    delay:0, wait:true, cd:Math.floor(rand() * 8), tgt:null, path:null, pi:0, mode:0, face:2, dealt:0, alive:true}); });
  else { const side = Math.floor(rand() * 4);
  R.attackers.forEach((a, n) => { const t = Math.floor(rand() * 16) - 8 + W / 2, e = .3;
   const p = side === 0 ? [t, e] : side === 1 ? [W - e, t] : side === 2 ? [t, H - e] : [e, t];
-  units.push({id:n, side:'a', look:a.look, x:r4(p[0]), y:r4(p[1]), hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0,
+  units.push({id:n, side:'a', look:a.look, x:r4(p[0]), y:r4(p[1]), hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0, ...xtra(a),
    delay:Math.floor(n * 3), cd:Math.floor(rand() * 8), tgt:null, path:null, pi:0, mode:0, face:0, dealt:0, alive:true}); }); }
  const posts = [];
  const cx = core ? core.x + core.fw / 2 : W / 2, cy = core ? core.y + core.fh + .6 : H / 2;
  R.defenders.forEach((d, n) => { const ang = n * 7 % 12, ox = ((ang % 4) - 1.5) * .7, oy = (Math.floor(ang / 4) - .5) * .7;
   units.push({id:100 + n, side:'d', look:d.look, hero:!!d.hero, x:r4(cx + ox), y:r4(cy + oy), px:r4(cx + ox), py:r4(cy + oy), hp:d.hp, max:d.hp, atk:d.atk, def:d.def || 0, speed:d.speed, range:d.range,
-   cd:Math.floor(rand() * 8), delay:0, tgt:null, mode:2, face:2, dealt:0, alive:true}); });
+   cd:Math.floor(rand() * 8), delay:0, tgt:null, mode:2, face:2, dealt:0, alive:true, offT:0}); });
  const guard = R.guard || 0;
  const dist2rect = (u, b) => { const dx = Math.max(b.x - u.x, 0, u.x - (b.x + b.fw)), dy = Math.max(b.y - u.y, 0, u.y - (b.y + b.fh)); return Math.sqrt(dx * dx + dy * dy); };
  const dist = (a, b) => Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+ // what is on a raider right now: Hype or Lights Out (harder hits), Smoke or Ghost (unseen), Ladder (over fences)
+ const inZone = (u, kind) => { for (const z of zones) if (z.kind === kind && z.until >= t && (u.x - z.x) * (u.x - z.x) + (u.y - z.y) * (u.y - z.y) <= z.r * z.r) return z; return null; };
+ const am = u => { if (!zones.length && !u.rageT) return 1; let m = u.rageT >= t ? u.rageM : 1; const z = zones.length ? inZone(u, 'rage') : null; if (z && z.mult > m) m = z.mult; return m; };
+ const unseen = u => u.ghostT >= t || (zones.length > 0 && !!inZone(u, 'smoke'));
+ const jmp = u => u.jump || (zones.length > 0 && !!inZone(u, 'jump'));
  const hurt = (target, amount) => { const d = Math.max(1, amount * 60 / (60 + (target.def || 0))); target.hp = r4(target.hp - d); return d; };
  // a walk from tile s to any tile within reach of building b: free tiles cost 1, standing walls cost 6 (they get broken), buildings block
  function route(u, b){
@@ -127,24 +140,46 @@ function raidStart(R, opt){
   while (heap.length){ const [c, k] = pop(); if (done[k]) continue; done[k] = 1; const x = k % W, y = (k - x) / W;
    if (dist2rect({x:x + .5, y:y + .5}, b) <= reach){ const out = []; let q = k; while (q !== -1){ out.push([q % W + .5, Math.floor(q / W) + .5]); q = prev[q]; } return out.reverse(); }
    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const nk = ny * W + nx, o = occ[nk];
-    let step = 1; if (o >= 0){ const ob = items[o]; if (!(ob.hp > 0)) step = 1; else if (ob.role === 'wall') step = 6; else continue; }
+    let step = 1; if (o >= 0){ const ob = items[o]; if (!(ob.hp > 0)) step = 1; else if (ob.role === 'wall') step = jmp(u) ? 1 : 6; else continue; }
     if (c + step < cost[nk]){ cost[nk] = c + step; prev[nk] = k; push(c + step, nk); } } }
   return null; }
  function pickTarget(u){
   let best = null, bd = 1e9;
   const pool = scoring.filter(b => b.hp > 0), defs = pool.filter(b => b.role === 'tower');
-  const list = u.prefer === 'def' && defs.length ? defs : pool;
+  let list = u.prefer === 'def' && defs.length ? defs : pool;
+  if (u.prefer === 'res'){ const l = pool.filter(b => b.loot); if (l.length) list = l; }
+  if (u.prefer === 'wall'){ const l = items.filter(b => b.role === 'wall' && b.hp > 0); if (l.length) list = l; }
   for (const b of list){ const d = dist2rect(u, b); if (d < bd - 1e-9){ bd = d; best = b; } }
   return best; }
  const frames = [], shots = [];
  let t = 0, over = null;
  const snap = () => { if (!opt.record){ if (dep) shots.length = 0; return; } frames.push({u:units.map(u => [u.id, r4(u.x), r4(u.y), Math.max(0, Math.round(u.hp)), u.mode, u.face, u.alive && u.delay <= 0 && !u.wait ? 1 : 0]), b:items.map(b => Math.max(0, Math.round(b.hp))), s:shots.splice(0)}); };
  // deploys waiting for their tick (sorted by tick, stable), how many are on the map, and the End tick if the player pressed End
- const queue = dep ? R.deploys.map(d => ({i:d.i | 0, x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)})).sort((a, b) => a.t - b.t) : [];
+ const qOf = d => d.c ? {c:String(d.c), x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)} : d.ab ? {ab:1, i:d.i | 0, t:Math.max(1, d.t | 0)} : {i:d.i | 0, x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)};
+ const queue = dep ? R.deploys.map(qOf).sort((a, b) => a.t - b.t) : [];
  let qi = 0, endAt = dep ? (R.endAt | 0) : 0;
- const placeDue = () => { while (qi < queue.length && queue[qi].t <= t){ const d = queue[qi++], u = units[d.i];
+ const placeDue = () => { while (qi < queue.length && queue[qi].t <= t){ const d = queue[qi++];
+  if (d.c){ if (!castNow(d)) d.skip = true; continue; }
+  if (d.ab){ if (!abilityNow(d)) d.skip = true; continue; }
+  const u = units[d.i];
   if (!u || u.side !== 'a' || !u.wait){ d.skip = true; continue; }
   u.wait = false; u.x = r4(Math.max(0, Math.min(W - .01, d.x))); u.y = r4(Math.max(0, Math.min(H - .01, d.y))); } };
+ // an item lands: a zone for its length, or a one-off hit (Firecracker) or switch-off (Blackout)
+ function castNow(d){ const sp = spells[d.c]; if (!sp || !(kitLeft[d.c] > 0) || !(d.x >= 0 && d.y >= 0 && d.x < W && d.y < H)) return false; kitLeft[d.c]--;
+  const r2 = sp.r * sp.r, near = (o, ox, oy) => (ox - d.x) * (ox - d.x) + (oy - d.y) * (oy - d.y) <= r2;
+  if (sp.kind === 'strike'){ for (const b of items){ if (!(b.hp > 0) || b.role === 'plot' || b.role === 'trap') continue; if (dist2rect({x:d.x, y:d.y}, b) <= sp.r) hurt(b, sp.dmg); }
+   for (const u of units) if (u.side === 'd' && u.alive && near(u, u.x, u.y)) hurt(u, sp.dmg); shots.push([d.x, d.y, d.x, d.y, 2]); }
+  else if (sp.kind === 'off'){ for (const b of items) if (b.role === 'tower' && dist2rect({x:d.x, y:d.y}, b) <= sp.r) b.offT = t + sp.len; for (const u of units) if (u.side === 'd' && near(u, u.x, u.y)) u.offT = t + sp.len; }
+  else zones.push({kind:sp.kind, x:d.x, y:d.y, r:sp.r, until:t + sp.len, mult:sp.mult || 1, heal:sp.heal || 0});
+  return true; }
+ // a boss uses its ability once, from where it stands
+ function abilityNow(d){ const u = units[d.i]; if (!u || u.side !== 'a' || u.wait || !u.alive || !(u.hp > 0) || !u.ab || u.abUsed) return false; u.abUsed = true; const A = u.ab;
+  if (A.kind === 'slam'){ for (const b of items){ if (!(b.hp > 0) || b.role === 'plot' || b.role === 'trap') continue; if (dist2rect(u, b) <= A.r) u.dealt += hurt(b, A.dmg); }
+   for (const o of units){ if (o.side === 'd' && o.alive && dist(u, o) <= A.r) u.dealt += hurt(o, A.dmg);
+    if (o.side === 'a' && !o.wait && o.alive && dist(u, o) <= A.r){ o.rageT = t + A.len; o.rageM = A.mult; } } shots.push([u.x, u.y, u.x, u.y, 2]); }
+  else if (A.kind === 'ghost'){ u.ghostT = t + A.len; u.rageT = t + A.len; u.rageM = A.mult; }
+  else if (A.kind === 'hold'){ for (const o of units) if (o.side === 'a' && !o.wait && o.alive && dist(u, o) <= A.r) o.holdT = t + A.len; }
+  return true; }
  const faceTo = (u, x, y) => { const dx = x - u.x, dy = y - u.y; u.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 0 : 2); };
  snap();
  t = 1;
@@ -154,35 +189,47 @@ function raidStart(R, opt){
   const live = units.filter(u => u.alive && u.delay <= 0 && !u.wait);
   const att = live.filter(u => u.side === 'a'), def = live.filter(u => u.side === 'd');
   // towers fire at the nearest raider in range
-  for (const b of items){ if (b.role !== 'tower' || !(b.hp > 0)) continue; if (b.cd > 0){ b.cd--; continue; }
-   let tg = null, td = 1e9; for (const a of att){ const d = dist2rect(a, b); if (d <= b.range && d < td - 1e-9){ td = d; tg = a; } }
+  for (const b of items){ if (b.role !== 'tower' || !(b.hp > 0)) continue; if (b.offT >= t) continue; if (b.cd > 0){ b.cd--; continue; }
+   let tg = null, td = 1e9; for (const a of att){ if (a.ghostT || zones.length){ if (unseen(a)) continue; } const d = dist2rect(a, b); if (d <= b.range && d < td - 1e-9){ td = d; tg = a; } }
    if (tg){ b.dealt += hurt(tg, b.dmg); b.cd = Math.round(b.rate / TICK); shots.push([b.x + b.fw / 2, b.y + b.fh / 2, tg.x, tg.y, 0]); } }
   // traps hurt each raider once as they cross
   for (const b of items){ if (b.role !== 'trap') continue; for (const a of att){ if (a.fly || b.hit.has(a.id)) continue; if (a.x >= b.x && a.x <= b.x + b.fw && a.y >= b.y && a.y <= b.y + b.fh){ b.hit.add(a.id); b.dealt += hurt(a, b.dmg); shots.push([a.x, a.y, a.x, a.y, 2]); } } }
   // defenders: engage the nearest raider near the Hall, otherwise go back to post
-  for (const u of def){ let tg = null, td = 1e9; for (const a of att){ if (!(a.hp > 0)) continue; const d = dist(u, a), dp = Math.sqrt((a.x - u.px) * (a.x - u.px) + (a.y - u.py) * (a.y - u.py)); if (dp < 7 && d < td - 1e-9){ td = d; tg = a; } }
+  for (const u of def){ if (u.offT >= t){ u.mode = 2; continue; } let tg = null, td = 1e9; for (const a of att){ if (!(a.hp > 0)) continue; if ((a.ghostT || zones.length) && unseen(a)) continue; if (rules >= 2 && a.fly && u.range <= 1.2) continue; const d = dist(u, a), dp = Math.sqrt((a.x - u.px) * (a.x - u.px) + (a.y - u.py) * (a.y - u.py)); if (dp < 7 && d < td - 1e-9){ td = d; tg = a; } }
    if (u.cd > 0) u.cd--;
    if (tg){ faceTo(u, tg.x, tg.y);
     if (td <= u.range + .35){ u.mode = 1; if (!u.cd){ u.dealt += hurt(tg, u.atk); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, tg.x, tg.y, 1]); } }
     else { u.mode = 0; const k = Math.min(1, u.speed * TICK / td); u.x = r4(u.x + (tg.x - u.x) * k); u.y = r4(u.y + (tg.y - u.y) * k); } }
    else { const d = Math.sqrt((u.px - u.x) * (u.px - u.x) + (u.py - u.y) * (u.py - u.y)); if (d > .05){ u.mode = 0; faceTo(u, u.px, u.py); const k = Math.min(1, u.speed * TICK / d); u.x = r4(u.x + (u.px - u.x) * k); u.y = r4(u.y + (u.py - u.y) * k); } else { u.mode = 2; u.face = 2; } } }
+  // First Aid Run: everyone inside is patched up every 0.8 s while it lasts
+  if (zones.length && t % 8 === 0) for (const z of zones){ if (z.kind !== 'heal' || z.until < t) continue; for (const a of att){ if (!(a.hp > 0) || a.hp >= a.max) continue; if ((a.x - z.x) * (a.x - z.x) + (a.y - z.y) * (a.y - z.y) <= z.r * z.r) a.hp = r4(Math.min(a.max, a.hp + z.heal)); } }
   // raiders: fight a defender in their face, else walk to the target, breaking walls in the way
   for (const u of att){ if (!(u.hp > 0)) continue; if (u.cd > 0) u.cd--;
-   let foe = null, fd = 1e9; for (const d of def){ if (!(d.hp > 0)) continue; const dd = dist(u, d); if (dd < Math.max(1.1, u.range + .3) && dd < fd - 1e-9){ fd = dd; foe = d; } }
-   if (foe){ faceTo(u, foe.x, foe.y); u.mode = 1; if (!u.cd){ u.dealt += hurt(foe, u.atk * (1 - guard)); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, foe.x, foe.y, 3]); } continue; }
+   if (u.heal){   // Street Medic: follows the nearest hurt raider (or the nearest one), patches up everyone close by, never attacks
+    let tg = null, td = 1e9; for (const a of att){ if (a === u || a.heal || !(a.hp > 0)) continue; const d = dist(u, a) + (a.hp < a.max ? 0 : 50); if (d < td - 1e-9){ td = d; tg = a; } }
+    if (!tg){ u.mode = 2; continue; }
+    const d = dist(u, tg); if (d > 1.2){ u.mode = 0; faceTo(u, tg.x, tg.y); const k = Math.min(1, u.speed * TICK / d); u.x = r4(u.x + (tg.x - u.x) * k); u.y = r4(u.y + (tg.y - u.y) * k); } else u.mode = 1;
+    if (!u.cd){ let any = false; for (const a of att){ if (a.heal || !(a.hp > 0) || a.hp >= a.max) continue; if (dist(u, a) <= u.healR){ a.hp = r4(Math.min(a.max, a.hp + u.heal)); u.dealt += u.heal; any = true; } } if (any) u.cd = 8; }
+    continue; }
+   let foe = null, fd = 1e9; if (!(rules >= 2 && u.fly)) for (const d of def){ if (!(d.hp > 0)) continue; const dd = dist(u, d); if (dd < Math.max(1.1, u.range + .3) && dd < fd - 1e-9){ fd = dd; foe = d; } }
+   if (foe){ faceTo(u, foe.x, foe.y); u.mode = 1; if (!u.cd){ u.dealt += hurt(foe, u.atk * am(u) * (1 - guard)); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, foe.x, foe.y, 3]); } continue; }
    if (!u.tgt || !(u.tgt.hp > 0)){ u.tgt = pickTarget(u); u.path = null; if (!u.tgt) continue; }
    const b = u.tgt, d = dist2rect(u, b);
-   if (d <= u.range + .05){ u.mode = 1; faceTo(u, b.x + b.fw / 2, b.y + b.fh / 2); if (!u.cd){ const dmg = hurt(b, u.atk); u.dealt += dmg; u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, b.x + b.fw / 2, b.y + b.fh / 2, 3]);
+   if (u.bomb && d <= u.range + .05){   // Breacher: one charge, breaks every fence close by, and is spent
+    const cx2 = b.x + b.fw / 2, cy2 = b.y + b.fh / 2; u.dealt += hurt(b, u.atk * (b.role === 'wall' ? u.wallMult : 1));
+    for (const o of items){ if (o !== b && o.role === 'wall' && o.hp > 0 && dist2rect({x:cx2, y:cy2}, o) < u.splash) u.dealt += hurt(o, u.atk * u.wallMult); }
+    shots.push([cx2, cy2, cx2, cy2, 2]); u.hp = 0; continue; }
+   if (d <= u.range + .05){ u.mode = 1; faceTo(u, b.x + b.fw / 2, b.y + b.fh / 2); if (!u.cd){ const dmg = hurt(b, (b.loot && u.lootMult !== 1 ? u.atk * u.lootMult : u.atk) * am(u)); u.dealt += dmg; u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, b.x + b.fw / 2, b.y + b.fh / 2, 3]);
      if (u.splash) for (const o of scoring){ if (o !== b && o.hp > 0 && dist2rect({x:b.x + b.fw / 2, y:b.y + b.fh / 2}, o) < u.splash) hurt(o, u.atk * .4); } } continue; }
    if (u.fly){ u.mode = 0; const tx = b.x + b.fw / 2, ty = b.y + b.fh / 2, dd = Math.sqrt((tx - u.x) * (tx - u.x) + (ty - u.y) * (ty - u.y)); faceTo(u, tx, ty); const k = Math.min(1, u.speed * TICK / dd); u.x = r4(u.x + (tx - u.x) * k); u.y = r4(u.y + (ty - u.y) * k); continue; }
    if (!u.path){ u.path = route(u, b); u.pi = 0; if (!u.path){ u.tgt = null; continue; } }
    const n = u.path[Math.min(u.pi, u.path.length - 1)], o = occ[Math.floor(n[1]) * W + Math.floor(n[0])];
-   if (o >= 0 && items[o].hp > 0 && items[o].role === 'wall'){ const w = items[o]; u.mode = 1; faceTo(u, n[0], n[1]); if (!u.cd){ u.dealt += hurt(w, u.atk * u.wallMult); u.cd = 8; if (!(w.hp > 0)) u.path = null; } continue; }
+   if (o >= 0 && items[o].hp > 0 && items[o].role === 'wall' && !jmp(u)){ const w = items[o]; u.mode = 1; faceTo(u, n[0], n[1]); if (!u.cd){ u.dealt += hurt(w, u.atk * u.wallMult * am(u)); u.cd = 8; if (!(w.hp > 0)) u.path = null; } continue; }
    const dd = Math.sqrt((n[0] - u.x) * (n[0] - u.x) + (n[1] - u.y) * (n[1] - u.y));
    if (dd < .06){ u.pi++; if (u.pi >= u.path.length) u.path = null; continue; }
    u.mode = 0; faceTo(u, n[0], n[1]); const k = Math.min(1, u.speed * TICK / dd); u.x = r4(u.x + (n[0] - u.x) * k); u.y = r4(u.y + (n[1] - u.y) * k); }
   // deaths, arrivals
-  for (const u of units){ if (u.wait) continue; if (u.delay > 0){ u.delay--; continue; } if (u.alive && !(u.hp > 0)){ u.alive = false; u.hp = 0; } }
+  for (const u of units){ if (u.wait) continue; if (u.delay > 0){ u.delay--; continue; } if (u.alive && !(u.hp > 0)){ if (u.holdT >= t){ u.hp = 1; continue; } u.alive = false; u.hp = 0; } }
   for (const b of items) if (b.hp < 0) b.hp = 0;
   if (!dep){
    if (core && !(core.hp > 0)) over = 'core';
@@ -190,7 +237,7 @@ function raidStart(R, opt){
   else {
    if (!scoring.some(b => b.hp > 0)) over = 'all';
    else if (endAt && t >= endAt) over = 'end';
-   else if (qi >= queue.length && !units.some(u => u.side === 'a' && (u.wait || u.alive))) over = 'cleared'; }
+   else if (qi >= queue.length && !units.some(u => u.side === 'a' && (u.wait || u.alive) && !(rules >= 2 && u.heal))) over = 'cleared'; }
   snap();
   t++;
   return true;
@@ -200,6 +247,10 @@ function raidStart(R, opt){
   const u = units[i]; if (!dep || over || t > maxT || !u || u.side !== 'a' || !u.wait) return false;
   for (let k = qi; k < queue.length; k++) if (queue[k].i === i) return false;
   queue.push({i, x:r4(x), y:r4(y), t}); return true; }
+ function cast(c, x, y){ if (!dep || over || t > maxT || !spells[c]) return false; let used = 0; for (let k = qi; k < queue.length; k++) if (queue[k].c === c) used++;
+  if (!(kitLeft[c] - used > 0) || !(x >= 0 && y >= 0 && x < W && y < H)) return false; queue.push({c, x:r4(x), y:r4(y), t}); return true; }
+ function ability(i){ const u = units[i]; if (!dep || over || t > maxT || !u || u.side !== 'a' || u.wait || !u.alive || !u.ab || u.abUsed) return false;
+  for (let k = qi; k < queue.length; k++) if (queue[k].ab && queue[k].i === i) return false; queue.push({ab:1, i, t}); return true; }
  function end(){ if (dep && !over && !endAt) endAt = t; }
  function result(){
  const lost = scoring.reduce((s, b) => s + (b.max - Math.max(0, b.hp)), 0), pct = Math.round(100 * lost / totalHp);
@@ -214,10 +265,12 @@ function raidStart(R, opt){
  units.forEach(u => { mix(u.x); mix(u.y); mix(u.hp); mix(u.dealt); }); items.forEach(b => mix(b.hp)); mix(t);
  result.hash = h;
  if (dep){ result.deployVer = DEPLOY_VER; result.allDown = !scoring.some(b => b.hp > 0); result.endAt = over === 'end' ? endAt : 0;
-  result.deploys = queue.slice(0, qi).filter(d => !d.skip).map(d => ({i:d.i, x:d.x, y:d.y, t:d.t})); }
+  result.deploys = queue.slice(0, qi).filter(d => !d.skip).map(d => d.c ? {c:d.c, x:d.x, y:d.y, t:d.t} : d.ab ? {ab:1, i:d.i, t:d.t} : {i:d.i, x:d.x, y:d.y, t:d.t}); }
  return result;
  }
- return {step, deploy, end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
+ // every deploy so far, landed or still waiting for its tick, and the End tick: enough to play the fight out again later
+ const outD = d => d.c ? {c:d.c, x:d.x, y:d.y, t:d.t} : d.ab ? {ab:1, i:d.i, t:d.t} : {i:d.i, x:d.x, y:d.y, t:d.t};
+ return {step, deploy, cast, ability, queued:() => queue.filter(d => !d.skip).map(outD), endAt:() => endAt, kitLeft:() => Object.assign({}, kitLeft), zones:() => zones.filter(z => z.until >= t), abUsed:i => !!(units[i] && units[i].abUsed), end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
   frame:() => frames[frames.length - 1], placed:i => !!units[i] && units[i].side === 'a' && !units[i].wait};
 }
 function simRaid(R, opt){ const s = raidStart(R, opt); while (s.step()); return {result:s.result(), frames:s.frames}; }

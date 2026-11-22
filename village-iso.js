@@ -340,6 +340,7 @@ function battleStep(dt){
  const prev = Math.floor(Bt.t / Bt.tick); Bt.t += dt * Bt.speed;
  let i = Math.floor(Bt.t / Bt.tick);
  if (i >= Bt.frames.length - 1){ i = Bt.frames.length - 1; Bt.t = i * Bt.tick; }
+ if (Bt.live && i < Bt.frames.length - 4){ i = Bt.frames.length - 2; Bt.t = i * Bt.tick; }   // a slow phone: show the fight as it is now, not seconds behind
  for (let k = prev + 1; k <= i; k++){ const f = Bt.frames[k]; if (f && f.s) f.s.forEach(s => Bt.shots.push({s, age:0})); }
  Bt.shots.forEach(x => x.age += dt * Bt.speed); Bt.shots = Bt.shots.filter(x => x.age < .35);
  // fire and smoke on badly hurt buildings
@@ -373,6 +374,8 @@ function battleBoxes(V, I){
   const x = x0 + (x1 - x0) * p, y = y0 + (y1 - y0) * p, z = .9 * (1 - p) + .35 + Math.sqrt(Math.max(0, p * (1 - p))) * .8;
   pushBox(V, I, [x - .04, y - .04, z, .08, .08, .08, kd === 3 ? 12 : kd === 1 ? 9 : 23], 0, 0); }
  if (Bt.zone && Bt.zoneT > 0){ for (const [zx, zy] of Bt.zone) pushBox(V, I, [zx + .06, zy + .06, .01, .88, .88, .02, 33], 0, 0); }
+ // Turf v0.4.1: rings on the ground where an item or a boss ability is working
+ if (st.rings) for (const r of st.rings) if (i >= r.t0 && i <= r.t1) ringDashes(V, I, r.x, r.y, 0, 0, r.r, r.m);
 }
 function battleLights(){ const Bt = st.battle; if (!Bt) return []; return Bt.shots.filter(s => s.s[4] === 3).slice(0, 6).map(s => { const p = Math.min(1, s.age / .3); return [s.s[0] + (s.s[2] - s.s[0]) * p, s.s[1] + (s.s[3] - s.s[1]) * p, .6, 1.2]; }); }
 
@@ -543,9 +546,10 @@ function unmount(){ st.mounted = false; cancelAnimationFrame(st.raf); if (canvas
 window.VIL = {mount, update, unmount, project,
  setHour(h){ st.hour = h; st.dirty = true; },
  getHour(){ return st.hour; },
- battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; st.dirty = true; },
+ battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); if (!o) st.rings = null; st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; st.dirty = true; },
  battleSpeed(s){ if (st.battle) st.battle.speed = s; },
  battleEnd(){ if (st.battle) st.battle.live = false; },
+ rings(list){ st.rings = list || null; st.dirty = true; },
  flashZone(tiles){ if (st.battle){ st.battle.zone = tiles; st.battle.zoneT = 1.2; st.dirty = true; } },
  battleSkip(){ const Bt = st.battle; if (!Bt) return; clearTimeout(Bt.endT); st.battle = null; Bt.onEnd && Bt.onEnd(); },
  battleInfo(){ const Bt = st.battle; return Bt ? {i:Math.floor(Bt.t / Bt.tick), n:Bt.frames.length, speed:Bt.speed, done:Bt.done} : null; },

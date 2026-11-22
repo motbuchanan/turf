@@ -2,8 +2,8 @@
 # into shell.html and writes the game to dist/ (index.html, sw.js and copies of the other deployed files).
 # Bump VER and set DATE by hand on every change. Upload the changed files from dist/ over the ones at the top of the repo.
 import os, re, shutil
-VER = '0.3.3'
-DATE = 'Nov 20 2026'   # the real date of this build (set by hand: the build machine's clock can be wrong)
+VER = '0.4.1'
+DATE = 'Nov 22 2026'   # the real date of this build (set by hand: the build machine's clock can be wrong)
 def src(f, tail=None):
     s = open(f).read()
     return s.replace(tail, '') if tail else s

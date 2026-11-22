@@ -20,6 +20,25 @@ def('lavD', 132, 114, 204); def('tealD', 26, 98, 98); def('jet', 38, 38, 44); de
 Object.assign(M, {white:16, black:18, charcoal:28, denim:29, mustard:30, teal:31, lav:20, blue:21, steel:13, wood:35, glow:11, flash:12});
 
 
+// scale a figure from body units (64 = full height) to tiles, and set its roundness
+function finishFig(P, p, lod){
+ const K = p.h / 64 * 1.06;
+ for (const q of P){ if (typeof q[0] === 'number'){ for (let k = 0; k < 6; k++) q[k] *= K; continue; } const n = q[0] === 'e' ? 6 : 8; for (let k = 1; k <= n; k++) q[k] *= K; }
+ P.seg = lod === 2 ? 10 : lod === 1 ? 7 : 5;
+ return P;
+}
+// Biker: a dirt bike under the rider. The rider is lifted onto the pegs; wheels front and back, crew-color tank.
+function bikeParts(P, E, C, G){
+ const lift = 5;
+ for (const q of P){ if (typeof q[0] === 'number') q[2] += lift; else if (q[0] === 'e') q[3] += lift; else { q[3] += lift; q[6] += lift; } }
+ const BL = M.black, ST = M.steel, R = 7;
+ for (const y of [-15, 16]){ E([0, y, R], 1.5, R, R, BL); E([0, y, R], 1.7, 3, 3, M.silver, 1); }
+ C([0, -15, R], [0, -3, 15], .9, .9, ST); C([0, -3, 15], [0, 13, 24], .9, .8, ST); C([0, 13.5, 25], [0, 16, R], .7, .7, ST);
+ C([0, -3, 15], [0, 3, 9], .9, .9, ST); E([0, 3, 9.5], 3, 3.4, 3, M.charcoal, 1);
+ E([0, 5, 19], 2.6, 4.6, 2.2, G); C([0, -10, 20], [0, 1, 20.5], 2.1, 2, BL); C([-6, 13, 26.5], [6, 13, 26.5], .55, .55, BL);
+ E([0, -17, 13], 2, 4, .6, G, 1);
+ for (const s of [-1, 1]) C([s * 2.5, 1, 7.5], [s * 4.5, 1, 7.5], .5, .5, ST, 1);
+}
 function build(p, frame, mode, lod){
  lod = lod == null ? 2 : lod;
  const P = [];
@@ -33,7 +52,14 @@ function build(p, frame, mode, lod){
  const sx = (fem ? 4.1 : 4.6) * (huge ? 1.22 : heavy ? 1.1 : slim ? .95 : 1);      // shoulder joint, half width
  const hx = (fem ? 2.15 : 1.95) * (huge ? 1.25 : heavy ? 1.12 : 1);                // hip joint, half width
  const far = lod === 0, walk = mode === 'walk', work = mode === 'work', f = frame & 3, beat = work && !!(frame & 2);
- const tool = p.tool, club = tool === 'bat' || tool === 'sledge', on = k => p.gangOn.indexOf(k) >= 0;
+ const tool = p.tool, club = tool === 'bat' || tool === 'sledge' || tool === 'pipe' || tool === 'cutters' || tool === 'boombox', on = k => p.gangOn.indexOf(k) >= 0;
+ if (p.drone){   // Drone Kid: the hobby drone itself, hovering, rotors blurring, a payload slung under it
+  const Z = 50 + (frame & 1) * .8, BL = M.black;
+  E([0, 0, Z], 4.4, 4.4, 1.7, G); E([0, 0, Z + 1.2], 2.6, 2.6, .9, GD, 1); E([0, 3.6, Z - .3], 1.2, 1.1, 1.1, BL, 1);
+  for (const [sx2, sy2] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]){ C([sx2 * 2.4, sy2 * 2.4, Z], [sx2 * 7.5, sy2 * 7.5, Z + .5], .55, .45, BL);
+   C([sx2 * 7.5, sy2 * 7.5, Z + .2], [sx2 * 7.5, sy2 * 7.5, Z + 1.6], .5, .5, BL, 1); E([sx2 * 7.5, sy2 * 7.5, Z + 1.8], (frame + sx2 + sy2) & 1 ? 4.4 : 3.6, (frame + sx2 + sy2) & 1 ? 3.6 : 4.4, .22, M.silver); }
+  C([0, 0, Z - 1.4], [0, 0, Z - 5], .2, .2, BL, 1); P.push([-1.8, -1.8, Z - 8.4, 3.6, 3.6, 3.4, M.tan]);
+  return finishFig(P, p, lod); }
 
  // ---------- legs: thigh angle and knee bend per leg, hips dropped so the lower foot stands on the ground ----------
  let la, lk, ra, rk;
@@ -96,6 +122,7 @@ function build(p, frame, mode, lod){
  if (p.tied) for (const z of [WZ + 1.6, CZ + .2]) E([0, lean * .5 - .3, z], cw * 1.16, cry * 1.12, .5, M.tan);
  if (on('neck')){ E([0, lean + .15, SZ + .95], 2.0, 1.95, .85, G); E([0, chestF(1.9) + .1, CZ + 1.9], 1.55, .55, 1.45, G, 1); }
  if (on('flag')) E([hx + 1.75 * g, .7, PZ - 1.7], .45, .95, 2.4, G, 1);
+ if (p.cassette){ E([0, lean * .95, SZ + .3], 2.25, 2.15, .18, M.brown, 2); const cy = chestF(.9) + .3; P.push([-1.25, cy - .1, CZ - .3, 2.5, .35, 1.6, M.charcoal]); P.push([-1.05, cy + .22, CZ - .05, 2.1, .08, .45, M.mustard]); E([-.5, cy + .26, CZ + .75], .3, .06, .3, M.silver, 2); E([.5, cy + .26, CZ + .75], .3, .06, .3, M.silver, 2); }
  if (p.chain){ E([0, lean * .95, SZ + .3], 2.25, 2.15, .22, M.gold, 2); E([0, chestF(.9) + .25, CZ + .9], .5, .32, .62, M.gold, 2); }
  if (p.pack) E([0, lean * .5 - td * bulk - 1.3, CZ - .7], 2.9, 1.7, 3.9, M[p.pack]);
  if (p.bag){ const b0 = [sx - 1, lean + td * .7, SZ + .7], b1 = [0, chestF(-.4) + .25, CZ - .4], b2 = [-(hx + 1.5 * g), td * .8, PZ + 1.4];
@@ -120,18 +147,34 @@ function build(p, frame, mode, lod){
   return {H, d2};
  };
  const swing = walk ? [.55, .1, -.5, -.1][f] : 0;
- let A;
+ let A, A2;
  if (p.tied){ arm(-1, -.35, -.1, -.75, -.7); arm(1, -.35, -.1, -.75, -.7); }
- else if (work && tool === 'pistol'){ A = arm(1, 1.5, -.14, 1.57, -.1); arm(-1, 1.36, -.3, 1.5, -.72); }
- else if (work && club){ A = beat ? arm(1, 1.2, .05, 1.5, -.1) : arm(1, 3.3, .15, 3.0, 0); arm(-1, .55, .1, 1.7, -.3); }
- else if (club){ A = arm(1, .1, .1, 2.45, 0); arm(-1, walk ? -swing : .06, .12, walk ? -swing + .5 : .3, .06); }
+ else if (p.bike){ A = arm(1, .95, .05, 1.35, -.05); A2 = arm(-1, .95, .05, 1.35, -.05); }
+ else if (work && (tool === 'pistol' || tool === 'shotgun')){ A = arm(1, 1.5, -.14, 1.57, -.1); arm(-1, 1.36, -.3, 1.5, -.72); }
+ else if (work && club){ A = beat ? arm(1, 1.2, .05, 1.5, -.1) : arm(1, 3.3, .15, 3.0, 0); A2 = arm(-1, .55, .1, 1.7, -.3); }
+ else if (club){ A = arm(1, .1, .1, 2.45, 0); A2 = arm(-1, walk ? -swing : .06, .12, walk ? -swing + .5 : .3, .06); }
  else if (walk){ A = arm(1, swing, .1, swing + .5, .05); arm(-1, -swing, .1, -swing + .5, .05); }
  else if (p.pose === 'pocket' && top.t === 'hoodie'){ arm(1, .12, .1, .95, -.55); arm(-1, .12, .1, .95, -.55); }
  else { A = arm(1, .06, .12, .3, .06); arm(-1, .06, .12, .3, .06); }
  // ---------- what they carry (drawn bigger from far away so each kind reads in a crowd) ----------
  if (A && club){ const k = far ? 1.7 : 1, pb = work ? (beat ? 1.45 : 3.9) : 3.75, d = [0, Math.sin(pb), -Math.cos(pb)], b0 = add(A.H, d, -1.3);
-  if (tool === 'bat'){ C(b0, add(A.H, d, 13.5), .36 * k, .64 * k, M.wood); E(b0, .52 * k, .52 * k, .52 * k, M.wood, 2); C(add(A.H, d, -.9), add(A.H, d, 2.2), .4, .4, M.ink, 2); }
+  if (tool === 'boombox'){   // a battered silver boombox resting on the shoulder beside the head, long side outward, speakers facing front
+   const dx = A.H[0] >= 0 ? 1 : -1, x0 = dx * 2.7, x1 = dx * (sx + 5.4), cx = (x0 + x1) / 2, y = lean * 1.15 + .3, z = SZ + 1.1;   // inner end against the head, sitting on the shoulder
+   P.push([Math.min(x0, x1), y - 1.6, z, Math.abs(x1 - x0), 3.2, 5, M.silver]); P.push([cx - 1.3, y + 1.45, z + 1.4, 2.6, .25, 1.8, M.charcoal]);
+   for (const o of [-2.75, 2.75]){ E([cx + o, y + 1.65, z + 2.3], 1.65, .3, 1.65, M.black, 1); E([cx + o, y + 1.85, z + 2.3], .65, .2, .65, M.charcoal, 2); }
+   C([x0 + dx * .8, y, z + 5.7], [x1 - dx * .8, y, z + 5.7], .3, .3, M.charcoal, 1); for (const xx of [x0 + dx * .8, x1 - dx * .8]) C([xx, y, z + 5], [xx, y, z + 5.8], .28, .28, M.charcoal, 2); }
+  else if (tool === 'bat'){ C(b0, add(A.H, d, 13.5), .36 * k, .64 * k, M.wood); E(b0, .52 * k, .52 * k, .52 * k, M.wood, 2); C(add(A.H, d, -.9), add(A.H, d, 2.2), .4, .4, M.ink, 2); }
+  else if (tool === 'pipe'){ C(b0, add(A.H, d, 14), .55 * k, .55 * k, M.steel); E(add(A.H, d, 14), .75 * k, .75 * k, .75 * k, M.steel, 1); C(add(A.H, d, -.9), add(A.H, d, 2.2), .62, .62, M.black, 2); }
+  else if (tool === 'cutters'){ const sd2 = [1, 0, 0], j = add(A.H, d, 12);
+   for (const s of [-1, 1]){ C(add(add(A.H, d, -1), sd2, s * .5), add(j, sd2, s * .45), .36 * k, .32 * k, M.steel); C(add(A.H, sd2, s * .55), add(add(A.H, d, 1.6), sd2, s * .6), .5, .5, M.red, 1);
+    C(add(j, sd2, s * .45), add(add(j, d, 2.6), sd2, s * .15), .5 * k, .3 * k, M.ink); } }
   else { const tip = add(A.H, d, 15.5); C(b0, tip, .4 * k, .4 * k, M.wood); P.push([tip[0] - 2 * k, tip[1] - 1.25 * k, tip[2] - 1.25 * k, 4 * k, 2.5 * k, 2.5 * k, M.steel]); } }
+ if (A && tool === 'shotgun'){ const k = far ? 1.6 : 1, d = A.d2, dn = [0, d[2], -d[1]];   // a long pump gun, held in both hands
+  C(add(A.H, d, -3.2), add(A.H, d, 8.5 * k), .55 * k, .5 * k, M.steel); C(add(A.H, d, -3.4), add(add(A.H, d, -.6), dn, 1.5), .75, .6, M.wood); C(add(A.H, d, 3.2), add(A.H, d, 5.4), .72, .72, M.wood, 1);
+  if (work && beat){ E(add(A.H, d, 10 * k), 1.5, 2, 1.5, M.glow); E(add(A.H, d, 12 * k), .8, 1.3, .8, M.flash, 1); } }
+ if (A && tool === 'sack' && !work){ E(add(A.H, [0, 0, -1], 2.4), 2.3, 2, 2.8, M.khaki); E(add(A.H, [0, 0, -1], .2), .9, .8, .6, M.brown, 1); }
+ if (A && tool === 'medbag'){ const c = add(A.H, [0, 0, -1], 2.6); P.push([c[0] - 1.8, c[1] - 1.1, c[2] - 1.6, 3.6, 2.2, 3, M.white]); P.push([c[0] - .4, c[1] - 1.25, c[2] - 1, .8, .2, 1.8, G]); P.push([c[0] - .9, c[1] - 1.25, c[2] - .3, 1.8, .2, .6, G]); }
+ if (A2 && p.shield){ const c = add(A2.H, [0, 1, 0], 1.6); P.push([c[0] - 4.6, c[1], c[2] - 8, 9.2, .8, 15, M.steel]); P.push([c[0] - 4.2, c[1] + .75, c[2] - 7.6, 8.4, .1, 14.2, M.glass || M.silver]); P.push([c[0] - 4.6, c[1] + .85, c[2] + 3.6, 9.2, .12, 1.4, G]); }
  if (A && tool === 'pistol'){ const k = far ? 1.8 : 1, d = A.d2, dn = [0, d[2], -d[1]];
   C(add(A.H, d, .2), add(A.H, d, 3.9 * k), .5 * k, .45 * k, M.steel); C(A.H, add(A.H, dn, 1.6), .42, .4, M.black, 1);
   if (work && beat){ E(add(A.H, d, 5.2 * k), .9, 1.4, .9, M.glow); E(add(A.H, d, 6.6 * k), .45, .9, .45, M.flash, 1); } }
@@ -159,7 +202,7 @@ function build(p, frame, mode, lod){
  if (masked) E([0, HC[1] + .4, HC[2] - 1.55], 2.3, 2.55, 1.7, G, 1);
 
  // ---------- hair (the top is skipped under a hat) ----------
- const hat = p.hat, covered = hat === 'cap' || hat === 'capback' || hat === 'beanie' || hat === 'hood' || hat === 'durag' || hat === 'bucket', hs = p.hair;
+ const hat = p.hat, covered = hat === 'cap' || hat === 'capback' || hat === 'beanie' || hat === 'hood' || hat === 'durag' || hat === 'bucket' || hat === 'helmet' || hat === 'flat', hs = p.hair;
  const skull = (dz, grow, m) => E([0, HC[1] - .5, HC[2] + .75 + dz], hr[0] + .2 + grow, hr[1] + .22 + grow, hr[2] + .1 + grow * .7 - dz * .5, m);
  if (hat !== 'hood'){
   if (!covered){
@@ -183,6 +226,8 @@ function build(p, frame, mode, lod){
  // ---------- hats ----------
  const HT = on('hat') ? G : M[p.hatC || 'jet'], HT2 = on('hat') ? GD : M[p.hatC2 || p.hatC || 'jet'];
  if (hat === 'cap' || hat === 'capback'){ E([0, HC[1] - .35, HC[2] + 1.25], hr[0] + .45, hr[1] + .45, 2.75, HT); E([0, HC[1] + (hat === 'cap' ? 3.3 : -3.7), HC[2] + .95], 2.45, 2.05, .32, HT2); E([0, HC[1] - .35, HC[2] + 4], .4, .4, .22, HT2, 2); }
+ if (hat === 'flat'){ E([0, HC[1] + .2, HC[2] + 1.35], hr[0] + .55, hr[1] + .75, 2.05, HT); E([0, HC[1] + 3.0, HC[2] + .85], 2.35, 1.7, .3, HT2); E([0, HC[1] - .3, HC[2] + 2.7], 1.4, 1.6, .6, HT, 2); }
+ if (hat === 'helmet'){ E([0, HC[1] - .3, HC[2] + .6], hr[0] + .85, hr[1] + .85, hr[2] + .6, HT); E([0, HC[1] + 2.2, HC[2] + .2], 2.2, 1.4, 1.35, M.black, 1); E([0, HC[1] + 3.1, HC[2] - 1.9], 1.2, .8, .9, HT2, 2); }
  if (hat === 'beanie'){ E([0, HC[1] - .4, HC[2] + 1.35], hr[0] + .5, hr[1] + .5, 3, HT); E([0, HC[1] - .4, HC[2] + .8], hr[0] + .74, hr[1] + .74, .85, HT2, 1); }
  if (hat === 'bucket'){ E([0, HC[1] - .35, HC[2] + 1.3], hr[0] + .45, hr[1] + .45, 2.75, HT); E([0, HC[1] - .2, HC[2] + 1.1], 4.2, 4.4, .36, HT2); }
  if (hat === 'durag'){ E([0, HC[1] - .5, HC[2] + .85], hr[0] + .3, hr[1] + .32, hr[2] + .05, HT); C([0, HC[1] - 2.9, HC[2] - .2], [0, HC[1] - 3.5, HC[2] - 3.6], .85, .4, HT, 1); }
@@ -190,10 +235,8 @@ function build(p, frame, mode, lod){
  if (hat === 'headband'){ E([0, HC[1], HC[2] + .95], hr[0] * .953 + .3, hr[1] * .953 + .3, .58, HT);
   C([-.4, HC[1] - 3, HC[2] + .9], [-1.5, HC[1] - 4.3, HC[2] - 1.3], .42, .22, HT2, 1); C([.3, HC[1] - 3, HC[2] + .9], [1, HC[1] - 4.6, HC[2] - .5], .42, .22, HT2, 2); }
 
- const K = p.h / 64 * 1.06;
- for (const q of P){ if (typeof q[0] === 'number'){ for (let k = 0; k < 6; k++) q[k] *= K; continue; } const n = q[0] === 'e' ? 6 : 8; for (let k = 1; k <= n; k++) q[k] *= K; }
- P.seg = lod === 2 ? 10 : lod === 1 ? 7 : 5;
- return P;
+ if (p.bike) bikeParts(P, E, C, G);
+ return finishFig(P, p, lod);
 }
 // ---------- one shared pool for every crew, plus a kit for each kind of fighter ----------
 function rng(seed){ let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -228,6 +271,23 @@ function person(seed, gang, role){
   p.build = 'huge'; p.h = 1.17 + r() * .05;
   p.top = {t:'vest', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', 'beanie', 'durag', null]); if (p.hair !== 'locs' && p.hair !== 'braids' && !p.hat) p.hair = 'buzz';
   p.bottom = pick([cargo(), cargo(), jeans()]); p.shoes = boots(); p.tool = 'sledge';
+ } else if (role === 'snatcher'){    // slim and quick: crew-color track jacket, cap backwards, a loot sack in hand
+  p.build = 'slim'; p.top = {t:'track', c:'jet', c2:'white'}; p.gangOn = ['top']; p.hat = 'capback';
+  p.bottom = soft('track'); p.shoes = low(); p.tool = 'sack';
+ } else if (role === 'breacher'){    // crew-color tee, beanie, work boots, red-handled bolt cutters
+  if (p.build === 'slim') p.build = 'avg'; p.top = {t:'tee', c:'jet', c2:'white'}; p.gangOn = ['top']; p.hat = 'beanie';
+  p.bottom = cargo(); p.shoes = boots(); p.tool = 'cutters';
+ } else if (role === 'medic'){       // crew-color hoodie, a white med bag with a crew-color cross
+  p.top = {t:'hoodie', c:'jet'}; p.gangOn = ['top']; p.hat = pick(['cap', null]); p.bottom = pick([jeans(), soft('track')]); p.shoes = low(); p.tool = 'medbag';
+ } else if (role === 'shotgunner'){  // crew-color bomber, boots, a long pump gun
+  p.top = {t:'bomber', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', null, 'bucket']); p.bottom = pick([jeans(), cargo()]); p.shoes = boots(); p.tool = 'shotgun';
+ } else if (role === 'drone'){       // the drone is the fighter; its shell is the crew color
+  p.drone = true; p.gangOn = ['top'];
+ } else if (role === 'biker'){       // crew-color helmet, black jacket, on a dirt bike with a crew-color tank
+  p.top = {t:'bomber', c:'ink', c2:'heather', c3:'ink'}; p.gangOn = ['hat']; p.hat = 'helmet'; p.bottom = jeans(); p.shoes = boots(); p.bike = true; p.tool = null;
+ } else if (role === 'heavy'){       // huge, crew-color vest, riot shield and a steel pipe
+  p.build = 'huge'; p.h = 1.15 + r() * .05; p.top = {t:'vest', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', 'durag']);
+  p.bottom = cargo(); p.shoes = boots(); p.tool = 'pipe'; p.shield = true;
  } else {                            // everyone else on the block
   const tt = pick(['tee', 'longtee', 'hoodie', 'hoodie', 'puffer', 'bomber', 'track', 'jersey', 'flannel', 'denimjkt', 'tank']);
   p.top = {t:tt, c:neutral(), c2:pick(['white', 'cream', 'heather', 'jet']), c3:'ink'};
@@ -248,10 +308,37 @@ function person(seed, gang, role){
 // ---------- named people, and a cache so a fight does not rebuild the same pose every frame ----------
 const VICEROY = {skin:4, sex:'m', build:'slim', h:1.06, hairC:'hBlack', hair:'pomp', beard:'stache', earring:true, gang:'lav', gangD:'lavD', gangOn:[],
  top:{t:'suit', c:'lav', c2:'cream', c3:'blue'}, bottom:{t:'slacks', c:'lav'}, shoes:{t:'boots', c:'blue', sole:'ink', toe:'blue'}, ruffle:true, cape:true, guitar:true};
-const NAMED = {viceroy:VICEROY, viceroy_tied:Object.assign({}, VICEROY, {guitar:false, tied:true})};
+// Pops Cassette, boss of the Boombox Kings: from the painted portrait. Sixties, deep brown skin, short grey beard, round glasses,
+// gold flat cap, gold satin bomber with black ribbing over a black shirt, a cassette on a cord, a silver boombox on his shoulder.
+const POPS = {skin:0, sex:'m', build:'heavy', h:1.0, hairC:'hGrey', hair:'buzz', beard:'full', glasses:'clear', gang:'mustard', gangD:'brown', gangOn:[],
+ hat:'flat', hatC:'mustard', hatC2:'brown', top:{t:'bomber', c:'mustard', c2:'ink', c3:'ink'}, bottom:{t:'slacks', c:'ink'}, shoes:{t:'boots', c:'ink', sole:'ink', toe:'ink'},
+ cassette:true, watch:true, tool:'boombox'};
+// the rival crews' bosses (v0.4.1): each holds its crew's last block
+const RIVALS = {
+ goldnote:{skin:2, sex:'m', build:'heavy', h:1.02, hairC:'hBlack', hair:'buzz', beard:'goatee', glasses:'clear', gang:'green', gangD:'forest', gangOn:[], chain:true, watch:true,
+  hat:'flat', hatC:'forest', hatC2:'green', top:{t:'suit', c:'green', c2:'cream', c3:'forest'}, bottom:{t:'slacks', c:'ink'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:null},
+ basement:{skin:3, sex:'m', build:'avg', h:1.0, hairC:'hBlack', hair:'locs', beard:'stache', glasses:'shades', gang:'blue', gangD:'navy', gangOn:[], chain:true,
+  hat:null, top:{t:'hoodie', c:'blue', c2:'navy'}, bottom:{t:'cargo', c:'jet', c2:'charcoal'}, shoes:{t:'high', c:'white', sole:'sole'}, tool:null},
+ afterhours:{skin:1, sex:'f', build:'slim', h:1.0, hairC:'hBlack', hair:'puffs', glasses:'shades', earring:true, gang:'red', gangD:'burgundy', gangOn:[],
+  hat:null, top:{t:'bomber', c:'red', c2:'ink', c3:'ink'}, bottom:{t:'jeans', c:'jet', c2:'charcoal'}, shoes:{t:'boots', c:'red', sole:'ink', toe:'red'}, tool:'pistol'},
+ yard:{skin:4, sex:'m', build:'huge', h:1.04, hairC:'hGrey', hair:'buzz', beard:'full', gang:'orange', gangD:'brown', gangOn:[],
+  hat:'beanie', hatC:'orange', hatC2:'orange', top:{t:'flannel', c:'orange', c2:'brown'}, bottom:{t:'cargo', c:'khaki', c2:'brown'}, shoes:{t:'boots', c:'tan', sole:'brown', toe:'tan'}, tool:'sledge'},
+ chrometide:{skin:2, sex:'f', build:'avg', h:1.0, hairC:'hDark', hair:'ponytail', gang:'teal', gangD:'tealD', gangOn:[], watch:true,
+  hat:'helmet', hatC:'teal', hatC2:'teal', top:{t:'bomber', c:'teal', c2:'ink', c3:'ink'}, bottom:{t:'jeans', c:'ink', c2:'charcoal'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:'pipe'}
+};
+// your three bosses wear your crew color: 'hero|enforcer|teal'
+function heroSpec(id, color){ const g = GANGS[color] || GANGS.lav, c = g[0], d = g[1];
+ if (id === 'enforcer') return {skin:1, sex:'m', build:'huge', h:1.06, hairC:'hBlack', hair:'buzz', beard:'goatee', gang:c, gangD:d, gangOn:[], chain:true,
+  hat:'durag', hatC:c, hatC2:d, top:{t:'tank', c, c2:d}, bottom:{t:'cargo', c:'jet', c2:'charcoal'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:'pipe'};
+ if (id === 'deadeye') return {skin:3, sex:'f', build:'slim', h:1.02, hairC:'hBlack', hair:'braids', glasses:'shades', earring:true, gang:c, gangD:d, gangOn:[],
+  hat:null, top:{t:'track', c, c2:'white'}, bottom:{t:'jeans', c:'ink', c2:'charcoal'}, shoes:{t:'high', c:'white', sole:'sole'}, tool:'pistol'};
+ return {skin:0, sex:'f', build:'avg', h:1.0, hairC:'hDark', hair:'bun', glasses:'clear', earring:true, watch:true, gang:c, gangD:d, gangOn:[],
+  hat:null, top:{t:'suit', c, c2:'white', c3:d}, bottom:{t:'slacks', c:'ink'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:null}; }
+const NAMED = {viceroy:VICEROY, viceroy_tied:Object.assign({}, VICEROY, {guitar:false, tied:true}), pops:POPS, 'boss:boombox':POPS};
+Object.keys(RIVALS).forEach(k => NAMED['boss:' + k] = RIVALS[k]);
 const SPECS = new Map(), CACHE = new Map();
 // a look is a name ('viceroy') or 'm|seed|crew color|role'
-function spec(look){ let p = SPECS.get(look); if (!p){ if (NAMED[look]) p = NAMED[look]; else { const a = String(look).split('|'); p = person(+a[1] || 1, a[2] || 'lav', a[3] || null); } SPECS.set(look, p); } return p; }
+function spec(look){ let p = SPECS.get(look); if (!p){ if (NAMED[look]) p = NAMED[look]; else if (String(look).indexOf('hero|') === 0){ const a = String(look).split('|'); p = heroSpec(a[1], a[2]); } else { const a = String(look).split('|'); p = person(+a[1] || 1, a[2] || 'lav', a[3] || null); } SPECS.set(look, p); } return p; }
 function fig(look, frame, mode, lod){
  const k = look + '|' + (frame & 3) + '|' + mode + '|' + lod; let b = CACHE.get(k);
  if (!b){ if (CACHE.size > 1200) CACHE.clear(); b = build(spec(look), frame & 3, mode, lod); CACHE.set(k, b); }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.3.3">
+<meta name="build" content="0.4.1">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -66,7 +66,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #hud .end{margin-left:auto;pointer-events:auto;background:rgba(14,15,18,.78);border:1px solid var(--line);padding:9px 14px;border-radius:4px;font-weight:700}
 #hud .end:active{background:#2a2c31}
 #hud .tip{position:absolute;top:calc(92px + var(--safe-t));left:50%;transform:translateX(-50%);background:rgba(14,15,18,.85);padding:8px 14px;border-radius:4px;font-size:15px;white-space:nowrap;pointer-events:none;transition:opacity .3s}
-#hud .bar{position:absolute;left:calc(8px + var(--safe-l));right:calc(8px + var(--safe-r));bottom:calc(10px + var(--safe-b));display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#hud .bar{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 16px - var(--safe-l) - var(--safe-r));bottom:calc(10px + var(--safe-b));display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior:contain;touch-action:pan-x;scrollbar-width:none}
+#hud .bar::-webkit-scrollbar{display:none}
+#hud .bar .troop{flex:0 0 auto}
 .troop{position:relative;width:96px;height:112px;background:var(--panel);border:2px solid var(--line);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 4px 6px}
 .troop canvas{margin-bottom:2px}
 .troop .nm{font-size:13px;font-weight:700}
@@ -96,12 +98,13 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #watch .lbl{position:absolute;top:calc(12px + var(--safe-t));left:calc(12px + var(--safe-l));background:rgba(14,15,18,.8);padding:6px 10px;border-radius:4px;font-weight:700}
 
 /* your block */
-#home .res{position:absolute;top:calc(10px + var(--safe-t));left:calc(10px + var(--safe-l));right:calc(64px + var(--safe-r));display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
-.chip{display:flex;align-items:center;gap:7px;background:rgba(14,15,18,.82);padding:7px 10px;border-radius:4px;font-weight:800;font-variant-numeric:tabular-nums;font-size:17px;pointer-events:auto;min-height:44px}
+#home .res{position:absolute;top:calc(10px + var(--safe-t));left:calc(8px + var(--safe-l));right:calc(62px + var(--safe-r));display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.chip{display:flex;align-items:center;gap:6px;background:rgba(14,15,18,.82);padding:6px 8px;border-radius:4px;font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(14px,3.9vw,17px);pointer-events:auto;min-height:44px}
 .chip.full b{color:var(--sodium)}
 .ic{display:block;width:20px;height:13px;border-radius:2px}
 .ic.cash{background:#5fd38a;box-shadow:inset 0 0 0 2px #2d7a4b}
 .ic.sup{width:16px;height:16px;background:#96764f;box-shadow:inset 0 0 0 2px #5c452a}
+.ic.rep{width:16px;height:16px;border-radius:50%;background:var(--sodium);box-shadow:inset 0 0 0 3px #9a5d14}
 .ic.crew{width:14px;height:18px;border-radius:7px 7px 2px 2px;background:var(--lav)}
 #home .dock{position:absolute;left:calc(10px + var(--safe-l));right:calc(10px + var(--safe-r));bottom:calc(14px + var(--safe-b));display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;pointer-events:none}
 #home.sheeton .dock{display:none}
@@ -111,11 +114,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #home .hint{position:absolute;top:calc(64px + var(--safe-t));left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;background:rgba(14,15,18,.92);border:1px solid var(--sodium);padding:6px 6px 6px 14px;border-radius:4px;font-size:15px;width:max-content;max-width:94vw}
 #home .hint[hidden]{display:none}
 #home .hint button{min-height:44px;padding:8px 14px;background:var(--sodium);color:#1a1209;font-weight:800;border-radius:3px}
-.sheet{position:absolute;left:calc(8px + var(--safe-l));right:calc(8px + var(--safe-r));bottom:calc(8px + var(--safe-b));max-width:520px;margin:0 auto;max-height:58vh;overflow:hidden;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px 10px 4px 4px;padding:14px 14px 12px}
+.sheet{position:absolute;left:calc(8px + var(--safe-l));right:calc(8px + var(--safe-r));bottom:calc(8px + var(--safe-b));max-width:520px;margin:0 auto;max-height:58vh;overflow:hidden;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px 10px 4px 4px;padding:62px 14px 12px}
 #sheetBody{overflow-y:auto;min-height:0;touch-action:pan-y;overscroll-behavior:contain}
 .sheet[hidden]{display:none}
 .sheet .x{position:absolute;top:10px;right:10px;z-index:1;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:4px;background:#2c2e34;font-weight:700;font-size:14px}
-.sheet h3{font-size:20px;line-height:1.25;margin-bottom:6px;min-height:42px;padding-right:92px}
+.sheet h3{font-size:20px;line-height:1.25;margin-bottom:6px}
+.sheet .x{left:14px;right:auto}
 .sheet h3 span{color:var(--dim);font-size:14px;font-weight:600;margin-left:8px;white-space:nowrap}
 .sheet p{color:var(--dim);font-size:15px;line-height:1.4;margin-bottom:8px}
 .sheet p.stat{color:var(--ink)}
@@ -155,9 +159,32 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #hud .troop{pointer-events:auto}
 @media (orientation:landscape) and (max-height:500px){
  .troop{width:84px;height:86px}.troop canvas{width:52px!important;height:52px!important}
- #hud .bar{left:auto;right:calc(8px + var(--safe-r));justify-content:flex-end}
+ #hud .bar{left:auto;transform:none;right:calc(8px + var(--safe-r));max-width:calc(100% - 140px - var(--safe-l) - var(--safe-r))}
  #title .mark{bottom:calc(96px + var(--safe-b))}#title .mark svg{width:min(40vw,240px)}#title .go{bottom:calc(20px + var(--safe-b))}#title .alt{bottom:calc(30px + var(--safe-b))}
  .card{max-width:640px}}
+.tod{display:flex;gap:0;margin:4px 0 6px}
+.tod button{flex:1;min-height:46px;border:1px solid var(--line);background:#26282d;font-weight:800;font-size:15px;color:var(--dim)}
+.tod button:first-child{border-radius:4px 0 0 4px}.tod button:last-child{border-radius:0 4px 4px 0}
+.tod button.on{background:#e8d9a8;color:#1b1b1d;border-color:#e8d9a8}
+.crewhd{display:flex;align-items:center;gap:10px;margin-top:10px}
+.crewhd i{flex:0 0 auto;width:14px;height:40px;border-radius:2px}
+.crewhd .nm{font-weight:800;font-size:16px}.crewhd .sub{color:var(--dim);font-size:13px;line-height:1.3}
+.blocks{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.blk{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:76px;padding:8px 4px;border:1px solid var(--line);border-radius:6px 2px 6px 2px;background:#26282d}
+.blk .nm{font-weight:800;font-size:13px;text-align:center;line-height:1.15}
+.blk .sub{color:var(--dim);font-size:11px;text-align:center;line-height:1.2}
+.blk .st{display:flex;gap:2px}.blk .st i{width:11px;height:11px;background:#44464c;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.blk .st i.on{background:#f0c64a}
+.blk.no{opacity:.45}.blk:active{background:#3a3c42}
+@media (max-width:360px){.blocks{grid-template-columns:repeat(2,1fr)}}
+#sheetBody h4{margin:16px 0 2px;font-size:16px;font-weight:800;display:flex;align-items:baseline;gap:8px}
+#sheetBody h4 span{color:var(--dim);font-weight:600;font-size:14px}
+.troop.boss{border-color:#6b6f78}
+.troop.ready{border-color:#f0c64a;box-shadow:0 0 0 2px #f0c64a inset;animation:ready 1.2s ease-in-out infinite}
+@keyframes ready{50%{box-shadow:0 0 0 4px #f0c64a inset}}
+.troop.item .nm{font-size:12px;line-height:1.1;text-align:center}
+.troop.boss .nm{font-size:12px;line-height:1.1;text-align:center}
+@media (prefers-reduced-motion:reduce){.troop.ready{animation:none}}
 
 </style>
 </head>
@@ -197,14 +224,14 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 </div>
 
 <div id="home" class="layer">
- <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
+ <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><span class="chip"><i class="ic rep"></i><b id="hRep">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
  <div class="hint" id="hHint" hidden><span id="hHintTxt"></span><button id="hHintDone">Done</button></div>
  <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb main" id="hAttack">Attack</button></div>
  <div class="sheet" id="sheet" hidden><button class="x" id="sheetX">Close</button><div id="sheetBody"></div></div>
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.3.3 · Nov 20 2026</button>
+<button id="badge">v0.4.1 · Nov 22 2026</button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
 
@@ -300,7 +327,15 @@ function raidStart(R, opt){
  opt = opt || {};
  const dep = Array.isArray(R.deploys), maxT = R.maxT || MAXT;
  const rand = rng(R.seed >>> 0), r4 = v => Math.round(v * 10000) / 10000;
- const items = R.items.map((it, i) => ({i, key:it.key, k:it.k, x:it.x, y:it.y, fw:it.fw, fh:it.fh, role:it.role, max:it.hp || 0, hp:it.hp || 0, range:it.range || 0, dmg:it.dmg || 0, rate:it.rate || 1, cd:0, dealt:0, hit:new Set()}));
+ // Turf fighters (Nov 20 2026): every rule below switches on only from a field Ravenmarrow never sets, so its fights do not change.
+ // heal/healR (Street Medic), bomb (Breacher), jump (Biker), lootMult (Snatcher), prefer 'res'|'wall'; item.loot marks loot buildings.
+ // R.rules >= 2 (Turf recipes) also lets fliers pass over defenders on foot.
+ const xtra = a => ({heal:a.heal || 0, healR:a.healR || 0, bomb:!!a.bomb, jump:!!a.jump, lootMult:a.lootMult || 1, ab:a.ability || null, abUsed:false, rageT:0, rageM:1, ghostT:0, holdT:0});
+ // Turf items and boss abilities (Nov 22 2026): deploys may also carry {c:item, x, y, t} (an item cast, limited by R.kit and defined
+ // by R.spells) and {ab:1, i, t} (attacker i uses its ability once). Ravenmarrow never sends either, so none of this runs for it.
+ const spells = R.spells || {}, kitLeft = Object.assign({}, R.kit || {}), zones = [];
+ const rules = R.rules | 0;
+ const items = R.items.map((it, i) => ({i, key:it.key, k:it.k, x:it.x, y:it.y, fw:it.fw, fh:it.fh, role:it.role, max:it.hp || 0, hp:it.hp || 0, range:it.range || 0, dmg:it.dmg || 0, rate:it.rate || 1, loot:!!it.loot, cd:0, dealt:0, hit:new Set(), offT:0}));
  const solid = items.filter(b => b.role !== 'plot' && b.role !== 'trap');
  const scoring = items.filter(b => b.role === 'core' || b.role === 'bld' || b.role === 'tower');
  const totalHp = scoring.reduce((s, b) => s + b.max, 0) || 1;
@@ -310,21 +345,26 @@ function raidStart(R, opt){
  // spawn: one side of the map, chosen by the seed
  const units = [];
  if (dep) R.attackers.forEach((a, n) => {
-  units.push({id:n, side:'a', look:a.look, x:0, y:0, hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0,
+  units.push({id:n, side:'a', look:a.look, x:0, y:0, hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0, ...xtra(a),
    delay:0, wait:true, cd:Math.floor(rand() * 8), tgt:null, path:null, pi:0, mode:0, face:2, dealt:0, alive:true}); });
  else { const side = Math.floor(rand() * 4);
  R.attackers.forEach((a, n) => { const t = Math.floor(rand() * 16) - 8 + W / 2, e = .3;
   const p = side === 0 ? [t, e] : side === 1 ? [W - e, t] : side === 2 ? [t, H - e] : [e, t];
-  units.push({id:n, side:'a', look:a.look, x:r4(p[0]), y:r4(p[1]), hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0,
+  units.push({id:n, side:'a', look:a.look, x:r4(p[0]), y:r4(p[1]), hp:a.hp, max:a.hp, atk:a.atk, def:a.def || 0, speed:a.speed, range:a.range, fly:!!a.fly, prefer:a.prefer || 'any', wallMult:a.wallMult || 1, splash:a.splash || 0, ...xtra(a),
    delay:Math.floor(n * 3), cd:Math.floor(rand() * 8), tgt:null, path:null, pi:0, mode:0, face:0, dealt:0, alive:true}); }); }
  const posts = [];
  const cx = core ? core.x + core.fw / 2 : W / 2, cy = core ? core.y + core.fh + .6 : H / 2;
  R.defenders.forEach((d, n) => { const ang = n * 7 % 12, ox = ((ang % 4) - 1.5) * .7, oy = (Math.floor(ang / 4) - .5) * .7;
   units.push({id:100 + n, side:'d', look:d.look, hero:!!d.hero, x:r4(cx + ox), y:r4(cy + oy), px:r4(cx + ox), py:r4(cy + oy), hp:d.hp, max:d.hp, atk:d.atk, def:d.def || 0, speed:d.speed, range:d.range,
-   cd:Math.floor(rand() * 8), delay:0, tgt:null, mode:2, face:2, dealt:0, alive:true}); });
+   cd:Math.floor(rand() * 8), delay:0, tgt:null, mode:2, face:2, dealt:0, alive:true, offT:0}); });
  const guard = R.guard || 0;
  const dist2rect = (u, b) => { const dx = Math.max(b.x - u.x, 0, u.x - (b.x + b.fw)), dy = Math.max(b.y - u.y, 0, u.y - (b.y + b.fh)); return Math.sqrt(dx * dx + dy * dy); };
  const dist = (a, b) => Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+ // what is on a raider right now: Hype or Lights Out (harder hits), Smoke or Ghost (unseen), Ladder (over fences)
+ const inZone = (u, kind) => { for (const z of zones) if (z.kind === kind && z.until >= t && (u.x - z.x) * (u.x - z.x) + (u.y - z.y) * (u.y - z.y) <= z.r * z.r) return z; return null; };
+ const am = u => { if (!zones.length && !u.rageT) return 1; let m = u.rageT >= t ? u.rageM : 1; const z = zones.length ? inZone(u, 'rage') : null; if (z && z.mult > m) m = z.mult; return m; };
+ const unseen = u => u.ghostT >= t || (zones.length > 0 && !!inZone(u, 'smoke'));
+ const jmp = u => u.jump || (zones.length > 0 && !!inZone(u, 'jump'));
  const hurt = (target, amount) => { const d = Math.max(1, amount * 60 / (60 + (target.def || 0))); target.hp = r4(target.hp - d); return d; };
  // a walk from tile s to any tile within reach of building b: free tiles cost 1, standing walls cost 6 (they get broken), buildings block
  function route(u, b){
@@ -338,24 +378,46 @@ function raidStart(R, opt){
   while (heap.length){ const [c, k] = pop(); if (done[k]) continue; done[k] = 1; const x = k % W, y = (k - x) / W;
    if (dist2rect({x:x + .5, y:y + .5}, b) <= reach){ const out = []; let q = k; while (q !== -1){ out.push([q % W + .5, Math.floor(q / W) + .5]); q = prev[q]; } return out.reverse(); }
    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const nk = ny * W + nx, o = occ[nk];
-    let step = 1; if (o >= 0){ const ob = items[o]; if (!(ob.hp > 0)) step = 1; else if (ob.role === 'wall') step = 6; else continue; }
+    let step = 1; if (o >= 0){ const ob = items[o]; if (!(ob.hp > 0)) step = 1; else if (ob.role === 'wall') step = jmp(u) ? 1 : 6; else continue; }
     if (c + step < cost[nk]){ cost[nk] = c + step; prev[nk] = k; push(c + step, nk); } } }
   return null; }
  function pickTarget(u){
   let best = null, bd = 1e9;
   const pool = scoring.filter(b => b.hp > 0), defs = pool.filter(b => b.role === 'tower');
-  const list = u.prefer === 'def' && defs.length ? defs : pool;
+  let list = u.prefer === 'def' && defs.length ? defs : pool;
+  if (u.prefer === 'res'){ const l = pool.filter(b => b.loot); if (l.length) list = l; }
+  if (u.prefer === 'wall'){ const l = items.filter(b => b.role === 'wall' && b.hp > 0); if (l.length) list = l; }
   for (const b of list){ const d = dist2rect(u, b); if (d < bd - 1e-9){ bd = d; best = b; } }
   return best; }
  const frames = [], shots = [];
  let t = 0, over = null;
  const snap = () => { if (!opt.record){ if (dep) shots.length = 0; return; } frames.push({u:units.map(u => [u.id, r4(u.x), r4(u.y), Math.max(0, Math.round(u.hp)), u.mode, u.face, u.alive && u.delay <= 0 && !u.wait ? 1 : 0]), b:items.map(b => Math.max(0, Math.round(b.hp))), s:shots.splice(0)}); };
  // deploys waiting for their tick (sorted by tick, stable), how many are on the map, and the End tick if the player pressed End
- const queue = dep ? R.deploys.map(d => ({i:d.i | 0, x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)})).sort((a, b) => a.t - b.t) : [];
+ const qOf = d => d.c ? {c:String(d.c), x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)} : d.ab ? {ab:1, i:d.i | 0, t:Math.max(1, d.t | 0)} : {i:d.i | 0, x:+d.x, y:+d.y, t:Math.max(1, d.t | 0)};
+ const queue = dep ? R.deploys.map(qOf).sort((a, b) => a.t - b.t) : [];
  let qi = 0, endAt = dep ? (R.endAt | 0) : 0;
- const placeDue = () => { while (qi < queue.length && queue[qi].t <= t){ const d = queue[qi++], u = units[d.i];
+ const placeDue = () => { while (qi < queue.length && queue[qi].t <= t){ const d = queue[qi++];
+  if (d.c){ if (!castNow(d)) d.skip = true; continue; }
+  if (d.ab){ if (!abilityNow(d)) d.skip = true; continue; }
+  const u = units[d.i];
   if (!u || u.side !== 'a' || !u.wait){ d.skip = true; continue; }
   u.wait = false; u.x = r4(Math.max(0, Math.min(W - .01, d.x))); u.y = r4(Math.max(0, Math.min(H - .01, d.y))); } };
+ // an item lands: a zone for its length, or a one-off hit (Firecracker) or switch-off (Blackout)
+ function castNow(d){ const sp = spells[d.c]; if (!sp || !(kitLeft[d.c] > 0) || !(d.x >= 0 && d.y >= 0 && d.x < W && d.y < H)) return false; kitLeft[d.c]--;
+  const r2 = sp.r * sp.r, near = (o, ox, oy) => (ox - d.x) * (ox - d.x) + (oy - d.y) * (oy - d.y) <= r2;
+  if (sp.kind === 'strike'){ for (const b of items){ if (!(b.hp > 0) || b.role === 'plot' || b.role === 'trap') continue; if (dist2rect({x:d.x, y:d.y}, b) <= sp.r) hurt(b, sp.dmg); }
+   for (const u of units) if (u.side === 'd' && u.alive && near(u, u.x, u.y)) hurt(u, sp.dmg); shots.push([d.x, d.y, d.x, d.y, 2]); }
+  else if (sp.kind === 'off'){ for (const b of items) if (b.role === 'tower' && dist2rect({x:d.x, y:d.y}, b) <= sp.r) b.offT = t + sp.len; for (const u of units) if (u.side === 'd' && near(u, u.x, u.y)) u.offT = t + sp.len; }
+  else zones.push({kind:sp.kind, x:d.x, y:d.y, r:sp.r, until:t + sp.len, mult:sp.mult || 1, heal:sp.heal || 0});
+  return true; }
+ // a boss uses its ability once, from where it stands
+ function abilityNow(d){ const u = units[d.i]; if (!u || u.side !== 'a' || u.wait || !u.alive || !(u.hp > 0) || !u.ab || u.abUsed) return false; u.abUsed = true; const A = u.ab;
+  if (A.kind === 'slam'){ for (const b of items){ if (!(b.hp > 0) || b.role === 'plot' || b.role === 'trap') continue; if (dist2rect(u, b) <= A.r) u.dealt += hurt(b, A.dmg); }
+   for (const o of units){ if (o.side === 'd' && o.alive && dist(u, o) <= A.r) u.dealt += hurt(o, A.dmg);
+    if (o.side === 'a' && !o.wait && o.alive && dist(u, o) <= A.r){ o.rageT = t + A.len; o.rageM = A.mult; } } shots.push([u.x, u.y, u.x, u.y, 2]); }
+  else if (A.kind === 'ghost'){ u.ghostT = t + A.len; u.rageT = t + A.len; u.rageM = A.mult; }
+  else if (A.kind === 'hold'){ for (const o of units) if (o.side === 'a' && !o.wait && o.alive && dist(u, o) <= A.r) o.holdT = t + A.len; }
+  return true; }
  const faceTo = (u, x, y) => { const dx = x - u.x, dy = y - u.y; u.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 0 : 2); };
  snap();
  t = 1;
@@ -365,35 +427,47 @@ function raidStart(R, opt){
   const live = units.filter(u => u.alive && u.delay <= 0 && !u.wait);
   const att = live.filter(u => u.side === 'a'), def = live.filter(u => u.side === 'd');
   // towers fire at the nearest raider in range
-  for (const b of items){ if (b.role !== 'tower' || !(b.hp > 0)) continue; if (b.cd > 0){ b.cd--; continue; }
-   let tg = null, td = 1e9; for (const a of att){ const d = dist2rect(a, b); if (d <= b.range && d < td - 1e-9){ td = d; tg = a; } }
+  for (const b of items){ if (b.role !== 'tower' || !(b.hp > 0)) continue; if (b.offT >= t) continue; if (b.cd > 0){ b.cd--; continue; }
+   let tg = null, td = 1e9; for (const a of att){ if (a.ghostT || zones.length){ if (unseen(a)) continue; } const d = dist2rect(a, b); if (d <= b.range && d < td - 1e-9){ td = d; tg = a; } }
    if (tg){ b.dealt += hurt(tg, b.dmg); b.cd = Math.round(b.rate / TICK); shots.push([b.x + b.fw / 2, b.y + b.fh / 2, tg.x, tg.y, 0]); } }
   // traps hurt each raider once as they cross
   for (const b of items){ if (b.role !== 'trap') continue; for (const a of att){ if (a.fly || b.hit.has(a.id)) continue; if (a.x >= b.x && a.x <= b.x + b.fw && a.y >= b.y && a.y <= b.y + b.fh){ b.hit.add(a.id); b.dealt += hurt(a, b.dmg); shots.push([a.x, a.y, a.x, a.y, 2]); } } }
   // defenders: engage the nearest raider near the Hall, otherwise go back to post
-  for (const u of def){ let tg = null, td = 1e9; for (const a of att){ if (!(a.hp > 0)) continue; const d = dist(u, a), dp = Math.sqrt((a.x - u.px) * (a.x - u.px) + (a.y - u.py) * (a.y - u.py)); if (dp < 7 && d < td - 1e-9){ td = d; tg = a; } }
+  for (const u of def){ if (u.offT >= t){ u.mode = 2; continue; } let tg = null, td = 1e9; for (const a of att){ if (!(a.hp > 0)) continue; if ((a.ghostT || zones.length) && unseen(a)) continue; if (rules >= 2 && a.fly && u.range <= 1.2) continue; const d = dist(u, a), dp = Math.sqrt((a.x - u.px) * (a.x - u.px) + (a.y - u.py) * (a.y - u.py)); if (dp < 7 && d < td - 1e-9){ td = d; tg = a; } }
    if (u.cd > 0) u.cd--;
    if (tg){ faceTo(u, tg.x, tg.y);
     if (td <= u.range + .35){ u.mode = 1; if (!u.cd){ u.dealt += hurt(tg, u.atk); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, tg.x, tg.y, 1]); } }
     else { u.mode = 0; const k = Math.min(1, u.speed * TICK / td); u.x = r4(u.x + (tg.x - u.x) * k); u.y = r4(u.y + (tg.y - u.y) * k); } }
    else { const d = Math.sqrt((u.px - u.x) * (u.px - u.x) + (u.py - u.y) * (u.py - u.y)); if (d > .05){ u.mode = 0; faceTo(u, u.px, u.py); const k = Math.min(1, u.speed * TICK / d); u.x = r4(u.x + (u.px - u.x) * k); u.y = r4(u.y + (u.py - u.y) * k); } else { u.mode = 2; u.face = 2; } } }
+  // First Aid Run: everyone inside is patched up every 0.8 s while it lasts
+  if (zones.length && t % 8 === 0) for (const z of zones){ if (z.kind !== 'heal' || z.until < t) continue; for (const a of att){ if (!(a.hp > 0) || a.hp >= a.max) continue; if ((a.x - z.x) * (a.x - z.x) + (a.y - z.y) * (a.y - z.y) <= z.r * z.r) a.hp = r4(Math.min(a.max, a.hp + z.heal)); } }
   // raiders: fight a defender in their face, else walk to the target, breaking walls in the way
   for (const u of att){ if (!(u.hp > 0)) continue; if (u.cd > 0) u.cd--;
-   let foe = null, fd = 1e9; for (const d of def){ if (!(d.hp > 0)) continue; const dd = dist(u, d); if (dd < Math.max(1.1, u.range + .3) && dd < fd - 1e-9){ fd = dd; foe = d; } }
-   if (foe){ faceTo(u, foe.x, foe.y); u.mode = 1; if (!u.cd){ u.dealt += hurt(foe, u.atk * (1 - guard)); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, foe.x, foe.y, 3]); } continue; }
+   if (u.heal){   // Street Medic: follows the nearest hurt raider (or the nearest one), patches up everyone close by, never attacks
+    let tg = null, td = 1e9; for (const a of att){ if (a === u || a.heal || !(a.hp > 0)) continue; const d = dist(u, a) + (a.hp < a.max ? 0 : 50); if (d < td - 1e-9){ td = d; tg = a; } }
+    if (!tg){ u.mode = 2; continue; }
+    const d = dist(u, tg); if (d > 1.2){ u.mode = 0; faceTo(u, tg.x, tg.y); const k = Math.min(1, u.speed * TICK / d); u.x = r4(u.x + (tg.x - u.x) * k); u.y = r4(u.y + (tg.y - u.y) * k); } else u.mode = 1;
+    if (!u.cd){ let any = false; for (const a of att){ if (a.heal || !(a.hp > 0) || a.hp >= a.max) continue; if (dist(u, a) <= u.healR){ a.hp = r4(Math.min(a.max, a.hp + u.heal)); u.dealt += u.heal; any = true; } } if (any) u.cd = 8; }
+    continue; }
+   let foe = null, fd = 1e9; if (!(rules >= 2 && u.fly)) for (const d of def){ if (!(d.hp > 0)) continue; const dd = dist(u, d); if (dd < Math.max(1.1, u.range + .3) && dd < fd - 1e-9){ fd = dd; foe = d; } }
+   if (foe){ faceTo(u, foe.x, foe.y); u.mode = 1; if (!u.cd){ u.dealt += hurt(foe, u.atk * am(u) * (1 - guard)); u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, foe.x, foe.y, 3]); } continue; }
    if (!u.tgt || !(u.tgt.hp > 0)){ u.tgt = pickTarget(u); u.path = null; if (!u.tgt) continue; }
    const b = u.tgt, d = dist2rect(u, b);
-   if (d <= u.range + .05){ u.mode = 1; faceTo(u, b.x + b.fw / 2, b.y + b.fh / 2); if (!u.cd){ const dmg = hurt(b, u.atk); u.dealt += dmg; u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, b.x + b.fw / 2, b.y + b.fh / 2, 3]);
+   if (u.bomb && d <= u.range + .05){   // Breacher: one charge, breaks every fence close by, and is spent
+    const cx2 = b.x + b.fw / 2, cy2 = b.y + b.fh / 2; u.dealt += hurt(b, u.atk * (b.role === 'wall' ? u.wallMult : 1));
+    for (const o of items){ if (o !== b && o.role === 'wall' && o.hp > 0 && dist2rect({x:cx2, y:cy2}, o) < u.splash) u.dealt += hurt(o, u.atk * u.wallMult); }
+    shots.push([cx2, cy2, cx2, cy2, 2]); u.hp = 0; continue; }
+   if (d <= u.range + .05){ u.mode = 1; faceTo(u, b.x + b.fw / 2, b.y + b.fh / 2); if (!u.cd){ const dmg = hurt(b, (b.loot && u.lootMult !== 1 ? u.atk * u.lootMult : u.atk) * am(u)); u.dealt += dmg; u.cd = 8; if (u.range > 1.2) shots.push([u.x, u.y, b.x + b.fw / 2, b.y + b.fh / 2, 3]);
      if (u.splash) for (const o of scoring){ if (o !== b && o.hp > 0 && dist2rect({x:b.x + b.fw / 2, y:b.y + b.fh / 2}, o) < u.splash) hurt(o, u.atk * .4); } } continue; }
    if (u.fly){ u.mode = 0; const tx = b.x + b.fw / 2, ty = b.y + b.fh / 2, dd = Math.sqrt((tx - u.x) * (tx - u.x) + (ty - u.y) * (ty - u.y)); faceTo(u, tx, ty); const k = Math.min(1, u.speed * TICK / dd); u.x = r4(u.x + (tx - u.x) * k); u.y = r4(u.y + (ty - u.y) * k); continue; }
    if (!u.path){ u.path = route(u, b); u.pi = 0; if (!u.path){ u.tgt = null; continue; } }
    const n = u.path[Math.min(u.pi, u.path.length - 1)], o = occ[Math.floor(n[1]) * W + Math.floor(n[0])];
-   if (o >= 0 && items[o].hp > 0 && items[o].role === 'wall'){ const w = items[o]; u.mode = 1; faceTo(u, n[0], n[1]); if (!u.cd){ u.dealt += hurt(w, u.atk * u.wallMult); u.cd = 8; if (!(w.hp > 0)) u.path = null; } continue; }
+   if (o >= 0 && items[o].hp > 0 && items[o].role === 'wall' && !jmp(u)){ const w = items[o]; u.mode = 1; faceTo(u, n[0], n[1]); if (!u.cd){ u.dealt += hurt(w, u.atk * u.wallMult * am(u)); u.cd = 8; if (!(w.hp > 0)) u.path = null; } continue; }
    const dd = Math.sqrt((n[0] - u.x) * (n[0] - u.x) + (n[1] - u.y) * (n[1] - u.y));
    if (dd < .06){ u.pi++; if (u.pi >= u.path.length) u.path = null; continue; }
    u.mode = 0; faceTo(u, n[0], n[1]); const k = Math.min(1, u.speed * TICK / dd); u.x = r4(u.x + (n[0] - u.x) * k); u.y = r4(u.y + (n[1] - u.y) * k); }
   // deaths, arrivals
-  for (const u of units){ if (u.wait) continue; if (u.delay > 0){ u.delay--; continue; } if (u.alive && !(u.hp > 0)){ u.alive = false; u.hp = 0; } }
+  for (const u of units){ if (u.wait) continue; if (u.delay > 0){ u.delay--; continue; } if (u.alive && !(u.hp > 0)){ if (u.holdT >= t){ u.hp = 1; continue; } u.alive = false; u.hp = 0; } }
   for (const b of items) if (b.hp < 0) b.hp = 0;
   if (!dep){
    if (core && !(core.hp > 0)) over = 'core';
@@ -401,7 +475,7 @@ function raidStart(R, opt){
   else {
    if (!scoring.some(b => b.hp > 0)) over = 'all';
    else if (endAt && t >= endAt) over = 'end';
-   else if (qi >= queue.length && !units.some(u => u.side === 'a' && (u.wait || u.alive))) over = 'cleared'; }
+   else if (qi >= queue.length && !units.some(u => u.side === 'a' && (u.wait || u.alive) && !(rules >= 2 && u.heal))) over = 'cleared'; }
   snap();
   t++;
   return true;
@@ -411,6 +485,10 @@ function raidStart(R, opt){
   const u = units[i]; if (!dep || over || t > maxT || !u || u.side !== 'a' || !u.wait) return false;
   for (let k = qi; k < queue.length; k++) if (queue[k].i === i) return false;
   queue.push({i, x:r4(x), y:r4(y), t}); return true; }
+ function cast(c, x, y){ if (!dep || over || t > maxT || !spells[c]) return false; let used = 0; for (let k = qi; k < queue.length; k++) if (queue[k].c === c) used++;
+  if (!(kitLeft[c] - used > 0) || !(x >= 0 && y >= 0 && x < W && y < H)) return false; queue.push({c, x:r4(x), y:r4(y), t}); return true; }
+ function ability(i){ const u = units[i]; if (!dep || over || t > maxT || !u || u.side !== 'a' || u.wait || !u.alive || !u.ab || u.abUsed) return false;
+  for (let k = qi; k < queue.length; k++) if (queue[k].ab && queue[k].i === i) return false; queue.push({ab:1, i, t}); return true; }
  function end(){ if (dep && !over && !endAt) endAt = t; }
  function result(){
  const lost = scoring.reduce((s, b) => s + (b.max - Math.max(0, b.hp)), 0), pct = Math.round(100 * lost / totalHp);
@@ -425,10 +503,12 @@ function raidStart(R, opt){
  units.forEach(u => { mix(u.x); mix(u.y); mix(u.hp); mix(u.dealt); }); items.forEach(b => mix(b.hp)); mix(t);
  result.hash = h;
  if (dep){ result.deployVer = DEPLOY_VER; result.allDown = !scoring.some(b => b.hp > 0); result.endAt = over === 'end' ? endAt : 0;
-  result.deploys = queue.slice(0, qi).filter(d => !d.skip).map(d => ({i:d.i, x:d.x, y:d.y, t:d.t})); }
+  result.deploys = queue.slice(0, qi).filter(d => !d.skip).map(d => d.c ? {c:d.c, x:d.x, y:d.y, t:d.t} : d.ab ? {ab:1, i:d.i, t:d.t} : {i:d.i, x:d.x, y:d.y, t:d.t}); }
  return result;
  }
- return {step, deploy, end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
+ // every deploy so far, landed or still waiting for its tick, and the End tick: enough to play the fight out again later
+ const outD = d => d.c ? {c:d.c, x:d.x, y:d.y, t:d.t} : d.ab ? {ab:1, i:d.i, t:d.t} : {i:d.i, x:d.x, y:d.y, t:d.t};
+ return {step, deploy, cast, ability, queued:() => queue.filter(d => !d.skip).map(outD), endAt:() => endAt, kitLeft:() => Object.assign({}, kitLeft), zones:() => zones.filter(z => z.until >= t), abUsed:i => !!(units[i] && units[i].abUsed), end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
   frame:() => frames[frames.length - 1], placed:i => !!units[i] && units[i].side === 'a' && !units[i].wait};
 }
 function simRaid(R, opt){ const s = raidStart(R, opt); while (s.step()); return {result:s.result(), frames:s.frames}; }
@@ -459,9 +539,23 @@ const UNITS = {
  shooter:{name:'Shooter', look:'shooter', hp:70, atk:12, speed:1.45, range:3.4, prefer:'any', wallMult:.6, size:1,
   line:'Pistol. Fires over fences. Keep him behind someone.'},
  bruiser:{name:'Bruiser', look:'bruiser', hp:620, atk:20, speed:.95, range:.8, prefer:'def', wallMult:1.8, size:5,
-  line:'Big and slow. Walks straight at the guns and soaks the fire.'}
+  line:'Big and slow. Walks straight at the guns and soaks the fire.'},
+ snatcher:{name:'Snatcher', look:'snatcher', hp:90, atk:11, speed:2.6, range:.6, prefer:'res', lootMult:2, wallMult:1, size:1,
+  line:'Fast. Runs for the stash spots and hits them twice as hard.'},
+ breacher:{name:'Breacher', look:'breacher', hp:60, atk:40, speed:2.2, range:.5, prefer:'wall', bomb:true, wallMult:10, splash:1.6, size:2,
+  line:'Bolt cutters and a door charge. Blows open the nearest fence, and the fence next to it.'},
+ medic:{name:'Street Medic', look:'medic', hp:200, atk:0, speed:1.35, range:0, prefer:'any', heal:14, healR:2.2, wallMult:0, size:5,
+  line:'Patches up the crew around him. Never fights. Keep him behind the line.'},
+ shotgunner:{name:'Shotgunner', look:'shotgunner', hp:110, atk:30, speed:1.4, range:2.2, prefer:'any', splash:1.5, wallMult:.8, size:3,
+  line:'Short range, wide spread. Hits a building and everything packed around it.'},
+ drone:{name:'Drone Kid', look:'drone', hp:160, atk:60, speed:1.25, range:.35, prefer:'def', fly:true, wallMult:0, size:4,
+  line:'A hobby drone that flies over fences and drops on the guns. People on foot cannot reach it.'},
+ biker:{name:'Biker', look:'biker', hp:380, atk:26, speed:2.4, range:.7, prefer:'def', jump:true, wallMult:1, size:4,
+  line:'Dirt bike. Jumps fences and goes straight for the guns.'},
+ heavy:{name:'Heavy', look:'heavy', hp:820, atk:30, speed:1.15, range:.8, prefer:'any', splash:1.3, wallMult:1.4, size:6,
+  line:'Riot shield and a pipe. Soaks hits and knocks into everything around him.'}
 };
-const ORDER = ['brawler', 'shooter', 'bruiser'];
+const ORDER = ['brawler', 'shooter', 'bruiser', 'snatcher', 'breacher', 'medic', 'shotgunner', 'drone', 'biker', 'heavy'];
 
 // ---------- buildings ----------
 // fp is the footprint in tiles; role is what the fight sim does with it (core, bld, tower, wall).
@@ -477,15 +571,29 @@ const BDEFS = {
  run:{name:'Supply Run', fp:[2, 2], role:'bld', hp:300},
  supstash:{name:'Supply Stash', fp:[2, 2], role:'bld', hp:380},
  gym:{name:'The Gym', fp:[3, 2], role:'bld', hp:480},
- pad:{name:'Crash Pad', fp:[2, 3], role:'bld', hp:420}
+ pad:{name:'Crash Pad', fp:[2, 3], role:'bld', hp:420},
+ pharmacy:{name:'Pharmacy', fp:[3, 2], role:'bld', hp:440},
+ hardware:{name:'Hardware Store', fp:[3, 2], role:'bld', hp:460},
+ studio:{name:'Recording Studio', fp:[2, 3], role:'bld', hp:420},
+ workshop:{name:'Workshop', fp:[2, 2], role:'bld', hp:400},
+ crewhouse:{name:'Crew House', fp:[3, 3], role:'bld', hp:520}
 };
 
 // ---------- rival crews ----------
 const CREWS = [
- {id:'boombox', name:'The Boombox Kings', boss:'Pops Cassette', crew:'kb_crew', bossLook:'kb_boss',
-  defender:{look:'kb_crew', hp:120, atk:7, speed:1.4, range:2.8}}
+ {id:'boombox', name:'The Boombox Kings', boss:'Pops Cassette', color:'gold', hl:1, turf:'Corner store and rowhouses. Cheap fences everywhere.',
+  defender:{hp:120, atk:7, speed:1.4, range:2.8}, kinds:['store', 'rowhouse', 'rowhouse', 'stash', 'hustle'], fence:'double', guns:['porch', 'porch', 'roof']},
+ {id:'goldnote', name:'Gold Note', boss:'Big Ledger', color:'green', hl:1, turf:'Fancy townhouses. Fat stashes and a hard Main House.',
+  defender:{hp:130, atk:8, speed:1.4, range:2.8}, kinds:['stash', 'stash', 'supstash', 'rowhouse', 'rowhouse', 'pharmacy'], fence:'ring', houseHp:1.6, guns:['porch', 'roof', 'roof']},
+ {id:'basement', name:'The Basement', boss:'Low End', color:'blue', hl:2, turf:'A studio warehouse. Shooters on every roof.',
+  defender:{hp:140, atk:9, speed:1.4, range:3}, kinds:['studio', 'workshop', 'supstash', 'stash', 'run'], fence:'ring', guns:['roof', 'roof', 'porch', 'roof']},
+ {id:'afterhours', name:'Afterhours', boss:'Neon', color:'red', hl:2, turf:'The nightclub strip. Long-reach shooters and bright lights.',
+  defender:{hp:150, atk:9, speed:1.5, range:3.2}, kinds:['studio', 'store', 'rowhouse', 'hustle', 'stash'], fence:'ring', guns:['roof', 'roof', 'roof', 'porch']},
+ {id:'yard', name:'The Yard', boss:'Deacon', color:'orange', hl:3, turf:'Vacant lots and garages. Fence mazes.',
+  defender:{hp:170, atk:10, speed:1.4, range:2.8}, kinds:['hardware', 'workshop', 'run', 'stash', 'supstash', 'rowhouse'], fence:'maze', guns:['porch', 'porch', 'roof', 'porch']},
+ {id:'chrometide', name:'Chrome Tide', boss:'Wheels', color:'teal', hl:4, turf:'Body shop and parking lot. More crew on defense, and fast.',
+  defender:{hp:190, atk:11, speed:1.9, range:2.8}, kinds:['hardware', 'gym', 'run', 'run', 'stash', 'supstash', 'pad'], fence:'ring', extraDef:2, guns:['porch', 'roof', 'porch', 'roof']}
 ];
-
 // ---------- the rescue: the Boombox Kings' block, the Viceroy held at the Main House ----------
 function fenceRing(x0, y0, x1, y1, gaps){
  const out = [], skip = new Set(gaps.map(g => g.join(',')));
@@ -502,30 +610,65 @@ const RESCUE_BLOCK = (() => {
 })();
 
 // a fight item from a placed building: footprint and fight numbers from BDEFS
+const LOOT = ['stash', 'supstash', 'store', 'hustle', 'run'];   // what a Snatcher runs for
 function fightItem(it){
  const d = BDEFS[it.k], f = d.fp;
- return {key:it.key, k:it.k, x:it.x, y:it.y, fw:f[0], fh:f[1], hp:d.hp, role:d.role, range:d.range || 0, dmg:d.dmg || 0, rate:d.rate || 1};
+ return {key:it.key, k:it.k, x:it.x, y:it.y, fw:f[0], fh:f[1], hp:d.hp, role:d.role, range:d.range || 0, dmg:d.dmg || 0, rate:d.rate || 1, loot:LOOT.indexOf(it.k) >= 0};
 }
 // an army line-up: {brawler:6, shooter:4, bruiser:2} -> attacker list grouped by type, in ORDER
-function army(counts){
+// research: one track per fighter kind, levels 1 to 5, instant; each level past 1 adds 10% health and 10% damage (healing for the medic)
+const RESEARCH = {max:5, step:.1, base:{brawler:60, shooter:80, bruiser:300, snatcher:70, breacher:150, medic:320, shotgunner:220, drone:360, biker:320, heavy:450}};
+function researchMult(lv){ return 1 + RESEARCH.step * (Math.max(1, Math.min(RESEARCH.max, lv | 0 || 1)) - 1); }
+function researchCost(k, lv){ return lv >= RESEARCH.max ? null : [0, RESEARCH.base[k] * lv * lv]; }   // Supplies for the next level
+function researchCap(block){ const l = lvOf(block, 'workshop'); return l ? l + 1 : 1; }                 // Workshop level 1 researches to 2, level 4 to 5
+// ---------- bosses and items (v0.4.1) ----------
+// Your three bosses join every fight you start (no beds, no training). Each is dropped like a fighter and has one ability per fight.
+const BOSSES = {
+ enforcer:{name:'The Enforcer', hp:1500, atk:42, speed:1.3, range:.9, prefer:'any', ability:{kind:'slam', r:3, len:60, mult:1.5, dmg:140}, abName:'Lights Out',
+  line:'Walks through the front door. Lights Out: slams the ground, hurting everything close, and the crew around him hit harder for 6 seconds.'},
+ deadeye:{name:'Deadeye', hp:720, atk:32, speed:1.5, range:4.6, prefer:'any', ability:{kind:'ghost', len:50, mult:1.8}, abName:'Ghost',
+  line:'Shoots from a long way off. Ghost: nobody can see her for 5 seconds, and she fires harder.'},
+ shotcaller:{name:'The Shot Caller', hp:950, atk:18, speed:1.4, range:3.2, prefer:'any', splash:1, ability:{kind:'hold', r:3.5, len:45}, abName:'Hold the Line',
+  line:'Runs the crew from the middle. Hold the Line: nobody around her can fall for 4.5 seconds.'}
+};
+const BOSS_ORDER = ['enforcer', 'deadeye', 'shotcaller'];
+// one-time items, made at your Corner Store with Supplies; each is cast with a tap on the block
+const ITEMS = {
+ hype:{name:'Hype Track', kind:'rage', r:3, len:80, mult:1.5, cost:120, store:1, line:'A boombox blast. Your crew inside the ring hit 50% harder for 8 seconds.'},
+ firstaid:{name:'First Aid Run', kind:'heal', r:3, len:80, heal:22, cost:120, store:1, line:'Patches up your crew inside the ring for 8 seconds.'},
+ firecracker:{name:'Firecracker Strike', kind:'strike', r:1.6, dmg:260, cost:150, store:1, line:'A big bang on one spot. Hurts buildings and anyone standing there.'},
+ ladder:{name:'Ladder', kind:'jump', r:2.5, len:100, cost:90, store:2, line:'Your crew inside the ring go over fences instead of through them, for 10 seconds.'},
+ blackout:{name:'Blackout', kind:'off', r:3, len:50, cost:160, store:2, line:'Cuts the power. Guns and people inside the ring stop for 5 seconds.'},
+ smoke:{name:'Smoke', kind:'smoke', r:2.5, len:40, cost:140, store:3, line:'Their guns and people cannot see your crew inside the cloud for 4 seconds.'}
+};
+const ITEM_ORDER = ['hype', 'firstaid', 'firecracker', 'ladder', 'blackout', 'smoke'];
+function kitCap(block){ const l = lvOf(block || [], 'store'); return l ? 1 + l : 0; }          // a Corner Store holds 2 items, 3 at level 2, 4 at level 3
+function kitSize(kit){ let n = 0; for (const k of ITEM_ORDER) n += (kit && kit[k]) | 0; return n; }
+function itemOpen(block, k){ return lvOf(block || [], 'store') >= ITEMS[k].store; }
+function cleanKit(o){ const out = {}; ITEM_ORDER.forEach(k => { const v = o && o[k] | 0; if (v > 0) out[k] = Math.min(9, v); }); return out; }
+function spellsFor(kit){ const out = {}; for (const k of ITEM_ORDER) if (kit && kit[k] > 0){ const it = ITEMS[k]; out[k] = {kind:it.kind, r:it.r, len:it.len || 0, mult:it.mult || 1, heal:it.heal || 0, dmg:it.dmg || 0}; } return out; }
+// what you bring to a fight beyond your fighters: bosses (every fight but the rescue) and the items you made
+function loadout(R, load){ if (!load) return R; R.attackers = R.attackers.concat(bossUnits(load.bosses || [])); R.kit = cleanKit(load.kit); R.spells = spellsFor(R.kit); return R; }
+function bossUnits(ids){ return ids.filter(id => BOSSES[id]).map(id => { const b = BOSSES[id]; return {type:'boss', boss:id, hp:b.hp, atk:b.atk, speed:b.speed, range:b.range, prefer:b.prefer, wallMult:1, splash:b.splash || 0, fly:false, heal:0, healR:0, bomb:false, jump:false, lootMult:1, ability:Object.assign({}, b.ability)}; }); }
+function army(counts, research){
  const list = [];
- ORDER.forEach(k => { const u = UNITS[k]; for (let n = 0; n < (counts[k] || 0); n++) list.push({type:k, look:u.look, hp:u.hp, atk:u.atk, speed:u.speed, range:u.range, prefer:u.prefer, wallMult:u.wallMult}); });
+ ORDER.forEach(k => { const u = UNITS[k], m = researchMult(research && research[k]); for (let n = 0; n < (counts[k] || 0); n++) list.push({type:k, look:u.look, hp:Math.round(u.hp * m), atk:Math.round(u.atk * m * 10) / 10, speed:u.speed, range:u.range, prefer:u.prefer, wallMult:u.wallMult, splash:u.splash || 0, fly:!!u.fly, heal:Math.round((u.heal || 0) * m * 10) / 10, healR:u.healR || 0, bomb:!!u.bomb, jump:!!u.jump, lootMult:u.lootMult || 1}); });
  return list;
 }
 const RESCUE_ARMY = {brawler:6, shooter:4, bruiser:2};
 function rescueRecipe(seed){
  const crew = CREWS[0], d = crew.defender;
- return {deployVer:B.DEPLOY_VER, seed:seed >>> 0, maxT:1800, guard:0, mode:'rescue',
+ return {deployVer:B.DEPLOY_VER, rules:2, seed:seed >>> 0, maxT:1800, guard:0, mode:'rescue', crewColor:'gold',
   items:RESCUE_BLOCK.map(fightItem),
   attackers:army(RESCUE_ARMY),
-  defenders:[0, 1, 2].map(() => ({look:d.look, hp:d.hp, atk:d.atk, speed:d.speed, range:d.range})),
+  defenders:[0, 1, 2].map(() => ({look:'kb_crew', hp:d.hp, atk:d.atk, speed:d.speed, range:d.range})),
   deploys:[]};
 }
 // stars: one for half the block down, one for the Main House down, one for everything down
 function starsFor(r){ return (r.pct >= 50 ? 1 : 0) + (r.coreDown ? 1 : 0) + (r.allDown ? 1 : 0); }
 // a report keeps the recipe (with the deploys and End tick the fight produced) so Watch can play it again
 function reportFrom(R, result){
- return {at:0, simVer:B.SIM_VER, deployVer:B.DEPLOY_VER, mode:R.mode,
+ return {at:0, simVer:B.SIM_VER, deployVer:B.DEPLOY_VER, rules:2, mode:R.mode,
   recipe:Object.assign({}, R, {deploys:result.deploys, endAt:result.endAt || 0}),
   stars:starsFor(result), pct:result.pct, hash:result.hash};
 }
@@ -541,15 +684,20 @@ const HOME = {
  gym:{cap:[1, 1, 1, 1], cost:[200, 100], line:'Where the crew trains. Level 2 brings in Bruisers.'},
  pad:{cap:[1, 1, 2, 2], cost:[200, 100], line:'Beds for the crew. More beds, bigger crew.'},
  store:{cap:[0, 1, 1, 1], cost:[400, 200], line:'A corner store on your lot. 20% more Supplies from every fight.'},
+ pharmacy:{cap:[0, 1, 1, 1], cost:[500, 250], line:'Medicine and bandages. Some of the crew you send in come home patched up.'},
+ hardware:{cap:[0, 0, 1, 1], cost:[700, 300], line:'Tools and lumber at cost. Everything you build or level up costs less.'},
+ studio:{cap:[0, 0, 1, 1], cost:[600, 400], line:'Cuts records about your crew. More Rep from every fight.'},
+ workshop:{cap:[0, 1, 1, 1], cost:[400, 300], line:'Where the crew works on its gear. Research makes every fighter of a kind tougher and harder hitting.'},
+ crewhouse:{cap:[1, 1, 1, 1], cost:[300, 0], line:'Where friends\' crews will wait to back you up. Opens when the group goes online.'},
  porch:{cap:[1, 2, 3, 4], cost:[0, 200], line:'A gunner behind sandbags. Covers the ground around him.'},
  roof:{cap:[0, 1, 2, 3], cost:[0, 350], line:'A shooter up high. Long reach, slower shots.'},
  fence:{cap:[24, 44, 64, 90], cost:[0, 10], line:'Chain-link. Slows anyone on foot.'}
 };
-const SHOP = ['hustle', 'run', 'stash', 'supstash', 'pad', 'store', 'porch', 'roof'];
-const MAXLV = {house:4, fence:1}, HOUSE_UP = [null, [600, 400], [1500, 1000], [3500, 2500]];
-const UNLOCKS = {brawler:1, shooter:1, bruiser:2};          // the Gym level that brings each fighter in
-const TRAIN = {brawler:20, shooter:30, bruiser:150};        // Cash each
-const SIZE = {brawler:1, shooter:1, bruiser:5};             // beds each
+const SHOP = ['hustle', 'run', 'stash', 'supstash', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof'];
+const MAXLV = {house:4, fence:1, gym:5, workshop:4, crewhouse:1}, HOUSE_UP = [null, [600, 400], [1500, 1000], [3500, 2500]];
+const UNLOCKS = {brawler:1, shooter:1, bruiser:2, snatcher:2, breacher:3, medic:3, shotgunner:4, drone:4, biker:5, heavy:5};   // the Gym level that brings each fighter in
+const TRAIN = {brawler:20, shooter:30, bruiser:150, snatcher:25, breacher:60, medic:150, shotgunner:90, drone:160, biker:140, heavy:220};   // Cash each
+const SIZE = {brawler:1, shooter:1, bruiser:5, snatcher:1, breacher:2, medic:5, shotgunner:3, drone:4, biker:4, heavy:6};   // beds each
 const START = {cash:500, sup:300, army:{brawler:6, shooter:4, bruiser:0}};
 function maxLv(k){ return MAXLV[k] || 3; }
 function trainCost(k){ return TRAIN[k]; }
@@ -569,6 +717,13 @@ function storeCap(block){ return {cash:1000 + 1500 * sumLv(block, 'stash'), sup:
 function armyCap(block){ let n = 0; for (const i of block) if (i.k === 'pad') n += 14 + 6 * (i.lv || 1); return n; }
 function armySize(a){ let n = 0; for (const k of ORDER) n += (a[k] || 0) * SIZE[k]; return n; }
 function gymLv(block){ let n = 0; for (const i of block) if (i.k === 'gym') n = Math.max(n, i.lv || 1); return n; }
+// neighborhood bonuses, by the building's level
+function lvOf(block, k){ let n = 0; for (const i of block) if (i.k === k) n = Math.max(n, i.lv || 1); return n; }
+function priceCut(block){ const l = lvOf(block, 'hardware'); return l ? .1 + .05 * l : 0; }               // 15%, 20%, 25% off
+function price(block, c){ const f = 1 - priceCut(block); return c.map(v => Math.round(v * f / 10) * 10); }
+function patchShare(block){ const l = lvOf(block, 'pharmacy'); return l ? .15 + .1 * l : 0; }             // 25%, 35%, 45% come home
+function patchedUp(block, spent){ const f = patchShare(block), out = {}; for (const k of ORDER) out[k] = Math.floor((spent[k] || 0) * f); return out; }
+function repFor(res, block){ const st = starsFor(res), l = lvOf(block, 'studio'); return Math.round((st * 8 + Math.floor(res.pct / 10)) * (l ? 1.25 + .25 * l : 1)); }   // studio: x1.5, x1.75, x2
 function payout(block){ return {cash:60 * sumLv(block, 'hustle'), sup:40 * sumLv(block, 'run')}; }
 function lootFor(res, block){ const st = starsFor(res), bonus = count(block, 'store') ? 1.2 : 1;
  return {cash:Math.round(320 * res.pct / 100) + 40 * st, sup:Math.round(200 * res.pct / 100 * bonus)}; }
@@ -614,16 +769,84 @@ function cleanBlock(list){
  return out;
 }
 // a loot raid on the Boombox Kings with the crew you trained
-function raidRecipe(seed, counts){
+function raidRecipe(seed, counts, research, load){
  const crew = CREWS[0], d = crew.defender;
- return {deployVer:B.DEPLOY_VER, seed:seed >>> 0, maxT:1800, guard:0, mode:'raid',
-  items:RESCUE_BLOCK.map(fightItem), attackers:army(counts),
-  defenders:[0, 1, 2].map(() => ({look:d.look, hp:d.hp, atk:d.atk, speed:d.speed, range:d.range})), deploys:[]};
+ return loadout({deployVer:B.DEPLOY_VER, rules:2, seed:seed >>> 0, maxT:1800, guard:0, mode:'raid', crewColor:'gold',
+  items:RESCUE_BLOCK.map(fightItem), attackers:army(counts, research),
+  defenders:[0, 1, 2].map(() => ({look:'kb_crew', hp:d.hp, atk:d.atk, speed:d.speed, range:d.range})), deploys:[]}, load);
 }
+
+// ---------- the streets (v0.4): 6 rival crews, 4 blocks each ----------
+// Blocks are laid out by a fixed recipe per crew and block number, so every phone gets the same 24 blocks.
+// g is the block's place in the run (0 to 23); a block opens when the one before it has a star and the Main House is high enough.
+const CAMP = {crews:6, blocks:4};
+function rng32(a){ return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function campG(ci, bi){ return ci * CAMP.blocks + bi; }
+function campLayout(ci, bi, tryN){
+ const c = CREWS[ci], g = campG(ci, bi), r = rng32(9001 + g * 131 + (tryN || 0) * 7), out = [];
+ const taken = (x, y, w, h, pad) => out.some(o => { const f = BDEFS[o.k].fp; return x - pad < o.x + f[0] && o.x < x + w + pad && y - pad < o.y + f[1] && o.y < y + h + pad; });
+ const put = (k, x, y) => { out.push({k, x, y}); return true; };
+ const place = k => { const f = BDEFS[k].fp; for (let n = 0; n < 160; n++){ const x = 9 + Math.floor(r() * (12 - f[0] + 1)), y = 8 + Math.floor(r() * (12 - f[1] + 1)); if (!taken(x, y, f[0], f[1], 1)) return put(k, x, y); } return false; };
+ put('house', 13, 12);
+ const guns = c.guns.slice(0, Math.min(c.guns.length, 2 + bi)).concat(bi >= 3 ? ['porch'] : []);
+ guns.forEach(place);
+ c.kinds.slice(0, 3 + bi + (bi >= 2 ? 1 : 0)).forEach(place);
+ const fence = new Set(), addF = (x, y) => { const key = x + ',' + y; if (fence.has(key) || taken(x, y, 1, 1, 0)) return; fence.add(key); };
+ const ring = (x0, y0, x1, y1, gaps) => { const skip = new Set(gaps.map(p => p.join(','))); for (let x = x0; x <= x1; x++){ [y0, y1].forEach(y => { if (!skip.has(x + ',' + y)) addF(x, y); }); } for (let y = y0 + 1; y < y1; y++){ [x0, x1].forEach(x => { if (!skip.has(x + ',' + y)) addF(x, y); }); } };
+ const gate = (a, b) => a + Math.floor(r() * (b - a));
+ ring(7, 6, 21, 20, [[gate(9, 19), 6], [7, gate(8, 18)], [21, gate(8, 18)], [gate(9, 19), 20]]);
+ if (c.fence === 'double' || bi >= 2) ring(11, 10, 17, 16, [[14, 10], [11, 13], [17, 13], [14, 16]]);
+ if (c.fence === 'maze') for (let n = 0; n < 4 + bi; n++){ const hz = r() < .5, len = 3 + Math.floor(r() * 4), x = 8 + Math.floor(r() * 12), y = 7 + Math.floor(r() * 12); for (let j = 0; j < len; j++){ const fx = hz ? x + j : x, fy = hz ? y : y + j; if (fx <= 20 && fy <= 19) addF(fx, fy); } }
+ fence.forEach(key => { const [x, y] = key.split(',').map(Number); if (x >= 0 && y >= 0 && x < 28 && y < 28) out.push({k:'fence', x, y}); });
+ return out.map((it, i) => Object.assign({key:'c' + g + '_' + i}, it));
+}
+const CAMP_BLOCKS = {};
+function campBlock(ci, bi){ const g = campG(ci, bi); if (CAMP_BLOCKS[g]) return CAMP_BLOCKS[g];
+ for (let n = 0; n < 40; n++){ const b = campLayout(ci, bi, n); if (reachOk(b)) return (CAMP_BLOCKS[g] = b); }
+ return (CAMP_BLOCKS[g] = campLayout(ci, bi, 0).filter(i => i.k !== 'fence'));
+}
+// the strength of a block: towers, the Main House and the people on defense grow along the run
+// CAMP_POWER is found by camptune.js so a fair army 3-stars block 1 of a crew about half the time by day, falling to about 28% at block 4
+const CAMP_POWER = [5.67, 4.41, 4.03, 2.57, 5.31, 4.31, 3.67, 2.33, 5.45, 4.12, 3.3, 2.16, 5.76, 4.1, 3.18, 1.95, 7.58, 5.99, 4.53, 2.79, 6.06, 4.99, 3.83, 2.54];
+function campPower(ci, bi){ return CAMP_POWER[campG(ci, bi)]; }
+const BOSS_DEF = {hp:6, atk:2.2, reach:1};
+const NIGHT = {loot:.75, reach:.95};
+function campRecipe(ci, bi, seed, counts, research, night, load){
+ const c = CREWS[ci], m = campPower(ci, bi), reach = night ? NIGHT.reach : 1, d = c.defender;
+ const items = campBlock(ci, bi).map(it => { const f = fightItem(it);
+  if (f.role === 'tower'){ f.hp = Math.round(f.hp * m); f.dmg = Math.round(f.dmg * m * 10) / 10; f.range = Math.round(f.range * reach * 100) / 100; }
+  else if (f.role === 'core') f.hp = Math.round(f.hp * m * (c.houseHp || 1));
+  else if (f.role === 'wall') f.hp = Math.round(f.hp * (1 + .05 * campG(ci, bi)));
+  else f.hp = Math.round(f.hp * (1 + (m - 1) * .5));
+  return f; });
+ const nd = 2 + bi + (c.extraDef || 0);
+ // the crew's boss holds its last block: much tougher than the rest, and it hits hard
+ const boss = bi === CAMP.blocks - 1 ? [{look:'boss:' + c.id, hero:true, hp:Math.round(d.hp * m * BOSS_DEF.hp), atk:Math.round(d.atk * m * BOSS_DEF.atk * 10) / 10, speed:d.speed, range:Math.round((d.range + BOSS_DEF.reach) * reach * 100) / 100}] : [];
+ return loadout({deployVer:B.DEPLOY_VER, rules:2, seed:seed >>> 0, maxT:1800, guard:0, mode:'camp', camp:[ci, bi], night:night ? 1 : 0, crewColor:c.color,
+  items, attackers:army(counts, research),
+  defenders:boss.concat(Array.from({length:nd}, () => ({look:'def', hp:Math.round(d.hp * m), atk:Math.round(d.atk * m * 10) / 10, speed:d.speed, range:Math.round(d.range * reach * 100) / 100}))), deploys:[]}, load);
+}
+// what a block holds: you take your share of what is left, by how much of it you knocked down (less at night)
+function campPool(ci, bi){ const g = campG(ci, bi); return {cash:400 + 300 * g, sup:250 + 190 * g}; }
+function campLoot(res, ci, bi, took, night){ const p = campPool(ci, bi), t = took || [0, 0], f = res.pct / 100 * (night ? NIGHT.loot : 1);
+ return {cash:Math.floor(Math.max(0, p.cash - (t[0] | 0)) * f), sup:Math.floor(Math.max(0, p.sup - (t[1] | 0)) * f)}; }
+function campOpen(camp, block, ci, bi){
+ if (houseLv(block || []) < CREWS[ci].hl) return false;
+ const g = campG(ci, bi); if (!g) return true;
+ const pc = Math.floor((g - 1) / CAMP.blocks), pb = (g - 1) % CAMP.blocks, prev = camp && camp[pc + '-' + pb];
+ return !!(prev && prev.s > 0);
+}
+function cleanCamp(o){ const out = {}; if (!o || typeof o !== 'object') return out;
+ for (let ci = 0; ci < CAMP.crews; ci++) for (let bi = 0; bi < CAMP.blocks; bi++){ const v = o[ci + '-' + bi]; if (!v || typeof v !== 'object') continue;
+  const t = Array.isArray(v.t) ? v.t : [0, 0], p = campPool(ci, bi);
+  out[ci + '-' + bi] = {s:Math.max(0, Math.min(3, v.s | 0)), t:[Math.max(0, Math.min(p.cash, t[0] | 0)), Math.max(0, Math.min(p.sup, t[1] | 0))]}; }
+ return out; }
 
 return {UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
  HOME, SHOP, UNLOCKS, SIZE, START, maxLv, trainCost, upgradeCost, lotsOpen, houseLv, count, capFor, storeCap, armyCap, armySize, gymLv, payout, lootFor,
- starterBlock, fitsAt, freeSpot, reachOk, cleanBlock, raidRecipe};
+ starterBlock, fitsAt, freeSpot, reachOk, cleanBlock, raidRecipe, RESEARCH, researchMult, researchCost, researchCap, lvOf, priceCut, price, patchShare, patchedUp, repFor,
+ CAMP, CAMP_POWER, NIGHT, BOSS_DEF, campBlock,
+ BOSSES, BOSS_ORDER, ITEMS, ITEM_ORDER, kitCap, kitSize, itemOpen, cleanKit, spellsFor, loadout, campRecipe, campPool, campLoot, campOpen, cleanCamp, campPower};
 })();
 
 
@@ -651,6 +874,25 @@ def('lavD', 132, 114, 204); def('tealD', 26, 98, 98); def('jet', 38, 38, 44); de
 Object.assign(M, {white:16, black:18, charcoal:28, denim:29, mustard:30, teal:31, lav:20, blue:21, steel:13, wood:35, glow:11, flash:12});
 
 
+// scale a figure from body units (64 = full height) to tiles, and set its roundness
+function finishFig(P, p, lod){
+ const K = p.h / 64 * 1.06;
+ for (const q of P){ if (typeof q[0] === 'number'){ for (let k = 0; k < 6; k++) q[k] *= K; continue; } const n = q[0] === 'e' ? 6 : 8; for (let k = 1; k <= n; k++) q[k] *= K; }
+ P.seg = lod === 2 ? 10 : lod === 1 ? 7 : 5;
+ return P;
+}
+// Biker: a dirt bike under the rider. The rider is lifted onto the pegs; wheels front and back, crew-color tank.
+function bikeParts(P, E, C, G){
+ const lift = 5;
+ for (const q of P){ if (typeof q[0] === 'number') q[2] += lift; else if (q[0] === 'e') q[3] += lift; else { q[3] += lift; q[6] += lift; } }
+ const BL = M.black, ST = M.steel, R = 7;
+ for (const y of [-15, 16]){ E([0, y, R], 1.5, R, R, BL); E([0, y, R], 1.7, 3, 3, M.silver, 1); }
+ C([0, -15, R], [0, -3, 15], .9, .9, ST); C([0, -3, 15], [0, 13, 24], .9, .8, ST); C([0, 13.5, 25], [0, 16, R], .7, .7, ST);
+ C([0, -3, 15], [0, 3, 9], .9, .9, ST); E([0, 3, 9.5], 3, 3.4, 3, M.charcoal, 1);
+ E([0, 5, 19], 2.6, 4.6, 2.2, G); C([0, -10, 20], [0, 1, 20.5], 2.1, 2, BL); C([-6, 13, 26.5], [6, 13, 26.5], .55, .55, BL);
+ E([0, -17, 13], 2, 4, .6, G, 1);
+ for (const s of [-1, 1]) C([s * 2.5, 1, 7.5], [s * 4.5, 1, 7.5], .5, .5, ST, 1);
+}
 function build(p, frame, mode, lod){
  lod = lod == null ? 2 : lod;
  const P = [];
@@ -664,7 +906,14 @@ function build(p, frame, mode, lod){
  const sx = (fem ? 4.1 : 4.6) * (huge ? 1.22 : heavy ? 1.1 : slim ? .95 : 1);      // shoulder joint, half width
  const hx = (fem ? 2.15 : 1.95) * (huge ? 1.25 : heavy ? 1.12 : 1);                // hip joint, half width
  const far = lod === 0, walk = mode === 'walk', work = mode === 'work', f = frame & 3, beat = work && !!(frame & 2);
- const tool = p.tool, club = tool === 'bat' || tool === 'sledge', on = k => p.gangOn.indexOf(k) >= 0;
+ const tool = p.tool, club = tool === 'bat' || tool === 'sledge' || tool === 'pipe' || tool === 'cutters' || tool === 'boombox', on = k => p.gangOn.indexOf(k) >= 0;
+ if (p.drone){   // Drone Kid: the hobby drone itself, hovering, rotors blurring, a payload slung under it
+  const Z = 50 + (frame & 1) * .8, BL = M.black;
+  E([0, 0, Z], 4.4, 4.4, 1.7, G); E([0, 0, Z + 1.2], 2.6, 2.6, .9, GD, 1); E([0, 3.6, Z - .3], 1.2, 1.1, 1.1, BL, 1);
+  for (const [sx2, sy2] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]){ C([sx2 * 2.4, sy2 * 2.4, Z], [sx2 * 7.5, sy2 * 7.5, Z + .5], .55, .45, BL);
+   C([sx2 * 7.5, sy2 * 7.5, Z + .2], [sx2 * 7.5, sy2 * 7.5, Z + 1.6], .5, .5, BL, 1); E([sx2 * 7.5, sy2 * 7.5, Z + 1.8], (frame + sx2 + sy2) & 1 ? 4.4 : 3.6, (frame + sx2 + sy2) & 1 ? 3.6 : 4.4, .22, M.silver); }
+  C([0, 0, Z - 1.4], [0, 0, Z - 5], .2, .2, BL, 1); P.push([-1.8, -1.8, Z - 8.4, 3.6, 3.6, 3.4, M.tan]);
+  return finishFig(P, p, lod); }
 
  // ---------- legs: thigh angle and knee bend per leg, hips dropped so the lower foot stands on the ground ----------
  let la, lk, ra, rk;
@@ -727,6 +976,7 @@ function build(p, frame, mode, lod){
  if (p.tied) for (const z of [WZ + 1.6, CZ + .2]) E([0, lean * .5 - .3, z], cw * 1.16, cry * 1.12, .5, M.tan);
  if (on('neck')){ E([0, lean + .15, SZ + .95], 2.0, 1.95, .85, G); E([0, chestF(1.9) + .1, CZ + 1.9], 1.55, .55, 1.45, G, 1); }
  if (on('flag')) E([hx + 1.75 * g, .7, PZ - 1.7], .45, .95, 2.4, G, 1);
+ if (p.cassette){ E([0, lean * .95, SZ + .3], 2.25, 2.15, .18, M.brown, 2); const cy = chestF(.9) + .3; P.push([-1.25, cy - .1, CZ - .3, 2.5, .35, 1.6, M.charcoal]); P.push([-1.05, cy + .22, CZ - .05, 2.1, .08, .45, M.mustard]); E([-.5, cy + .26, CZ + .75], .3, .06, .3, M.silver, 2); E([.5, cy + .26, CZ + .75], .3, .06, .3, M.silver, 2); }
  if (p.chain){ E([0, lean * .95, SZ + .3], 2.25, 2.15, .22, M.gold, 2); E([0, chestF(.9) + .25, CZ + .9], .5, .32, .62, M.gold, 2); }
  if (p.pack) E([0, lean * .5 - td * bulk - 1.3, CZ - .7], 2.9, 1.7, 3.9, M[p.pack]);
  if (p.bag){ const b0 = [sx - 1, lean + td * .7, SZ + .7], b1 = [0, chestF(-.4) + .25, CZ - .4], b2 = [-(hx + 1.5 * g), td * .8, PZ + 1.4];
@@ -751,18 +1001,34 @@ function build(p, frame, mode, lod){
   return {H, d2};
  };
  const swing = walk ? [.55, .1, -.5, -.1][f] : 0;
- let A;
+ let A, A2;
  if (p.tied){ arm(-1, -.35, -.1, -.75, -.7); arm(1, -.35, -.1, -.75, -.7); }
- else if (work && tool === 'pistol'){ A = arm(1, 1.5, -.14, 1.57, -.1); arm(-1, 1.36, -.3, 1.5, -.72); }
- else if (work && club){ A = beat ? arm(1, 1.2, .05, 1.5, -.1) : arm(1, 3.3, .15, 3.0, 0); arm(-1, .55, .1, 1.7, -.3); }
- else if (club){ A = arm(1, .1, .1, 2.45, 0); arm(-1, walk ? -swing : .06, .12, walk ? -swing + .5 : .3, .06); }
+ else if (p.bike){ A = arm(1, .95, .05, 1.35, -.05); A2 = arm(-1, .95, .05, 1.35, -.05); }
+ else if (work && (tool === 'pistol' || tool === 'shotgun')){ A = arm(1, 1.5, -.14, 1.57, -.1); arm(-1, 1.36, -.3, 1.5, -.72); }
+ else if (work && club){ A = beat ? arm(1, 1.2, .05, 1.5, -.1) : arm(1, 3.3, .15, 3.0, 0); A2 = arm(-1, .55, .1, 1.7, -.3); }
+ else if (club){ A = arm(1, .1, .1, 2.45, 0); A2 = arm(-1, walk ? -swing : .06, .12, walk ? -swing + .5 : .3, .06); }
  else if (walk){ A = arm(1, swing, .1, swing + .5, .05); arm(-1, -swing, .1, -swing + .5, .05); }
  else if (p.pose === 'pocket' && top.t === 'hoodie'){ arm(1, .12, .1, .95, -.55); arm(-1, .12, .1, .95, -.55); }
  else { A = arm(1, .06, .12, .3, .06); arm(-1, .06, .12, .3, .06); }
  // ---------- what they carry (drawn bigger from far away so each kind reads in a crowd) ----------
  if (A && club){ const k = far ? 1.7 : 1, pb = work ? (beat ? 1.45 : 3.9) : 3.75, d = [0, Math.sin(pb), -Math.cos(pb)], b0 = add(A.H, d, -1.3);
-  if (tool === 'bat'){ C(b0, add(A.H, d, 13.5), .36 * k, .64 * k, M.wood); E(b0, .52 * k, .52 * k, .52 * k, M.wood, 2); C(add(A.H, d, -.9), add(A.H, d, 2.2), .4, .4, M.ink, 2); }
+  if (tool === 'boombox'){   // a battered silver boombox resting on the shoulder beside the head, long side outward, speakers facing front
+   const dx = A.H[0] >= 0 ? 1 : -1, x0 = dx * 2.7, x1 = dx * (sx + 5.4), cx = (x0 + x1) / 2, y = lean * 1.15 + .3, z = SZ + 1.1;   // inner end against the head, sitting on the shoulder
+   P.push([Math.min(x0, x1), y - 1.6, z, Math.abs(x1 - x0), 3.2, 5, M.silver]); P.push([cx - 1.3, y + 1.45, z + 1.4, 2.6, .25, 1.8, M.charcoal]);
+   for (const o of [-2.75, 2.75]){ E([cx + o, y + 1.65, z + 2.3], 1.65, .3, 1.65, M.black, 1); E([cx + o, y + 1.85, z + 2.3], .65, .2, .65, M.charcoal, 2); }
+   C([x0 + dx * .8, y, z + 5.7], [x1 - dx * .8, y, z + 5.7], .3, .3, M.charcoal, 1); for (const xx of [x0 + dx * .8, x1 - dx * .8]) C([xx, y, z + 5], [xx, y, z + 5.8], .28, .28, M.charcoal, 2); }
+  else if (tool === 'bat'){ C(b0, add(A.H, d, 13.5), .36 * k, .64 * k, M.wood); E(b0, .52 * k, .52 * k, .52 * k, M.wood, 2); C(add(A.H, d, -.9), add(A.H, d, 2.2), .4, .4, M.ink, 2); }
+  else if (tool === 'pipe'){ C(b0, add(A.H, d, 14), .55 * k, .55 * k, M.steel); E(add(A.H, d, 14), .75 * k, .75 * k, .75 * k, M.steel, 1); C(add(A.H, d, -.9), add(A.H, d, 2.2), .62, .62, M.black, 2); }
+  else if (tool === 'cutters'){ const sd2 = [1, 0, 0], j = add(A.H, d, 12);
+   for (const s of [-1, 1]){ C(add(add(A.H, d, -1), sd2, s * .5), add(j, sd2, s * .45), .36 * k, .32 * k, M.steel); C(add(A.H, sd2, s * .55), add(add(A.H, d, 1.6), sd2, s * .6), .5, .5, M.red, 1);
+    C(add(j, sd2, s * .45), add(add(j, d, 2.6), sd2, s * .15), .5 * k, .3 * k, M.ink); } }
   else { const tip = add(A.H, d, 15.5); C(b0, tip, .4 * k, .4 * k, M.wood); P.push([tip[0] - 2 * k, tip[1] - 1.25 * k, tip[2] - 1.25 * k, 4 * k, 2.5 * k, 2.5 * k, M.steel]); } }
+ if (A && tool === 'shotgun'){ const k = far ? 1.6 : 1, d = A.d2, dn = [0, d[2], -d[1]];   // a long pump gun, held in both hands
+  C(add(A.H, d, -3.2), add(A.H, d, 8.5 * k), .55 * k, .5 * k, M.steel); C(add(A.H, d, -3.4), add(add(A.H, d, -.6), dn, 1.5), .75, .6, M.wood); C(add(A.H, d, 3.2), add(A.H, d, 5.4), .72, .72, M.wood, 1);
+  if (work && beat){ E(add(A.H, d, 10 * k), 1.5, 2, 1.5, M.glow); E(add(A.H, d, 12 * k), .8, 1.3, .8, M.flash, 1); } }
+ if (A && tool === 'sack' && !work){ E(add(A.H, [0, 0, -1], 2.4), 2.3, 2, 2.8, M.khaki); E(add(A.H, [0, 0, -1], .2), .9, .8, .6, M.brown, 1); }
+ if (A && tool === 'medbag'){ const c = add(A.H, [0, 0, -1], 2.6); P.push([c[0] - 1.8, c[1] - 1.1, c[2] - 1.6, 3.6, 2.2, 3, M.white]); P.push([c[0] - .4, c[1] - 1.25, c[2] - 1, .8, .2, 1.8, G]); P.push([c[0] - .9, c[1] - 1.25, c[2] - .3, 1.8, .2, .6, G]); }
+ if (A2 && p.shield){ const c = add(A2.H, [0, 1, 0], 1.6); P.push([c[0] - 4.6, c[1], c[2] - 8, 9.2, .8, 15, M.steel]); P.push([c[0] - 4.2, c[1] + .75, c[2] - 7.6, 8.4, .1, 14.2, M.glass || M.silver]); P.push([c[0] - 4.6, c[1] + .85, c[2] + 3.6, 9.2, .12, 1.4, G]); }
  if (A && tool === 'pistol'){ const k = far ? 1.8 : 1, d = A.d2, dn = [0, d[2], -d[1]];
   C(add(A.H, d, .2), add(A.H, d, 3.9 * k), .5 * k, .45 * k, M.steel); C(A.H, add(A.H, dn, 1.6), .42, .4, M.black, 1);
   if (work && beat){ E(add(A.H, d, 5.2 * k), .9, 1.4, .9, M.glow); E(add(A.H, d, 6.6 * k), .45, .9, .45, M.flash, 1); } }
@@ -790,7 +1056,7 @@ function build(p, frame, mode, lod){
  if (masked) E([0, HC[1] + .4, HC[2] - 1.55], 2.3, 2.55, 1.7, G, 1);
 
  // ---------- hair (the top is skipped under a hat) ----------
- const hat = p.hat, covered = hat === 'cap' || hat === 'capback' || hat === 'beanie' || hat === 'hood' || hat === 'durag' || hat === 'bucket', hs = p.hair;
+ const hat = p.hat, covered = hat === 'cap' || hat === 'capback' || hat === 'beanie' || hat === 'hood' || hat === 'durag' || hat === 'bucket' || hat === 'helmet' || hat === 'flat', hs = p.hair;
  const skull = (dz, grow, m) => E([0, HC[1] - .5, HC[2] + .75 + dz], hr[0] + .2 + grow, hr[1] + .22 + grow, hr[2] + .1 + grow * .7 - dz * .5, m);
  if (hat !== 'hood'){
   if (!covered){
@@ -814,6 +1080,8 @@ function build(p, frame, mode, lod){
  // ---------- hats ----------
  const HT = on('hat') ? G : M[p.hatC || 'jet'], HT2 = on('hat') ? GD : M[p.hatC2 || p.hatC || 'jet'];
  if (hat === 'cap' || hat === 'capback'){ E([0, HC[1] - .35, HC[2] + 1.25], hr[0] + .45, hr[1] + .45, 2.75, HT); E([0, HC[1] + (hat === 'cap' ? 3.3 : -3.7), HC[2] + .95], 2.45, 2.05, .32, HT2); E([0, HC[1] - .35, HC[2] + 4], .4, .4, .22, HT2, 2); }
+ if (hat === 'flat'){ E([0, HC[1] + .2, HC[2] + 1.35], hr[0] + .55, hr[1] + .75, 2.05, HT); E([0, HC[1] + 3.0, HC[2] + .85], 2.35, 1.7, .3, HT2); E([0, HC[1] - .3, HC[2] + 2.7], 1.4, 1.6, .6, HT, 2); }
+ if (hat === 'helmet'){ E([0, HC[1] - .3, HC[2] + .6], hr[0] + .85, hr[1] + .85, hr[2] + .6, HT); E([0, HC[1] + 2.2, HC[2] + .2], 2.2, 1.4, 1.35, M.black, 1); E([0, HC[1] + 3.1, HC[2] - 1.9], 1.2, .8, .9, HT2, 2); }
  if (hat === 'beanie'){ E([0, HC[1] - .4, HC[2] + 1.35], hr[0] + .5, hr[1] + .5, 3, HT); E([0, HC[1] - .4, HC[2] + .8], hr[0] + .74, hr[1] + .74, .85, HT2, 1); }
  if (hat === 'bucket'){ E([0, HC[1] - .35, HC[2] + 1.3], hr[0] + .45, hr[1] + .45, 2.75, HT); E([0, HC[1] - .2, HC[2] + 1.1], 4.2, 4.4, .36, HT2); }
  if (hat === 'durag'){ E([0, HC[1] - .5, HC[2] + .85], hr[0] + .3, hr[1] + .32, hr[2] + .05, HT); C([0, HC[1] - 2.9, HC[2] - .2], [0, HC[1] - 3.5, HC[2] - 3.6], .85, .4, HT, 1); }
@@ -821,10 +1089,8 @@ function build(p, frame, mode, lod){
  if (hat === 'headband'){ E([0, HC[1], HC[2] + .95], hr[0] * .953 + .3, hr[1] * .953 + .3, .58, HT);
   C([-.4, HC[1] - 3, HC[2] + .9], [-1.5, HC[1] - 4.3, HC[2] - 1.3], .42, .22, HT2, 1); C([.3, HC[1] - 3, HC[2] + .9], [1, HC[1] - 4.6, HC[2] - .5], .42, .22, HT2, 2); }
 
- const K = p.h / 64 * 1.06;
- for (const q of P){ if (typeof q[0] === 'number'){ for (let k = 0; k < 6; k++) q[k] *= K; continue; } const n = q[0] === 'e' ? 6 : 8; for (let k = 1; k <= n; k++) q[k] *= K; }
- P.seg = lod === 2 ? 10 : lod === 1 ? 7 : 5;
- return P;
+ if (p.bike) bikeParts(P, E, C, G);
+ return finishFig(P, p, lod);
 }
 // ---------- one shared pool for every crew, plus a kit for each kind of fighter ----------
 function rng(seed){ let a = seed >>> 0; return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -859,6 +1125,23 @@ function person(seed, gang, role){
   p.build = 'huge'; p.h = 1.17 + r() * .05;
   p.top = {t:'vest', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', 'beanie', 'durag', null]); if (p.hair !== 'locs' && p.hair !== 'braids' && !p.hat) p.hair = 'buzz';
   p.bottom = pick([cargo(), cargo(), jeans()]); p.shoes = boots(); p.tool = 'sledge';
+ } else if (role === 'snatcher'){    // slim and quick: crew-color track jacket, cap backwards, a loot sack in hand
+  p.build = 'slim'; p.top = {t:'track', c:'jet', c2:'white'}; p.gangOn = ['top']; p.hat = 'capback';
+  p.bottom = soft('track'); p.shoes = low(); p.tool = 'sack';
+ } else if (role === 'breacher'){    // crew-color tee, beanie, work boots, red-handled bolt cutters
+  if (p.build === 'slim') p.build = 'avg'; p.top = {t:'tee', c:'jet', c2:'white'}; p.gangOn = ['top']; p.hat = 'beanie';
+  p.bottom = cargo(); p.shoes = boots(); p.tool = 'cutters';
+ } else if (role === 'medic'){       // crew-color hoodie, a white med bag with a crew-color cross
+  p.top = {t:'hoodie', c:'jet'}; p.gangOn = ['top']; p.hat = pick(['cap', null]); p.bottom = pick([jeans(), soft('track')]); p.shoes = low(); p.tool = 'medbag';
+ } else if (role === 'shotgunner'){  // crew-color bomber, boots, a long pump gun
+  p.top = {t:'bomber', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', null, 'bucket']); p.bottom = pick([jeans(), cargo()]); p.shoes = boots(); p.tool = 'shotgun';
+ } else if (role === 'drone'){       // the drone is the fighter; its shell is the crew color
+  p.drone = true; p.gangOn = ['top'];
+ } else if (role === 'biker'){       // crew-color helmet, black jacket, on a dirt bike with a crew-color tank
+  p.top = {t:'bomber', c:'ink', c2:'heather', c3:'ink'}; p.gangOn = ['hat']; p.hat = 'helmet'; p.bottom = jeans(); p.shoes = boots(); p.bike = true; p.tool = null;
+ } else if (role === 'heavy'){       // huge, crew-color vest, riot shield and a steel pipe
+  p.build = 'huge'; p.h = 1.15 + r() * .05; p.top = {t:'vest', c:'jet', c3:'ink'}; p.gangOn = ['top']; p.hat = pick(['beanie', 'durag']);
+  p.bottom = cargo(); p.shoes = boots(); p.tool = 'pipe'; p.shield = true;
  } else {                            // everyone else on the block
   const tt = pick(['tee', 'longtee', 'hoodie', 'hoodie', 'puffer', 'bomber', 'track', 'jersey', 'flannel', 'denimjkt', 'tank']);
   p.top = {t:tt, c:neutral(), c2:pick(['white', 'cream', 'heather', 'jet']), c3:'ink'};
@@ -879,10 +1162,37 @@ function person(seed, gang, role){
 // ---------- named people, and a cache so a fight does not rebuild the same pose every frame ----------
 const VICEROY = {skin:4, sex:'m', build:'slim', h:1.06, hairC:'hBlack', hair:'pomp', beard:'stache', earring:true, gang:'lav', gangD:'lavD', gangOn:[],
  top:{t:'suit', c:'lav', c2:'cream', c3:'blue'}, bottom:{t:'slacks', c:'lav'}, shoes:{t:'boots', c:'blue', sole:'ink', toe:'blue'}, ruffle:true, cape:true, guitar:true};
-const NAMED = {viceroy:VICEROY, viceroy_tied:Object.assign({}, VICEROY, {guitar:false, tied:true})};
+// Pops Cassette, boss of the Boombox Kings: from the painted portrait. Sixties, deep brown skin, short grey beard, round glasses,
+// gold flat cap, gold satin bomber with black ribbing over a black shirt, a cassette on a cord, a silver boombox on his shoulder.
+const POPS = {skin:0, sex:'m', build:'heavy', h:1.0, hairC:'hGrey', hair:'buzz', beard:'full', glasses:'clear', gang:'mustard', gangD:'brown', gangOn:[],
+ hat:'flat', hatC:'mustard', hatC2:'brown', top:{t:'bomber', c:'mustard', c2:'ink', c3:'ink'}, bottom:{t:'slacks', c:'ink'}, shoes:{t:'boots', c:'ink', sole:'ink', toe:'ink'},
+ cassette:true, watch:true, tool:'boombox'};
+// the rival crews' bosses (v0.4.1): each holds its crew's last block
+const RIVALS = {
+ goldnote:{skin:2, sex:'m', build:'heavy', h:1.02, hairC:'hBlack', hair:'buzz', beard:'goatee', glasses:'clear', gang:'green', gangD:'forest', gangOn:[], chain:true, watch:true,
+  hat:'flat', hatC:'forest', hatC2:'green', top:{t:'suit', c:'green', c2:'cream', c3:'forest'}, bottom:{t:'slacks', c:'ink'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:null},
+ basement:{skin:3, sex:'m', build:'avg', h:1.0, hairC:'hBlack', hair:'locs', beard:'stache', glasses:'shades', gang:'blue', gangD:'navy', gangOn:[], chain:true,
+  hat:null, top:{t:'hoodie', c:'blue', c2:'navy'}, bottom:{t:'cargo', c:'jet', c2:'charcoal'}, shoes:{t:'high', c:'white', sole:'sole'}, tool:null},
+ afterhours:{skin:1, sex:'f', build:'slim', h:1.0, hairC:'hBlack', hair:'puffs', glasses:'shades', earring:true, gang:'red', gangD:'burgundy', gangOn:[],
+  hat:null, top:{t:'bomber', c:'red', c2:'ink', c3:'ink'}, bottom:{t:'jeans', c:'jet', c2:'charcoal'}, shoes:{t:'boots', c:'red', sole:'ink', toe:'red'}, tool:'pistol'},
+ yard:{skin:4, sex:'m', build:'huge', h:1.04, hairC:'hGrey', hair:'buzz', beard:'full', gang:'orange', gangD:'brown', gangOn:[],
+  hat:'beanie', hatC:'orange', hatC2:'orange', top:{t:'flannel', c:'orange', c2:'brown'}, bottom:{t:'cargo', c:'khaki', c2:'brown'}, shoes:{t:'boots', c:'tan', sole:'brown', toe:'tan'}, tool:'sledge'},
+ chrometide:{skin:2, sex:'f', build:'avg', h:1.0, hairC:'hDark', hair:'ponytail', gang:'teal', gangD:'tealD', gangOn:[], watch:true,
+  hat:'helmet', hatC:'teal', hatC2:'teal', top:{t:'bomber', c:'teal', c2:'ink', c3:'ink'}, bottom:{t:'jeans', c:'ink', c2:'charcoal'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:'pipe'}
+};
+// your three bosses wear your crew color: 'hero|enforcer|teal'
+function heroSpec(id, color){ const g = GANGS[color] || GANGS.lav, c = g[0], d = g[1];
+ if (id === 'enforcer') return {skin:1, sex:'m', build:'huge', h:1.06, hairC:'hBlack', hair:'buzz', beard:'goatee', gang:c, gangD:d, gangOn:[], chain:true,
+  hat:'durag', hatC:c, hatC2:d, top:{t:'tank', c, c2:d}, bottom:{t:'cargo', c:'jet', c2:'charcoal'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:'pipe'};
+ if (id === 'deadeye') return {skin:3, sex:'f', build:'slim', h:1.02, hairC:'hBlack', hair:'braids', glasses:'shades', earring:true, gang:c, gangD:d, gangOn:[],
+  hat:null, top:{t:'track', c, c2:'white'}, bottom:{t:'jeans', c:'ink', c2:'charcoal'}, shoes:{t:'high', c:'white', sole:'sole'}, tool:'pistol'};
+ return {skin:0, sex:'f', build:'avg', h:1.0, hairC:'hDark', hair:'bun', glasses:'clear', earring:true, watch:true, gang:c, gangD:d, gangOn:[],
+  hat:null, top:{t:'suit', c, c2:'white', c3:d}, bottom:{t:'slacks', c:'ink'}, shoes:{t:'boots', c:'jet', sole:'ink', toe:'jet'}, tool:null}; }
+const NAMED = {viceroy:VICEROY, viceroy_tied:Object.assign({}, VICEROY, {guitar:false, tied:true}), pops:POPS, 'boss:boombox':POPS};
+Object.keys(RIVALS).forEach(k => NAMED['boss:' + k] = RIVALS[k]);
 const SPECS = new Map(), CACHE = new Map();
 // a look is a name ('viceroy') or 'm|seed|crew color|role'
-function spec(look){ let p = SPECS.get(look); if (!p){ if (NAMED[look]) p = NAMED[look]; else { const a = String(look).split('|'); p = person(+a[1] || 1, a[2] || 'lav', a[3] || null); } SPECS.set(look, p); } return p; }
+function spec(look){ let p = SPECS.get(look); if (!p){ if (NAMED[look]) p = NAMED[look]; else if (String(look).indexOf('hero|') === 0){ const a = String(look).split('|'); p = heroSpec(a[1], a[2]); } else { const a = String(look).split('|'); p = person(+a[1] || 1, a[2] || 'lav', a[3] || null); } SPECS.set(look, p); } return p; }
 function fig(look, frame, mode, lod){
  const k = look + '|' + (frame & 3) + '|' + mode + '|' + lod; let b = CACHE.get(k);
  if (!b){ if (CACHE.size > 1200) CACHE.clear(); b = build(spec(look), frame & 3, mode, lod); CACHE.set(k, b); }
@@ -965,6 +1275,47 @@ function blocks(k, lv, shape){
   box(.3, .3, 3.0, .08, .08, .45, 13); box(.75, .3, 3.0, .08, .08, .45, 13); box(.3, .75, 3.0, .08, .08, .45, 13); box(.75, .75, 3.0, .08, .08, .45, 13);
   box(.25, .25, 3.45, .65, .65, .5, 35); box(.22, .22, 3.95, .71, .71, .08, 10);                                 // water tank
   top = 3.6;
+ } else if (k === 'pharmacy'){ // the Pharmacy: white storefront, a green cross that glows, a lit window of shelves
+  box(.15, .15, 0, 2.7, 1.6, 1.25, 7); box(.1, .1, 1.25, 2.8, 1.7, .12, 16); box(.2, .2, 1.37, 2.6, 1.5, .04, 10);
+  box(.3, 1.75, .12, 1.5, .03, .78, 19); for (const z of [.32, .58]) box(.32, 1.74, z, 1.46, .05, .03, 16);
+  box(2.0, 1.75, 0, .5, .04, .92, 17); box(2.22, 1.79, .42, .04, .02, .1, 13);
+  box(.15, 1.75, .98, 2.7, .3, .07, 16); box(.15, 2.03, .92, 2.7, .03, .1, 14);
+  box(2.86, .7, .55, .04, .42, .14, 32); box(2.86, .84, .41, .04, .14, .42, 32); L.push([3.0, .91, .76, 1.4]);   // green cross on the side wall
+  box(.7, 1.77, 1.07, 1.2, .04, .14, 18); box(.76, 1.8, 1.1, 1.08, .02, .08, 32);
+  top = 1.45;
+ } else if (k === 'hardware'){ // the Hardware Store: orange awning, lumber stacked out front, a ladder on the wall
+  box(.15, .15, 0, 2.7, 1.45, 1.3, 6); box(.1, .1, 1.3, 2.8, 1.55, .12, 16); box(.2, .2, 1.42, 2.6, 1.35, .04, 10);
+  box(.3, 1.6, .12, 1.3, .03, .75, 19); box(1.85, 1.6, 0, .6, .04, .95, 17);
+  for (let i = 0; i < 6; i++) box(.15 + i * .45, 1.6, 1.0, .45, .42, .06, i % 2 ? 16 : 30);
+  for (let i = 0; i < 4; i++) box(.3, 1.72 + i * .06, .06 * (i % 2) , 1.2, .05, .06, i % 2 ? 35 : 27); box(.3, 1.7, .26, 1.2, .26, .05, 35);   // lumber pile
+  box(2.86, .35, 0, .03, .05, 1.05, 27); box(2.86, .65, 0, .03, .05, 1.05, 27); for (let z = .15; z < 1.0; z += .2) box(2.86, .35, z, .03, .35, .03, 27);   // ladder
+  box(.55, 1.62, 1.08, 1.0, .04, .15, 18); box(.6, 1.65, 1.11, .9, .02, .09, 11);
+  top = 1.5;
+ } else if (k === 'studio'){ // the Recording Studio: dark brick, blacked-out windows, a red ON AIR light and a pink neon sign
+  box(.15, .15, 0, 1.7, 2.7, 1.9, 5); box(.1, .1, 1.9, 1.8, 2.8, .1, 16); box(.2, .2, 2.0, 1.6, 2.6, .04, 10);
+  win(.4, 2.85, .9, .5, .5, false); win(1.1, 2.85, .9, .45, .5, false); box(.9, 2.85, 0, .45, .04, .8, 17);
+  box(.35, 2.86, 1.55, 1.1, .04, .22, 18); box(.4, 2.89, 1.58, 1.0, .02, .16, 39); L.push([.9, 3.1, 1.66, 1.6]);   // neon sign
+  box(1.25, 2.86, .82, .16, .05, .1, 33); L.push([1.33, 2.95, .87, .8]);                                          // on-air light
+  sideWin(1.85, .5, 1.1, .5, .45, true); sideWin(1.85, 1.4, 1.1, .5, .45, false);
+  box(.6, .6, 2.04, .5, .5, .3, 8); box(1.3, 1.9, 2.04, .1, .1, .5, 13);                                          // roof unit, antenna
+  top = 2.4;
+ } else if (k === 'workshop'){ // the Workshop: a cinderblock garage, door rolled up, a lit bench with tools on a pegboard
+  box(.15, .15, 0, 1.7, 1.55, 1.15, 8); box(.1, .1, 1.15, 1.8, 1.65, .1, 13); box(.2, .2, 1.25, 1.6, 1.45, .04, 10);
+  box(.3, 1.7, 0, 1.15, .03, .88, 18); box(.3, 1.72, .88, 1.15, .04, .14, 13);                        // open bay, rolled door
+  box(.4, 1.25, .4, .95, .35, .05, 27); for (const x of [.42, 1.29]) box(x, 1.27, 0, .04, .04, .4, 13); // bench
+  box(.4, 1.22, .48, .95, .03, .45, 35); for (const [x, z] of [[.5, .7], [.72, .62], [.95, .75], [1.15, .66]]) box(x, 1.25, z, .06, .02, .12, 13);   // pegboard and tools
+  box(.6, 1.35, .45, .25, .15, .1, 33); box(1.0, 1.3, .45, .12, .12, .2, 18);                          // red toolbox, can
+  sideWin(1.85, .5, .55, .6, .35, true); L.push([.88, 1.4, .95, 1.3]);
+  box(1.5, 1.75, 0, .25, .25, .4, 36); box(1.52, 1.77, .4, .21, .21, .05, 13);                        // drum out front
+  top = 1.3;
+ } else if (k === 'crewhouse'){ // the Crew House: a wide two-storey brick house, big porch with chairs, a banner over the door
+  box(.2, .2, 0, 2.6, 2.3, 2.0, 4); box(.15, .15, 2.0, 2.7, 2.4, .12, 16); box(.25, .25, 2.12, 2.5, 2.2, .04, 10);
+  box(.2, 2.5, 0, 2.6, .4, .1, 15); box(.25, 2.5, .95, 2.5, .42, .06, 13); for (const x of [.25, 1.45, 2.65]) box(x, 2.82, .1, .08, .08, .85, 16);   // porch
+  box(1.25, 2.48, .1, .5, .03, .78, 17); box(1.15, 2.5, .82, .7, .02, .12, 31);                     // door, banner
+  for (const x of [.45, 2.05]) win(x, 2.48, .25, .5, .5, true); for (const x of [.45, 1.25, 2.05]) win(x, 2.48, 1.25, .5, .5, x !== 1.25);
+  box(.5, 2.62, .1, .3, .3, .35, 27); box(2.2, 2.62, .1, .3, .3, .35, 27);                          // chairs
+  sideWin(2.8, .6, 1.25, .6, .5, true); sideWin(2.8, 1.5, .3, .6, .5, false); L.push([1.5, 2.75, .9, 1.6]);
+  top = 2.2;
  } else if (k === 'gym'){ // the Gym: a cinderblock box with the door rolled up, a heavy bag inside, a barbell out front
   box(.15, .15, 0, 2.7, 1.55, 1.3, 7); box(.1, .1, 1.3, 2.8, 1.65, .1, 8); box(.2, .2, 1.4, 2.6, 1.45, .04, 10);
   box(.15, 1.7, 1.0, 2.7, .03, .12, 9);                                                              // painted stripe
@@ -1396,6 +1747,7 @@ function battleStep(dt){
  const prev = Math.floor(Bt.t / Bt.tick); Bt.t += dt * Bt.speed;
  let i = Math.floor(Bt.t / Bt.tick);
  if (i >= Bt.frames.length - 1){ i = Bt.frames.length - 1; Bt.t = i * Bt.tick; }
+ if (Bt.live && i < Bt.frames.length - 4){ i = Bt.frames.length - 2; Bt.t = i * Bt.tick; }   // a slow phone: show the fight as it is now, not seconds behind
  for (let k = prev + 1; k <= i; k++){ const f = Bt.frames[k]; if (f && f.s) f.s.forEach(s => Bt.shots.push({s, age:0})); }
  Bt.shots.forEach(x => x.age += dt * Bt.speed); Bt.shots = Bt.shots.filter(x => x.age < .35);
  // fire and smoke on badly hurt buildings
@@ -1429,6 +1781,8 @@ function battleBoxes(V, I){
   const x = x0 + (x1 - x0) * p, y = y0 + (y1 - y0) * p, z = .9 * (1 - p) + .35 + Math.sqrt(Math.max(0, p * (1 - p))) * .8;
   pushBox(V, I, [x - .04, y - .04, z, .08, .08, .08, kd === 3 ? 12 : kd === 1 ? 9 : 23], 0, 0); }
  if (Bt.zone && Bt.zoneT > 0){ for (const [zx, zy] of Bt.zone) pushBox(V, I, [zx + .06, zy + .06, .01, .88, .88, .02, 33], 0, 0); }
+ // Turf v0.4.1: rings on the ground where an item or a boss ability is working
+ if (st.rings) for (const r of st.rings) if (i >= r.t0 && i <= r.t1) ringDashes(V, I, r.x, r.y, 0, 0, r.r, r.m);
 }
 function battleLights(){ const Bt = st.battle; if (!Bt) return []; return Bt.shots.filter(s => s.s[4] === 3).slice(0, 6).map(s => { const p = Math.min(1, s.age / .3); return [s.s[0] + (s.s[2] - s.s[0]) * p, s.s[1] + (s.s[3] - s.s[1]) * p, .6, 1.2]; }); }
 
@@ -1599,9 +1953,10 @@ function unmount(){ st.mounted = false; cancelAnimationFrame(st.raf); if (canvas
 window.VIL = {mount, update, unmount, project,
  setHour(h){ st.hour = h; st.dirty = true; },
  getHour(){ return st.hour; },
- battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; st.dirty = true; },
+ battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); if (!o) st.rings = null; st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; st.dirty = true; },
  battleSpeed(s){ if (st.battle) st.battle.speed = s; },
  battleEnd(){ if (st.battle) st.battle.live = false; },
+ rings(list){ st.rings = list || null; st.dirty = true; },
  flashZone(tiles){ if (st.battle){ st.battle.zone = tiles; st.battle.zoneT = 1.2; st.dirty = true; } },
  battleSkip(){ const Bt = st.battle; if (!Bt) return; clearTimeout(Bt.endT); st.battle = null; Bt.onEnd && Bt.onEnd(); },
  battleInfo(){ const Bt = st.battle; return Bt ? {i:Math.floor(Bt.t / Bt.tick), n:Bt.frames.length, speed:Bt.speed, done:Bt.done} : null; },
@@ -1617,14 +1972,14 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.3.3', BUILD_DATE = 'Nov 20 2026';
+const VER = '0.4.1', BUILD_DATE = 'Nov 22 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
 'use strict';
 const B = BASE, T = TURF, $ = id => document.getElementById(id);
 const SAVE_KEY = 'turf.save.v1';
-const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false};
+const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}};
 const GANG_PICK = ['lav', 'teal', 'red', 'green', 'orange', 'blue'];   // gold belongs to the Boombox Kings
 
 // ---------- save (guarded: a phone that blocks storage still plays, it just forgets) ----------
@@ -1633,13 +1988,17 @@ function loadSave(){
  let raw = null; try { raw = localStorage.getItem(SAVE_KEY); } catch (e){}
  let s = {}; try { s = raw ? JSON.parse(raw) || {} : (memSave || {}); } catch (e){ s = {}; }
  const out = Object.assign(JSON.parse(JSON.stringify(DEFAULT_SAVE)), s);
- const okRep = r => r && r.recipe && ['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r.recipe[k]));
- out.reports = Array.isArray(out.reports) ? out.reports.filter(okRep).slice(0, 10) : [];
+ const okRep = r => r && r.recipe && ['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r.recipe[k])) && (r.recipe.mode !== 'camp' || (Array.isArray(r.recipe.camp) && T.CREWS[r.recipe.camp[0]] && r.recipe.camp[1] >= 0 && r.recipe.camp[1] < T.CAMP.blocks));
+ out.reports = Array.isArray(out.reports) ? out.reports.filter(okRep).slice(0, 30) : [];
  // anything a save holds is checked before use: a block that fits the rules, whole numbers, a color that exists
  out.block = T.cleanBlock(out.block);
+ if (out.block){ const cap = T.storeCap(out.block); out.cash = Math.min(out.cash | 0, cap.cash); out.sup = Math.min(out.sup | 0, cap.sup); }
  if (!out.army || typeof out.army !== 'object') out.army = {}; T.ORDER.forEach(k => out.army[k] = Math.max(0, Math.min(99, out.army[k] | 0)));
- out.cash = Math.max(0, Math.min(999999, out.cash | 0)); out.sup = Math.max(0, Math.min(999999, out.sup | 0)); out.nk = Math.max(20, out.nk | 0);
+ out.cash = Math.max(0, Math.min(999999, out.cash | 0)); out.sup = Math.max(0, Math.min(999999, out.sup | 0)); out.nk = Math.max(20, out.nk | 0); out.rep = Math.max(0, Math.min(999999, out.rep | 0));
+ const rs = out.research && typeof out.research === 'object' ? out.research : {}; out.research = {}; T.ORDER.forEach(k => { const v = rs[k] | 0; if (v > 1) out.research[k] = Math.min(T.RESEARCH.max, v); });
  if (GANG_PICK.indexOf(out.color) < 0) out.color = 'lav';
+ out.camp = T.cleanCamp(out.camp); out.night = out.night === true; out.kit = T.cleanKit(out.kit);
+ delete out.pending;
  return out;
 }
 function saveGame(){ memSave = save; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e){} }
@@ -1669,7 +2028,11 @@ function miniIcon(look, size){
  const P = MINI.fig(look, 0, 'idle', 1), cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1), px = Math.round(size * d);
  cv.width = cv.height = px; cv.style.width = cv.style.height = size + 'px'; cv.setAttribute('aria-hidden', 'true');
  const c = cv.getContext('2d'), col = m => { const q = ART.MATS[m] || [120, 120, 120]; return 'rgb(' + q[0] + ',' + q[1] + ',' + q[2] + ')'; };
- const S = px / .8, ox = px * .56, oy = px * .985;
+ let S = px / .8, ox = px * .56, oy = px * .985;
+ if (/\|drone$/.test(look)){   // the drone floats high and small: frame it to fill the card
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; const ext = (x, z, r) => { x0 = Math.min(x0, x - r); x1 = Math.max(x1, x + r); z0 = Math.min(z0, z - r); z1 = Math.max(z1, z + r); };
+  for (const q of P){ if (typeof q[0] === 'number'){ ext(q[0], q[2], 0); ext(q[0] + q[3], q[2] + q[5], 0); } else if (q[0] === 'e') ext(q[1], q[3], Math.max(q[4], q[6])); else { ext(q[1], q[3], q[7]); ext(q[4], q[6], q[8]); } }
+  S = px * .8 / Math.max(x1 - x0, z1 - z0); ox = px / 2 + (x0 + x1) / 2 * S; oy = px / 2 + (z0 + z1) / 2 * S; }
  const items = P.map(q => ({q, y:typeof q[0] === 'number' ? q[1] + q[4] / 2 : q[0] === 'e' ? q[2] : (q[2] + q[5]) / 2})).sort((a, b) => a.y - b.y);
  for (const it of items){ const q = it.q;
   if (q[0] === 'e'){ c.fillStyle = col(q[7]); c.beginPath(); c.ellipse(ox - q[1] * S, oy - q[3] * S, q[4] * S, q[6] * S, 0, 0, 7); c.fill(); }
@@ -1677,7 +2040,8 @@ function miniIcon(look, size){
   else { c.fillStyle = col(q[6]); c.fillRect(ox - (q[0] + q[3]) * S, oy - (q[2] + q[5]) * S, q[3] * S, q[5] * S); } }
  return cv;
 }
-const iconLook = k => 'm|' + {brawler:3, shooter:8, bruiser:21}[k] + '|' + MY_CREW + '|' + k;
+const ICON_SEED = {brawler:3, shooter:8, bruiser:21, snatcher:4, breacher:6, medic:7, shotgunner:9, drone:10, biker:12, heavy:14};
+const iconLook = k => 'm|' + (ICON_SEED[k] || 1) + '|' + MY_CREW + '|' + k;
 
 // ---------- the map: 3D renderer, or a flat canvas when WebGL2 is missing ----------
 const PALETTE = {sunC:[[.46, .44, .62], [1.0, .9, .76]], amb:[[.27, .27, .36], [.46, .46, .5]], sky:[[.07, .07, .13], [.33, .36, .44]], bg:[[.05, .05, .08], [.15, .16, .19]], torch:[1.35, .55]};
@@ -1697,8 +2061,8 @@ function mountMap(){
 // scene parts from a block: buildings standing, or rubble once they are knocked down. The block on screen is either a rival's or your own.
 let BLOCK = [], PARTS = [], RUBBLE = [], fenceSet = new Set(), blockKind = 'enemy', crewColor = 'gold', vicOn = true, lastDown = '';
 function fenceShape(x, y){ return (fenceSet.has(x + ',' + (y - 1)) ? 1 : 0) | (fenceSet.has((x + 1) + ',' + y) ? 2 : 0) | (fenceSet.has(x + ',' + (y + 1)) ? 4 : 0) | (fenceSet.has((x - 1) + ',' + y) ? 8 : 0); }
-function setBlock(list, kind){
- BLOCK = list; blockKind = kind; crewColor = kind === 'home' ? MY_CREW : 'gold';
+function setBlock(list, kind, color){
+ BLOCK = list; blockKind = kind; crewColor = kind === 'home' ? MY_CREW : color || 'gold';
  fenceSet = new Set(BLOCK.filter(i => i.k === 'fence').map(i => i.x + ',' + i.y));
  PARTS = BLOCK.map((it, n) => { const d = T.BDEFS[it.k], a = ART.blocks(it.k, n % 2, it.k === 'fence' ? fenceShape(it.x, it.y) : 0);
   return {id:it.key, key:it.key, k:it.k, x:it.x, y:it.y, fw:d.fp[0], fh:d.fp[1], boxes:a.boxes, lights:a.lights, smoke:a.smoke, top:a.top, tap:kind === 'home'}; });
@@ -1719,6 +2083,8 @@ const HANG = {house:2, gym:2, pad:1, hustle:1};   // how many of your people sta
 function solidAt(x, y){ return BLOCK.some(i => { const f = T.BDEFS[i.k].fp; return x >= i.x && x < i.x + f[0] && y >= i.y && y < i.y + f[1]; }); }
 function sceneFor(down){
  const home = blockKind === 'home', parts = PARTS.map((p, i) => down && down[i] ? RUBBLE[i] : p), actors = !home && vicOn ? [viceroyActor()] : [];
+ // Pops Cassette, boss of the Boombox Kings, watches from his store's doorway until the store goes down
+ if (!home && crewColor === 'gold'){ const si = PARTS.findIndex(p => p.k === 'store'); if (si >= 0 && !(down && down[si])){ const s0 = PARTS[si]; actors.push({route:[[s0.x - .45, s0.y + s0.fh + .25, 0]], faceAt:0, fig:fr => figFn('pops', fr, 'idle')}); } }
  // the people on the porches and the roof: they stand at their post until their building falls
  PARTS.forEach((p, i) => { const post = ART.POSTS[p.k]; if (!post || (down && down[i])) return; const look = 'm|' + (900 + i) + '|' + crewColor + '|shooter';
   actors.push({route:[[p.x + post[0], p.y + post[1], post[2]]], faceAt:0, fig:fr => figFn(look, 0, 'work')}); });
@@ -1780,25 +2146,61 @@ const NEXT = "The house on the next block is yours now. Pick your colors and bui
 let R = null, sim = null, units = {}, items = [], counts = {}, sel = null, queued = {}, raf = 0, acc = 0, lastT = 0, coreAt = 0, finished = false, zone = null, lastReport = null;
 // every fighter is one person: the look is rolled from the fight's seed, so a replay shows the same faces
 function meta(Rx){ const u = {}, base = (Rx.seed % 99991) * 37;
- Rx.attackers.forEach((a, i) => u[i] = {look:'m|' + (base + i + 1) + '|' + MY_CREW + '|' + a.type, type:a.type, max:a.hp, side:'a', barZ:a.type === 'bruiser' ? .9 : .76});
- Rx.defenders.forEach((d, i) => u[100 + i] = {look:'m|' + (base + 500 + i) + '|' + (Rx.crewColor || 'gold') + '|shooter', type:'shooter', max:d.hp, side:'d', barZ:.76});
+ Rx.attackers.forEach((a, i) => u[i] = a.boss ? {look:'hero|' + a.boss + '|' + MY_CREW, type:'boss', max:a.hp, side:'a', barZ:a.boss === 'enforcer' ? .98 : .8}
+  : {look:'m|' + (base + i + 1) + '|' + MY_CREW + '|' + a.type, type:a.type, max:a.hp, side:'a', fly:a.type === 'drone', barZ:a.type === 'bruiser' || a.type === 'heavy' ? .92 : a.type === 'biker' ? .98 : .76});
+ Rx.defenders.forEach((d, i) => u[100 + i] = {look:/^boss:/.test(d.look || '') ? d.look : 'm|' + (base + 500 + i) + '|' + (Rx.crewColor || 'gold') + '|shooter', type:'shooter', max:d.hp, side:'d', barZ:.8});
  const it = Rx.items.map(b => { const p = PARTS.find(q => q.key === b.key); return {key:b.key, x:b.x, y:b.y, fw:b.fw, fh:b.fh, top:p ? p.top : 1, max:b.role === 'wall' ? 0 : b.hp}; }); return {u, it}; }
+// the bar: your fighters, then bosses, then items. A boss on the block turns its card into its ability button.
+// keys: a fighter kind ('brawler'), a boss ('b:enforcer') or an item ('i:hype')
+const BAR_ORDER = () => T.ORDER.concat(T.BOSS_ORDER.map(k => 'b:' + k), T.ITEM_ORDER.map(k => 'i:' + k));
+function barName(k){ return k[1] === ':' ? (k[0] === 'b' ? T.BOSSES[k.slice(2)].name.replace(/^The /, '') : T.ITEMS[k.slice(2)].name) : T.UNITS[k].name; }
+function bossIndex(id){ return R ? R.attackers.findIndex(a => a.boss === id) : -1; }
 function buildBar(){
  const bar = $('bar'); bar.innerHTML = '';
- T.ORDER.forEach(k => { if (!counts[k]) return; const b = document.createElement('button'); b.className = 'troop'; b.dataset.k = k;
-  b.innerHTML = `<span class="n">x${counts[k]}</span><span class="nm">${T.UNITS[k].name}</span>`; b.insertBefore(miniIcon(iconLook(k), 74), b.lastChild);
-  b.onclick = e => { e.stopPropagation(); if (!counts[k]) return; sel = k; refreshBar(); }; bar.appendChild(b); });
+ BAR_ORDER().forEach(k => { if (!counts[k]) return; const b = document.createElement('button'); b.className = 'troop' + (k[1] === ':' ? (k[0] === 'b' ? ' boss' : ' item') : ''); b.dataset.k = k;
+  b.innerHTML = `<span class="n">x${counts[k]}</span><span class="nm">${barName(k)}</span>`;
+  b.insertBefore(k[0] === 'i' && k[1] === ':' ? itemIcon(k.slice(2)) : miniIcon(k[1] === ':' ? 'hero|' + k.slice(2) + '|' + MY_CREW : iconLook(k), 74), b.lastChild);
+  b.onclick = e => { e.stopPropagation(); barTap(k); }; bar.appendChild(b); });
  refreshBar();
 }
-function refreshBar(){ $('bar').querySelectorAll('.troop').forEach(b => { const k = b.dataset.k; b.classList.toggle('sel', k === sel); b.classList.toggle('out', !counts[k]); b.querySelector('.n').textContent = 'x' + counts[k]; }); }
+function barTap(k){
+ if (k[0] === 'b' && k[1] === ':'){ const i = bossIndex(k.slice(2));   // a boss already on the block: use the ability
+  if (i >= 0 && (queued[i] || sim.placed(i))){ if (abUsed[i] || finished) return; if (!sim.placed(i)){ toast('One moment, she is still on her way in'.replace('she is', k === 'b:enforcer' ? 'he is' : 'she is')); return; }
+   if (sim.ability(i)){ abUsed[i] = 1; savePending(true); const A = R.attackers[i].ability, u = sim.units[i]; if (A.kind === 'slam' || A.kind === 'hold') pushRing({x:u.x, y:u.y, r:A.r, t0:sim.tick(), t1:sim.tick() + (A.kind === 'slam' ? 10 : A.len), m:A.kind === 'slam' ? 9 : 12, follow:A.kind === 'hold' ? i : null}); toast(T.BOSSES[k.slice(2)].abName); refreshBar(); }
+   else { abUsed[i] = 1; refreshBar(); }
+   return; } }
+ if (!counts[k]) return; sel = k; refreshBar(); }
+function refreshBar(){ $('bar').querySelectorAll('.troop').forEach(b => { const k = b.dataset.k, boss = k[0] === 'b' && k[1] === ':', i = boss ? bossIndex(k.slice(2)) : -1, onField = boss && i >= 0 && (queued[i] || sim.placed(i));
+  b.classList.toggle('sel', k === sel); b.classList.toggle('out', onField ? !!abUsed[i] || (sim.units[i] && !sim.units[i].alive) : !counts[k]); b.classList.toggle('ready', onField && !abUsed[i] && !(sim.units[i] && !sim.units[i].alive));
+  b.querySelector('.n').textContent = onField ? '' : 'x' + counts[k]; b.querySelector('.nm').textContent = onField ? T.BOSSES[k.slice(2)].abName : barName(k); });
+ if (sel !== barShown){ barShown = sel; const c = sel && $('bar').querySelector('.troop[data-k="' + sel + '"]'); if (c && c.scrollIntoView) c.scrollIntoView({block:'nearest', inline:'nearest'}); } }
+let barShown = null;
+// after a drop: the next fighter, then a boss still waiting; never an item (those are only picked by hand)
+function nextSel(){ return T.ORDER.find(k => counts[k]) || T.BOSS_ORDER.map(k => 'b:' + k).find(k => counts[k]) || null; }
+// item cards get a flat badge: a ring in the item's color with a one-letter mark (no emoji, no stock icons)
+const ITEM_LOOK = {hype:['#f0c64a', 'H'], firstaid:['#5fc27a', '+'], firecracker:['#e2603a', 'F'], ladder:['#c99b5a', 'L'], blackout:['#7d8fb8', 'B'], smoke:['#b8bcc4', 'S']};
+function itemIcon(k){ const cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1), px = Math.round(74 * d); cv.width = cv.height = px; cv.style.width = cv.style.height = '74px';
+ const c = cv.getContext('2d'), L = ITEM_LOOK[k]; c.scale(d, d); c.strokeStyle = L[0]; c.lineWidth = 5; c.setLineDash([7, 4]); c.beginPath(); c.arc(37, 40, 24, 0, 7); c.stroke();
+ c.setLineDash([]); c.fillStyle = L[0]; c.font = '800 26px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(L[1], 37, 41); return cv; }
+// rings on the ground while an item or ability is working (live and in replays): [{x, y, r, t0, t1, m, follow}]
+let rings = [], abUsed = {};
+function pushRing(r){ rings.push(r); if (gl3d) VIL.rings(rings); }
+const RING_M = {rage:9, heal:33, strike:9, jump:9, off:13, smoke:13};
+function ringsOf(Rx){ const out = []; (Rx.deploys || []).forEach(d => { if (d.c && Rx.spells && Rx.spells[d.c]){ const sp = Rx.spells[d.c]; out.push({x:d.x, y:d.y, r:sp.r, t0:d.t, t1:d.t + (sp.len || 8), m:RING_M[sp.kind] || 9}); }
+  if (d.ab){ const A = Rx.attackers[d.i] && Rx.attackers[d.i].ability; if (A && (A.kind === 'slam' || A.kind === 'hold')) out.push({x:0, y:0, r:A.r, t0:d.t, t1:d.t + (A.kind === 'slam' ? 10 : A.len), m:A.kind === 'slam' ? 9 : 12, follow:d.i}); } }); return out; }
+// the block a fight is on, rebuilt from its recipe (so Watch shows the block exactly as it was fought)
+function blockOf(Rx){ return Rx.items.map(b => ({key:b.key, k:b.k, x:b.x, y:b.y})); }
+// street fights are day or night by your pick; everything else follows the phone's clock
+function lightFor(Rx){ if (gl3d) VIL.setHour(Rx && Rx.mode === 'camp' ? (Rx.night ? 22.5 : 13) : null); }
 function startAttack(recipe){
- R = recipe; setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = R.mode === 'rescue'; if (gl3d) VIL.edit(null);
+ R = recipe; setBlock(blockOf(R), 'enemy', R.crewColor); vicOn = R.mode === 'rescue'; lightFor(R); if (gl3d) VIL.edit(null);
  sim = B.raidStart(R, {record:true}); finished = false; coreAt = 0; queued = {}; acc = 0; lastT = 0; viceroyFree = false; lastDown = 'x';
- counts = {}; R.attackers.forEach(a => counts[a.type] = (counts[a.type] || 0) + 1); sel = T.ORDER.find(k => counts[k]) || null;
+ counts = {}; R.attackers.forEach(a => { const k = a.boss ? 'b:' + a.boss : a.type; counts[k] = (counts[k] || 0) + 1; }); for (const k in (R.kit || {})) counts['i:' + k] = R.kit[k];
+ sel = nextSel(); barShown = null; rings = []; abUsed = {};
  const m = meta(R); units = m.u; items = m.it; zone = B.dropZone(R);
  paint(null); buildBar(); setStars($('hudStars'), 0); $('pct').textContent = '0%'; $('clock').textContent = clock(0);
  $('tip').style.opacity = 1; $('tip').textContent = 'Pick a troop, then tap the street';
- if (gl3d) VIL.battle({live:true, frames:sim.frames, tick:B.TICK, units, items, speed:1, follow:false});
+ if (gl3d){ VIL.battle({live:true, frames:sim.frames, tick:B.TICK, units, items, speed:1, follow:false}); VIL.rings(rings); }
  cam('attack');
  if (gl3d && !sidewaysTold && innerWidth < innerHeight){ sidewaysTold = true; setTimeout(() => toast('Turn your phone sideways to see the whole block', 2600), 400); }
  show('hud'); cancelAnimationFrame(raf); raf = requestAnimationFrame(run);
@@ -1811,6 +2213,9 @@ function run(now){
 }
 function afterTick(){
  const f = sim.frame(); if (!gl3d) FB.frame(f);
+ if (rings.length) rings.forEach(r => { if (r.follow != null){ const u = sim.units[r.follow]; if (u){ r.x = u.x; r.y = u.y; } } });
+ if (sim.tick() % 10 === 0) refreshBar();
+ savePending();
  const t = sim.tick() - 1; $('clock').textContent = clock(t);
  const down = items.map((b, i) => b.max > 0 ? f.b[i] <= 0 : f.b[i] <= 0);
  paint(down);
@@ -1826,31 +2231,72 @@ function onGround(x, y){
  if ($('home').classList.contains('on')){ homeGround(x, y); return; }
  if (!sim || finished || !$('hud').classList.contains('on')) return;
  if (!sel || !counts[sel]){ $('bar').classList.remove('nudge'); void $('bar').offsetWidth; $('bar').classList.add('nudge'); toast('Pick a troop first'); return; }
+ if (sel[0] === 'i' && sel[1] === ':'){ const c = sel.slice(2), sp = R.spells[c];   // items land anywhere on the block
+  if (!(x >= 0 && y >= 0 && x < B.W && y < B.H)){ toast('Tap on the block itself'); return; }
+  if (!sim.cast(c, x, y)) return; pushRing({x, y, r:sp.r, t0:sim.tick(), t1:sim.tick() + (sp.len || 8), m:RING_M[sp.kind] || 9});
+  counts[sel]--; if (!counts[sel]) sel = nextSel(); refreshBar(); $('tip').style.opacity = 0; savePending(true); return; }
  if (!B.canDrop(R, x, y)){ if (gl3d) VIL.flashZone(zone); else FB.flash(zone); toast('Too close to their block. Drop on the street.'); return; }
- const i = R.attackers.findIndex((a, j) => a.type === sel && !queued[j] && !sim.placed(j));
+ const boss = sel[0] === 'b' && sel[1] === ':' ? sel.slice(2) : null;
+ const i = R.attackers.findIndex((a, j) => (boss ? a.boss === boss : a.type === sel && !a.boss) && !queued[j] && !sim.placed(j));
  if (i < 0 || !sim.deploy(i, x, y)) return;
- queued[i] = 1; counts[sel]--; if (!counts[sel]) sel = T.ORDER.find(k => counts[k]) || null; refreshBar();
+ queued[i] = 1; counts[sel]--; if (!counts[sel]) sel = nextSel(); refreshBar(); savePending(true);
  $('tip').style.opacity = 0;
 }
-$('endBtn').onclick = e => { e.stopPropagation(); if (sim && !finished) sim.end(); };
+$('endBtn').onclick = e => { e.stopPropagation(); if (sim && !finished){ sim.end(); savePending(true); } };
 function finish(){
  if (finished) return; finished = true; cancelAnimationFrame(raf); if (gl3d) VIL.battleEnd();
- const res = sim.result(), stars = T.starsFor(res), won = R.mode === 'rescue' ? res.coreDown : stars > 0;
- lastReport = T.reportFrom(R, res); lastReport.at = Date.now();
- save.tries++; save.best = Math.max(save.best, stars); if (won && R.mode === 'rescue') save.rescued = true;
- if (R.mode === 'raid' && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
-  R.attackers.forEach((a, j) => { if (queued[j] || sim.placed(j)) save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); });
-  const loot = T.lootFor(res, save.block), p = T.payout(save.block); lastReport.gain = addRes(loot.cash + p.cash, loot.sup + p.sup); }
- save.reports.unshift(lastReport); save.reports = save.reports.slice(0, 10); saveGame();
- setTimeout(() => showResult(res, stars, won), 900);
+ const res = sim.result(), out = settle(R, res);
+ setTimeout(() => showResult(res, out.stars, out.won), 900);
 }
+// count a finished fight, exactly once: stars, spent fighters and items, loot, Rep, the street record, the report
+function settle(Rx, res){
+ const stars = T.starsFor(res), won = Rx.mode === 'rescue' ? res.coreDown : stars > 0;
+ lastReport = T.reportFrom(Rx, res); lastReport.at = Date.now();
+ save.tries++; save.best = Math.max(save.best, stars); if (won && Rx.mode === 'rescue') save.rescued = true;
+ if ((Rx.mode === 'raid' || Rx.mode === 'camp') && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
+  const sent = new Set((res.deploys || []).filter(d => !d.c && !d.ab).map(d => d.i)), spent = {};
+  Rx.attackers.forEach((a, j) => { if (a.boss || !sent.has(j)) return; save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
+  (res.deploys || []).forEach(d => { if (d.c && save.kit[d.c] > 0){ save.kit[d.c]--; if (!save.kit[d.c]) delete save.kit[d.c]; } });   // items used are gone
+  const back = T.patchedUp(save.block, spent); let nb = 0;   // the pharmacy patches some of them up: they come home, beds allowing
+  for (const k of T.ORDER) for (let n = 0; n < back[k]; n++) if (T.armySize(save.army) + T.SIZE[k] <= T.armyCap(save.block)){ save.army[k]++; nb++; }
+  const landed = (res.deploys || []).some(d => !d.c && !d.ab);   // nobody went in (End pressed at once): nothing is paid
+  let loot = landed ? T.lootFor(res, save.block) : {cash:0, sup:0};
+  if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};   // you take your share of what is left on that block
+   loot = landed ? T.campLoot(res, Rx.camp[0], Rx.camp[1], was.t, Rx.night) : {cash:0, sup:0}; }
+  const got = addRes(loot.cash, loot.sup);   // what fit in your stashes; a block only loses what you actually carried home
+  if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};
+   save.camp[key] = {s:Math.max(was.s, stars), t:[was.t[0] + got.cash, was.t[1] + got.sup]}; lastReport.firstTake = !was.s && stars > 0; }
+  const p = landed ? T.payout(save.block) : {cash:0, sup:0}, pg = addRes(p.cash, p.sup); lastReport.gain = {cash:got.cash + pg.cash, sup:got.sup + pg.sup};
+  const rp = landed ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; }
+ save.reports.unshift(lastReport); save.reports = save.reports.slice(0, 30); saveGame(); clearPending();
+ return {stars, won};
+}
+// a fight in progress is saved every 2 seconds; if the app closes, the next start plays it out from there and counts it once
+// it is kept under its own key so the big save is not rewritten mid-fight; written on every drop, item, move and End, and every 5 seconds
+const PEND_KEY = 'turf.pending.v1';
+function savePending(now){ if (!sim || finished || !R || R.mode === 'rescue') return; if (!now && sim.tick() % 50) return;
+ const dep = sim.queued(); if (!dep.length) return;
+ const p = {at:Date.now(), simVer:B.SIM_VER, deployVer:B.DEPLOY_VER, recipe:Object.assign({}, R, {deploys:dep, endAt:sim.endAt()})};
+ try { localStorage.setItem(PEND_KEY, JSON.stringify(p)); } catch (e){ memPend = p; } }
+let memPend = null;
+function loadPending(){ let raw = null; try { raw = localStorage.getItem(PEND_KEY); } catch (e){} let p = null; try { p = raw ? JSON.parse(raw) : memPend; } catch (e){ p = null; } return p; }
+function clearPending(){ memPend = null; try { localStorage.removeItem(PEND_KEY); } catch (e){} }
+function cleanPending(p){ if (!p || typeof p !== 'object' || !p.recipe) return null; const r = p.recipe; if (p.simVer !== B.SIM_VER || p.deployVer !== B.DEPLOY_VER) return null;
+ if (!['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r[k])) || (r.mode !== 'raid' && r.mode !== 'camp')) return null;
+ if (r.mode === 'camp' && !(Array.isArray(r.camp) && r.camp[0] >= 0 && r.camp[0] < T.CAMP.crews && r.camp[1] >= 0 && r.camp[1] < T.CAMP.blocks)) return null;
+ return {at:+p.at || 0, recipe:r}; }
+function settlePending(){ const p = cleanPending(loadPending()); clearPending(); if (!p) return null;
+ try { const res = B.simRaid(JSON.parse(JSON.stringify(p.recipe))).result; return settle(p.recipe, res); } catch (e){ return null; } }
 function showResult(res, stars, won){
- const raid = !!(lastReport && lastReport.recipe.mode === 'raid'), g = lastReport && lastReport.gain;
- $('resTitle').textContent = raid ? (won ? 'You hit the Boombox Kings' : 'They held the block') : (won ? 'The Viceroy is out' : 'They held the house');
- setStars($('resStars'), stars); $('resPct').textContent = res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash and ' + g.sup + ' Supplies.' : '');
- const again = () => raid ? startAttack(T.raidRecipe(seed(), save.army)) : startAttack(T.rescueRecipe(seed()));
- $('resNext').textContent = raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
- $('resNext').onclick = () => raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
+ const mode = lastReport && lastReport.recipe.mode, camp = mode === 'camp', raid = mode === 'raid' || camp, g = lastReport && lastReport.gain;
+ const crew = camp ? T.CREWS[lastReport.recipe.camp[0]] : T.CREWS[0];
+ $('resTitle').textContent = raid ? (won ? 'You hit ' + crew.name : crew.name + ' held the block') : (won ? 'The Viceroy is out' : 'They held the house');
+ setStars($('resStars'), stars); $('resPct').textContent = res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.back ? ' The pharmacy patched up ' + g.back + ' of your crew.' : '') : '');
+ const Rl = lastReport && lastReport.recipe;
+ const again = () => camp ? startAttack(T.campRecipe(Rl.camp[0], Rl.camp[1], seed(), save.army, save.research, !!Rl.night, myLoad())) : raid ? startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))) : startAttack(T.rescueRecipe(seed()));
+ $('resNext').textContent = camp ? 'Back to the streets' : raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
+ $('resNext').onclick = () => camp ? (toHome(), openSheet('streets')) : raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
+ if (camp && lastReport.firstTake && lastReport.recipe.camp[1] === T.CAMP.blocks - 1) setTimeout(() => toast('That was the last of ' + crew.name + ' turf', 2600), 600);
  $('resAgain').textContent = raid ? 'Hit them again' : 'Run it again'; $('resAgain').onclick = again;
  $('resAgain').style.display = (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
  show('result');
@@ -1861,18 +2307,21 @@ function seed(){ return (Date.now() ^ (Math.random() * 4294967296)) >>> 0; }
 // ---------- Watch: the saved recipe fought again, frame by frame ----------
 let wSpeed = 1, wPaused = false, wFrames = null, wI = 0, wRaf = 0;
 function watch(rep){
- if (!rep) return; const Rw = JSON.parse(JSON.stringify(rep.recipe)); setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = Rw.mode === 'rescue'; if (gl3d) VIL.edit(null);
+ if (!rep) return; const Rw = JSON.parse(JSON.stringify(rep.recipe)); setBlock(blockOf(Rw), 'enemy', Rw.crewColor); vicOn = Rw.mode === 'rescue'; lightFor(Rw); if (gl3d) VIL.edit(null);
  const out = B.simRaid(Rw, {record:true}), m = meta(Rw);
  wFrames = out.frames; units = m.u; items = m.it; viceroyFree = false; lastDown = 'x'; paint(null); wSpeed = 1; wPaused = false;
  $('wPlay').textContent = 'Pause'; $('wSpeed').textContent = '2x'; $('watchLbl').textContent = 'Replay · ' + rep.stars + (rep.stars === 1 ? ' star' : ' stars');
  const onTick = i => { const f = wFrames[i], down = items.map((b, j) => f.b[j] <= 0), coreI = Rw.items.findIndex(b => b.role === 'core');
   if (vicOn && f.b[coreI] <= 0 && !viceroyFree){ viceroyFree = true; lastDown = 'x'; } paint(down); };
  show('watch'); cam('watch');
- if (gl3d){ VIL.battle({frames:wFrames, tick:B.TICK, units, items, speed:1, follow:true, zoom:VIL.view().zoom, onTick, onEnd:endWatch}); }
+ const wr = ringsOf(Rw);
+ const onTick2 = i => { onTick(i); if (wr.length){ const f = wFrames[i]; wr.forEach(r => { if (r.follow != null){ const u = f.u.find(q => q[0] === r.follow); if (u){ r.x = u[1]; r.y = u[2]; } } }); } };
+ if (gl3d){ VIL.battle({frames:wFrames, tick:B.TICK, units, items, speed:1, follow:true, zoom:VIL.view().zoom, onTick:onTick2, onEnd:endWatch}); VIL.rings(wr); }
  else { wI = 0; cancelAnimationFrame(wRaf); let a = 0, lt = 0; const step = now => { wRaf = requestAnimationFrame(step); const dt = Math.min(.25, (now - (lt || now)) / 1000); lt = now; if (wPaused) return; a += dt * wSpeed;
    while (a >= B.TICK){ a -= B.TICK; wI++; if (wI >= wFrames.length){ cancelAnimationFrame(wRaf); endWatch(); return; } FB.frame(wFrames[wI]); onTick(wI); } }; wRaf = requestAnimationFrame(step); }
 }
-function endWatch(){ if (!$('watch').classList.contains('on')) return; if (lastReport) showResult({pct:lastReport.pct}, lastReport.stars, lastReport.recipe.mode === 'rescue' ? lastReport.stars >= 2 : lastReport.stars > 0); else toTitle(); }
+let watchFromList = false;
+function endWatch(){ if (!$('watch').classList.contains('on')) return; if (watchFromList){ watchFromList = false; toHome(); openSheet('fights'); return; } if (lastReport) showResult({pct:lastReport.pct}, lastReport.stars, lastReport.recipe.mode === 'rescue' ? lastReport.stars >= 2 : lastReport.stars > 0); else toTitle(); }
 $('wPlay').onclick = () => { wPaused = !wPaused; $('wPlay').textContent = wPaused ? 'Play' : 'Pause'; if (gl3d) VIL.battleSpeed(wPaused ? 0 : wSpeed); };
 $('wSpeed').onclick = () => { wSpeed = wSpeed === 1 ? 2 : 1; $('wSpeed').textContent = wSpeed === 1 ? '2x' : '1x'; if (gl3d && !wPaused) VIL.battleSpeed(wSpeed); };
 $('wSkip').onclick = () => { if (gl3d) VIL.battleSkip(); else { cancelAnimationFrame(wRaf); endWatch(); } };
@@ -1897,7 +2346,7 @@ $('fsBtn').onclick = e => { e.stopPropagation(); if (fsOn()){ save.fs = false; f
 ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { const t = fsOn() ? 'Leave full screen' : 'Full screen'; $('fsBtn').querySelector('span').textContent = t; $('fsBtn').setAttribute('aria-label', t); }));
 // ---------- title ----------
 function toTitle(){
- if (gl3d){ VIL.battle(null); VIL.edit(null); } setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = true; viceroyFree = !!save.rescued; paint(null);
+ if (gl3d){ VIL.battle(null); VIL.edit(null); } lightFor(null); setBlock(T.RESCUE_BLOCK, 'enemy'); vicOn = true; viceroyFree = !!save.rescued; paint(null);
  $('goBtn').textContent = save.rescued ? 'Go to your block' : 'Start';
  $('watchBtn').hidden = !save.reports.length;
  show('title'); cam('title');
@@ -1918,7 +2367,7 @@ function gangHex(c){ const m = ART.MATS[MINI.M[MINI.GANGS[c][0]]] || [185, 163, 
 function homeHud(){
  const cap = T.storeCap(save.block); $('hCash').textContent = save.cash; $('hSup').textContent = save.sup;
  $('hCash').parentNode.classList.toggle('full', save.cash >= cap.cash); $('hSup').parentNode.classList.toggle('full', save.sup >= cap.sup);
- $('hArmy').textContent = T.armySize(save.army) + '/' + T.armyCap(save.block); $('hCrew').querySelector('.ic').style.background = gangHex(MY_CREW);
+ $('hRep').textContent = save.rep; $('hArmy').textContent = T.armySize(save.army) + '/' + T.armyCap(save.block); $('hCrew').querySelector('.ic').style.background = gangHex(MY_CREW);
  const hint = $('hHint'); hint.hidden = !fenceMode;
  if (fenceMode){ const left = T.capFor('fence', T.houseLv(save.block)) - T.count(save.block, 'fence');
   $('hHintTxt').textContent = fenceMode === 'paint' ? (gl3d ? 'Drag to lay fence. ' : 'Tap to lay fence. ') + left + ' left.' : (gl3d ? 'Drag over fence to take it down.' : 'Tap fence to take it down.'); }
@@ -1955,7 +2404,7 @@ function fenceAt(x, y, add){
  saveGame(); homePaint();
 }
 function buy(k){
- const b = save.block, c = T.HOME[k].cost, lv = T.houseLv(b);
+ const b = save.block, c = T.price(save.block, T.HOME[k].cost), lv = T.houseLv(b);
  if (T.count(b, k) >= T.capFor(k, lv)){ toast(T.capFor(k, lv) ? 'Level up the Main House for more' : 'Opens at Main House level 2'); return; }
  if (!has(c)){ toast('Needs ' + costText(c)); return; }
  const spot = T.freeSpot(b, k); if (!spot){ toast('No room on the lot. Move things or level up the Main House.'); return; }
@@ -1965,7 +2414,7 @@ function buy(k){
  toast(gl3d ? 'Placed. Drag it where you want it.' : 'Placed. Tap an open spot to move it.', 2400);
 }
 function levelUp(key){
- const it = item(key); if (!it) return; const c = T.upgradeCost(it.k, it.lv); if (!c) return;
+ const it = item(key); if (!it) return; const c0 = T.upgradeCost(it.k, it.lv); if (!c0) return; const c = T.price(save.block, c0);
  if (!has(c)){ toast('Needs ' + costText(c)); return; }
  pay(c); it.lv++; saveGame(); homePaint(); openSheet('info');
  if (it.k === 'house'){ cam('home'); toast('The lot got bigger. New limits on everything.', 2600); } else toast(T.BDEFS[it.k].name + ' is level ' + it.lv);
@@ -1980,6 +2429,18 @@ function train(k, n){
   pay(c); a[k]++; saveGame(); }
  homeHud(); openSheet('crew');
 }
+function make(k){
+ const it = T.ITEMS[k]; if (!it || !T.itemOpen(save.block, k)) return;
+ if (T.kitSize(save.kit) >= T.kitCap(save.block)){ toast('No room. Level up the Corner Store to carry more.'); return; }
+ const c = [0, it.cost]; if (!has(c)){ toast('Needs ' + costText(c)); return; }
+ pay(c); save.kit[k] = (save.kit[k] | 0) + 1; saveGame(); toast(it.name + ' made'); homeHud(); openSheet('crew'); }
+function ago(at){ const m = Math.round((Date.now() - at) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; }
+function research(k){
+ const lv = save.research[k] || 1, c = T.researchCost(k, lv);
+ if (!c || lv >= T.researchCap(save.block)) return;
+ if (!has(c)){ toast('Needs ' + costText(c)); return; }
+ pay(c); save.research[k] = lv + 1; saveGame(); homeHud(); openSheet('lab'); toast(T.UNITS[k].name + 's are level ' + (lv + 1));
+}
 function setColor(c){ if (!MINI.GANGS[c] || c === 'gold') return; save.color = MY_CREW = c; saveGame(); homePaint(); openSheet('crew'); }
 function statLine(it){
  const k = it.k, lv = it.lv, b = save.block;
@@ -1990,6 +2451,11 @@ function statLine(it){
  if (k === 'supstash') return 'Holds ' + 1500 * lv + ' Supplies. You can hold ' + T.storeCap(b).sup + ' in all.';
  if (k === 'pad') return 'Sleeps ' + (14 + 6 * lv) + '.';
  if (k === 'gym') return 'Trains ' + T.ORDER.filter(u => T.UNLOCKS[u] <= lv).map(u => T.UNITS[u].name + 's').join(', ') + '.';
+ if (k === 'workshop') return 'Researches up to level ' + T.researchCap(b) + '.';
+ if (k === 'crewhouse') return 'Empty for now. Friends can send fighters once the group is online.';
+ if (k === 'pharmacy') return Math.round(T.patchShare(b) * 100) + '% of the crew you send in come home patched up.';
+ if (k === 'hardware') return 'Everything you build or level up costs ' + Math.round(T.priceCut(b) * 100) + '% less.';
+ if (k === 'studio') return 'Rep from every fight times ' + (1.25 + .25 * lv) + '.';
  if (k === 'porch' || k === 'roof') return 'Reaches ' + T.BDEFS[k].range + ' tiles. Guards the block once rivals can hit back.';
  if (k === 'fence') return T.count(b, 'fence') + ' of ' + T.capFor('fence', T.houseLv(b)) + ' pieces up.';
  return '';
@@ -1997,35 +2463,79 @@ function statLine(it){
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[c]));
 function openSheet(kind){
  const body = $('sheetBody'); let h = ''; sheetKind = kind;
- if (kind === 'info'){ const it = item(homeSel); if (!it){ closeSheet(); return; } const d = T.BDEFS[it.k], c = T.upgradeCost(it.k, it.lv);
+ if (kind === 'info'){ const it = item(homeSel); if (!it){ closeSheet(); return; } const d = T.BDEFS[it.k], c0 = T.upgradeCost(it.k, it.lv), c = c0 && T.price(save.block, c0);
   h = '<h3>' + esc(d.name) + (it.k === 'fence' ? '' : '<span>Level ' + it.lv + '</span>') + '</h3><p>' + esc(T.HOME[it.k].line) + '</p><p class="stat">' + esc(statLine(it)) + '</p>';
   if (it.k === 'fence') h += '<button class="btn" data-act="unfence">Take it down, ' + T.HOME.fence.cost[1] + ' Supplies back</button>';
   else { h += c ? '<button class="btn main' + (has(c) ? '' : ' no') + '" data-act="up">Level up for ' + costText(c) + '</button>' : '<p class="stat">Top level.</p>';
+   if (it.k === 'workshop') h += '<button class="btn" data-act="lab">Research</button>';
    h += '<p>' + (gl3d ? 'Drag it to move it.' : 'Tap an open spot to move it there.') + '</p>'; } }
  else if (kind === 'shop'){ const b = save.block, lv = T.houseLv(b);
   h = '<h3>Build</h3><div class="rows">';
   const fn = T.count(b, 'fence'), fc = T.capFor('fence', lv);
   h += '<div class="row"><span class="mid"><span class="nm">Chain-link Fence</span><br><span class="sub">' + fn + ' of ' + fc + ' up. ' + T.HOME.fence.cost[1] + ' Supplies a piece.</span></span><button class="mini" data-act="lay">Lay</button><button class="mini" data-act="pull">Take down</button></div>';
 
-  T.SHOP.forEach(k => { const n = T.count(b, k), cap = T.capFor(k, lv), c = T.HOME[k].cost, off = n >= cap || !has(c);
-   h += '<button class="row' + (off ? ' no' : '') + '" data-buy="' + k + '"><span class="mid"><span class="nm">' + esc(T.BDEFS[k].name) + '</span><br><span class="sub">' + esc(T.HOME[k].line) + '</span></span><span class="pr">' + (cap ? n + ' of ' + cap + '<br>' + costText(c) : 'House level 2') + '</span></button>'; });
+  T.SHOP.forEach(k => { const n = T.count(b, k), cap = T.capFor(k, lv), c = T.price(b, T.HOME[k].cost), off = n >= cap || !has(c);
+   h += '<button class="row' + (off ? ' no' : '') + '" data-buy="' + k + '"><span class="mid"><span class="nm">' + esc(T.BDEFS[k].name) + '</span><br><span class="sub">' + esc(T.HOME[k].line) + '</span></span><span class="pr">' + (cap ? n + ' of ' + cap + '<br>' + costText(c) : 'House level ' + (T.HOME[k].cap.indexOf(1) + 1)) + '</span></button>'; });
   h += '</div>'; }
+ else if (kind === 'lab'){ const cap = T.researchCap(save.block), g = T.gymLv(save.block);
+  h = '<h3>Research<span>up to level ' + cap + '</span></h3><p>Every fighter of a kind gets it, now and from then on. Each level adds 10% health and damage.</p><div class="rows">';
+  T.ORDER.filter(k => g >= T.UNLOCKS[k]).forEach(k => { const lv = save.research[k] || 1, c = T.researchCost(k, lv), can = c && lv < cap;
+   h += '<div class="row' + (can ? '' : ' no') + '" data-unit="' + k + '"><span class="mid"><span class="nm">' + esc(T.UNITS[k].name) + ' Lv ' + lv + '</span><br><span class="sub">' + (!c ? 'Top level.' : lv >= cap ? 'Level up the Workshop to go further.' : 'Next: Lv ' + (lv + 1) + ' for ' + costText(c) + '.') + '</span></span>'
+    + (can ? '<button class="mini" data-lab="' + k + '">Lv ' + (lv + 1) + '</button>' : '') + '</div>'; });
+  h += '</div>'; }
+ else if (kind === 'streets'){ let got = 0; for (const k in save.camp) got += save.camp[k].s;
+  h = '<h3>The streets<span>' + got + ' of ' + T.CAMP.crews * T.CAMP.blocks * 3 + ' stars</span></h3>';
+  h += '<div class="tod"><button data-tod="day" class="' + (save.night ? '' : 'on') + '">Day</button><button data-tod="night" class="' + (save.night ? 'on' : '') + '">Night</button></div>';
+  h += '<p class="stat">' + (save.night ? 'Night: their guns reach a little less. 75% of the loot.' : 'Day: full loot, full reach.') + '</p><div class="rows">';
+  h += '<button class="row" data-hit="-1"><span class="mid"><span class="nm">The Boombox corner</span><br><span class="sub">Loot for your crew, any time. Bosses sit this one out.</span></span></button>';
+  T.CREWS.forEach((c, ci) => { const hl = T.houseLv(save.block || []) >= c.hl;
+   h += '<div class="crewhd"><i style="background:' + gangHex(c.color) + '"></i><span class="mid"><span class="nm">' + esc(c.name) + '</span><br><span class="sub">' + esc(hl ? c.turf : 'Opens at Main House level ' + c.hl + '.') + '</span></span></div><div class="blocks">';
+   for (let bi = 0; bi < T.CAMP.blocks; bi++){ const v = save.camp[ci + '-' + bi], open = T.campOpen(save.camp, save.block, ci, bi), st = v ? v.s : 0;
+    const p = T.campPool(ci, bi), t = v ? v.t : [0, 0], left = Math.max(0, p.cash - t[0]) + Math.max(0, p.sup - t[1]);
+    h += '<button class="blk' + (open ? '' : ' no') + '" data-hit="' + ci + '" data-b="' + bi + '"' + (open ? '' : ' aria-disabled="true"') + '><span class="nm">' + (bi === T.CAMP.blocks - 1 ? esc(c.boss) : 'Block ' + (bi + 1)) + '</span><span class="st">' + [0, 1, 2].map(n => '<i class="' + (n < st ? 'on' : '') + '"></i>').join('') + '</span><span class="sub">' + (open ? (left ? left + ' loot left' : 'Picked clean') : 'Locked') + '</span></button>'; }
+   h += '</div>'; });
+  h += '<button class="row" data-act="fights"><span class="mid"><span class="nm">Your fights</span><br><span class="sub">' + (save.reports.length ? 'The last ' + Math.min(30, save.reports.length) + ' you started. Watch any of them again.' : 'None yet. Every fight you start is kept here.') + '</span></span></button>';
+  h += '</div><p>Each block opens once the one before it has a star. A block keeps what you take: hit it again and there is less to carry home.</p>'; }
  else if (kind === 'crew'){ const a = save.army, g = T.gymLv(save.block);
   h = '<h3>Your crew<span>' + T.armySize(a) + ' of ' + T.armyCap(save.block) + ' beds</span></h3><p>Colors are the only thing that marks your people.</p><div class="sw">';
   GANG_PICK.forEach(c => { h += '<button data-col="' + c + '" class="' + (c === MY_CREW ? 'on' : '') + '" style="background:' + gangHex(c) + '" aria-label="' + c + '"></button>'; });
   h += '</div><div class="rows">';
   T.ORDER.forEach(k => { const u = T.UNITS[k], open = g >= T.UNLOCKS[k];
-   h += '<div class="row' + (open ? '' : ' no') + '" data-unit="' + k + '"><span class="mid"><span class="nm">' + esc(u.name) + ' x' + (a[k] || 0) + '</span><br><span class="sub">' + (open ? esc(u.line) + ' ' + T.SIZE[k] + (T.SIZE[k] === 1 ? ' bed.' : ' beds.') : 'Comes in at Gym level ' + T.UNLOCKS[k] + '.') + '</span></span>'
+   h += '<div class="row' + (open ? '' : ' no') + '" data-unit="' + k + '"><span class="mid"><span class="nm">' + esc(u.name) + (save.research[k] > 1 ? ' Lv ' + save.research[k] : '') + ' x' + (a[k] || 0) + '</span><br><span class="sub">' + (open ? esc(u.line) + ' ' + T.SIZE[k] + (T.SIZE[k] === 1 ? ' bed.' : ' beds.') : 'Comes in at Gym level ' + T.UNLOCKS[k] + '.') + '</span></span>'
     + (open ? '<button class="mini" data-train="' + k + '" data-n="-1" aria-label="Let one ' + esc(u.name) + ' go">-</button><button class="mini" data-train="' + k + '" data-n="1">+ ' + T.trainCost(k) + '</button>' : '') + '</div>'; });
-  h += '</div>'; }
+  h += '</div><h4>Bosses</h4><p>All three come on every fight you start. No beds, no training. Drop one, then tap its card again for its move.</p><div class="rows">';
+  T.BOSS_ORDER.forEach(k => { const b = T.BOSSES[k]; h += '<div class="row" data-boss="' + k + '"><span class="mid"><span class="nm">' + esc(b.name) + '</span><br><span class="sub">' + esc(b.line) + '</span></span></div>'; });
+  const cap = T.kitCap(save.block), have = T.kitSize(save.kit);
+  h += '</div><h4>Items<span>' + have + ' of ' + cap + '</span></h4>';
+  if (!cap) h += '<p>Items are made at a Corner Store on your lot. Build one to make them.</p>';
+  else { h += '<p>Made with Supplies, used once. Pick one in a fight and tap the block where it should land.</p><div class="rows">';
+   T.ITEM_ORDER.forEach(k => { const it = T.ITEMS[k], open = T.itemOpen(save.block, k);
+    h += '<div class="row' + (open ? '' : ' no') + '" data-item="' + k + '"><span class="mid"><span class="nm">' + esc(it.name) + ' x' + (save.kit[k] | 0) + '</span><br><span class="sub">' + (open ? esc(it.line) : 'Comes in at Corner Store level ' + it.store + '.') + '</span></span>'
+     + (open ? '<button class="mini" data-make="' + k + '">+ ' + it.cost + '</button>' : '') + '</div>'; });
+   h += '</div>'; } }
+ else if (kind === 'fights'){
+  h = '<h3>Your fights<span>' + save.reports.length + '</span></h3>';
+  if (!save.reports.length) h += '<p>Nothing yet. Every fight you start is kept here so you can watch it again.</p>';
+  else { h += '<div class="rows">'; save.reports.forEach((r, i) => { const R2 = r.recipe, who = R2.mode === 'camp' ? T.CREWS[R2.camp[0]].name + ', ' + (R2.camp[1] === T.CAMP.blocks - 1 ? T.CREWS[R2.camp[0]].boss : 'block ' + (R2.camp[1] + 1)) + (R2.night ? ', night' : ', day') : R2.mode === 'raid' ? 'The Boombox corner' : 'The rescue';
+   h += '<div class="row"><span class="mid"><span class="nm">' + esc(who) + '</span><br><span class="sub">' + r.stars + (r.stars === 1 ? ' star, ' : ' stars, ') + r.pct + '%' + (r.gain ? ', ' + r.gain.cash + ' Cash, ' + r.gain.sup + ' Supplies' : '') + (r.at ? ', ' + ago(r.at) : '') + '</span></span><button class="mini" data-watch="' + i + '">Watch</button></div>'; });
+   h += '</div>'; } }
  body.innerHTML = h;
- if (kind === 'crew') body.querySelectorAll('[data-unit]').forEach(r => r.insertBefore(miniIcon(iconLook(r.dataset.unit), 64), r.firstChild));
+ if (kind === 'crew' || kind === 'lab') body.querySelectorAll('[data-unit]').forEach(r => r.insertBefore(miniIcon(iconLook(r.dataset.unit), 64), r.firstChild));
+ body.querySelectorAll('[data-boss]').forEach(r => r.insertBefore(miniIcon('hero|' + r.dataset.boss + '|' + MY_CREW, 64), r.firstChild));
+ body.querySelectorAll('[data-item]').forEach(r => { const c = itemIcon(r.dataset.item); c.style.width = c.style.height = '64px'; r.insertBefore(c, r.firstChild); });
  $('sheet').hidden = false; $('home').classList.add('sheeton');
 }
 function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); }
 $('sheetX').onclick = () => { const was = sheetKind; closeSheet(); if (was === 'info'){ homeSel = null; if (gl3d) VIL.select(null); else FB.scene(null); } };
 $('sheetBody').addEventListener('click', e => {
- const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col]'); if (!t) return;
+ const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch]'); if (!t) return;
+ if (t.dataset.make){ make(t.dataset.make); return; }
+ if (t.dataset.watch){ const r = save.reports[+t.dataset.watch]; if (!r) return; closeSheet(); watchFromList = true; try { watch(r); } catch (e){ watchFromList = false; toast("That replay can't be played"); toHome(); } return; }
+ if (t.dataset.act === 'fights'){ openSheet('fights'); return; }
+ if (t.dataset.tod){ save.night = t.dataset.tod === 'night'; saveGame(); openSheet('streets'); return; }
+ if (t.dataset.hit){ hit(+t.dataset.hit, +(t.dataset.b || 0)); return; }
+ if (t.dataset.lab){ research(t.dataset.lab); return; }
+ if (t.dataset.act === 'lab'){ openSheet('lab'); return; }
  if (t.dataset.buy) buy(t.dataset.buy);
  else if (t.dataset.train) train(t.dataset.train, +t.dataset.n);
  else if (t.dataset.col) setColor(t.dataset.col);
@@ -2037,7 +2547,16 @@ $('sheetBody').addEventListener('click', e => {
 $('hHintDone').onclick = () => { fenceMode = null; setEdit(); homeHud(); };
 $('hBuild').onclick = () => openSheet('shop');
 $('hTrain').onclick = $('hCrew').onclick = () => openSheet('crew');
-$('hAttack').onclick = () => { if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; } startAttack(T.raidRecipe(seed(), save.army)); };
+$('hAttack').onclick = () => openSheet('streets');
+function hit(ci, bi){
+ if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; }
+ if (ci >= 0 && !T.campOpen(save.camp, save.block, ci, bi)){ toast(T.houseLv(save.block || []) < T.CREWS[ci].hl ? 'Opens at Main House level ' + T.CREWS[ci].hl : 'Get a star on the block before it first'); return; }
+ closeSheet();
+ if (ci < 0){ startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))); return; }
+ startAttack(T.campRecipe(ci, bi, seed(), save.army, save.research, save.night, myLoad())); }
+// what you bring besides fighters: all three bosses and every item you have made
+// the Boombox corner is your crew's loot run: bosses sit that one out (it never runs dry, so they would farm it for free)
+function myLoad(corner){ return {bosses:corner ? [] : T.BOSS_ORDER, kit:Object.assign({}, save.kit)}; }
 // the flat map has no dragging: tap a building to pick it, then tap an open spot to move it there
 function homeGround(gx, gy){
  const x = Math.floor(gx), y = Math.floor(gy);
@@ -2055,7 +2574,7 @@ function focusOn(x, y){ if (!gl3d) return; const v = VIL.view(), r = $('stage').
  VIL.view({tx:v.tx + (j22 * ex - j12 * ey) / det, ty:v.ty + (-j21 * ex + j11 * ey) / det, zoom:v.zoom}); }
 function toHome(){
  if (!save.block){ save.block = T.starterBlock(); save.cash = T.START.cash; save.sup = T.START.sup; save.army = Object.assign({}, T.START.army); save.nk = 20; saveGame(); firstHome = true; }
- if (gl3d) VIL.battle(null); homeSel = null; fenceMode = null; closeSheet(); show('home'); homePaint(); setEdit(); cam('home');
+ if (gl3d) VIL.battle(null); lightFor(null); homeSel = null; fenceMode = null; closeSheet(); show('home'); homePaint(); setEdit(); cam('home');
  if (firstHome){ firstHome = false; openSheet('crew'); }
 }
 
@@ -2075,10 +2594,12 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 if (location.protocol.startsWith('http')){ bust(); checkUpdate(); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); }); }
 
 // ---------- go ----------
-mountMap(); toTitle();
+mountMap();
+{ const done = settlePending(); toTitle(); if (done) setTimeout(() => toast('Your last fight played out while you were away: ' + done.stars + (done.stars === 1 ? ' star' : ' stars'), 3200), 900); }
 // test hook (used by the headless proof): read-only peeks at the fight
 window.TURF_TEST = {block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
  state:() => ({screen:['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on')), tick:sim ? sim.tick() : 0, counts:Object.assign({}, counts), sel, finished, gl3d, reports:save.reports.length}),
+ camp:() => JSON.parse(JSON.stringify({camp:save.camp, night:save.night})), hit, icon:(l, n) => miniIcon(l, n),
  toScreen:(x, y, z) => gl3d ? VIL.project(x, y, z || 0) : null, result:() => sim ? sim.result() : null};
 })();
 
