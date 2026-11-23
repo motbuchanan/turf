@@ -11,6 +11,7 @@ def run(nogl=False, w=390, h=844, tag='main'):
         b = p.chromium.launch(args=args)
         ctx = b.new_context(viewport={'width': w, 'height': h}, device_scale_factor=2, user_agent=UA, has_touch=False)
         pg = ctx.new_page()
+        pg.add_init_script("try{localStorage.setItem('turf.intro.v1','1')}catch(e){}")   # these proofs skip the intro
         pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto(URL); pg.wait_for_timeout(2500)

@@ -12,6 +12,7 @@ def run(nogl=False, w=390, h=844, tag='home'):
         b = p.chromium.launch(args=args)
         ctx = b.new_context(viewport={'width': w, 'height': h}, device_scale_factor=1, user_agent=UA, has_touch=False)
         pg = ctx.new_page()
+        pg.add_init_script("try{localStorage.setItem('turf.intro.v1','1')}catch(e){}")   # these proofs skip the intro
         pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
         pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto(URL); pg.wait_for_timeout(800)
@@ -26,7 +27,7 @@ def run(nogl=False, w=390, h=844, tag='home'):
         assert pg.locator('#goBtn').inner_text() == 'Go to your block'
         click('#goBtn'); pg.wait_for_timeout(900)
         s, H = st(), hm(); print(tag, 'old save ->', s['screen'], H)
-        assert s['screen'] == 'home' and H['n'] == 7 and H['cash'] == 500 and H['sup'] == 300 and H['sheet'] == 'crew' and H['army'] == {'brawler': 6, 'shooter': 4, 'bruiser': 0}, H
+        assert s['screen'] == 'home' and H['n'] == 7 and H['cash'] == 500 and H['sup'] == 300 and H['sheet'] == 'crew' and {k: v for k, v in H['army'].items() if v} == {k: v for k, v in {'brawler': 6, 'shooter': 4, 'bruiser': 0}.items() if v}, H
         pg.screenshot(path=OUT + tag + '-1-crew.png')
         click('[data-col="teal"]'); pg.wait_for_timeout(400); assert hm()['color'] == 'teal'
         click('[data-train="brawler"][data-n="1"]'); pg.wait_for_timeout(200); click('[data-train="brawler"][data-n="1"]'); pg.wait_for_timeout(200)
@@ -87,7 +88,7 @@ def run(nogl=False, w=390, h=844, tag='home'):
         n0 = hm()['n']; pg.reload(); pg.wait_for_timeout(2500); click('#goBtn'); pg.wait_for_timeout(900)
         H = hm(); print(tag, 'after reload', H); assert H['n'] == n0 and H['color'] == 'teal' and H['army']['brawler'] == 8 and H['sheet'] is None, H
         # a loot raid with the trained crew
-        click('#hAttack'); pg.wait_for_timeout(1200); s = st(); assert s['screen'] == 'hud' and s['counts'] == {'brawler': 8, 'shooter': 4}, s
+        click('#hAttack'); pg.wait_for_timeout(400); click('[data-hit="-1"]'); pg.wait_for_timeout(1200); s = st(); assert s['screen'] == 'hud' and s['counts'] == {'brawler': 8, 'shooter': 4}, s
         for n in range(8):
             click('.troop[data-k="brawler"]'); sx, sy = world(13.2 + n * .35, 23.6); pg.mouse.click(sx, sy); pg.wait_for_timeout(120)
         for n in range(4):
@@ -100,7 +101,7 @@ def run(nogl=False, w=390, h=844, tag='home'):
         assert 'came home with' in txt
         pg.screenshot(path=OUT + tag + '-7-result.png')
         click('#resNext'); pg.wait_for_timeout(900); H2 = hm(); print(tag, 'home after raid', H2)
-        assert st()['screen'] == 'home' and H2['army'] == {'brawler': 0, 'shooter': 0, 'bruiser': 0} and H2['cash'] >= H['cash'] + 60 and H2['sup'] >= H['sup'] + 40, H2
+        assert st()['screen'] == 'home' and {k: v for k, v in H2['army'].items() if v} == {k: v for k, v in {'brawler': 0, 'shooter': 0, 'bruiser': 0}.items() if v} and H2['cash'] >= H['cash'] + 60 and H2['sup'] >= H['sup'] + 40, H2
         pg.screenshot(path=OUT + tag + '-8-home.png')
         b.close()
     errs = [e for e in errs if 'favicon' not in e]

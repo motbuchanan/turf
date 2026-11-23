@@ -25,6 +25,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #story .shade{background:linear-gradient(180deg,rgba(10,10,12,0) 45%,rgba(10,10,12,.75) 100%)}
 #title .mark{position:absolute;left:calc(20px + var(--safe-l));right:calc(20px + var(--safe-r));bottom:calc(150px + var(--safe-b));pointer-events:none}
 #title .mark svg{width:min(72vw,300px);height:auto;display:block}
+#title .mark h1.painted img{display:block;width:auto;height:auto;max-width:min(80vw,360px);max-height:34vh;margin-left:-8px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55))}
 #title .mark p{margin-top:12px;font-size:clamp(15px,4.2vw,18px);color:var(--dim);max-width:36ch;line-height:1.4}
 #title .go{position:absolute;left:calc(20px + var(--safe-l));bottom:calc(64px + var(--safe-b));min-width:200px;padding:16px 26px;background:var(--sodium);color:#1a1209;font-weight:800;font-size:18px;border-radius:4px 14px 4px 14px;box-shadow:0 4px 0 #9a5d14}
 #title .go:active{transform:translateY(3px);box-shadow:0 1px 0 #9a5d14}
@@ -145,7 +146,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 @media (orientation:landscape) and (max-height:500px){
  .troop{width:84px;height:86px}.troop canvas{width:52px!important;height:52px!important}
  #hud .bar{left:auto;transform:none;right:calc(8px + var(--safe-r));max-width:calc(100% - 140px - var(--safe-l) - var(--safe-r))}
- #title .mark{bottom:calc(96px + var(--safe-b))}#title .mark svg{width:min(40vw,240px)}#title .go{bottom:calc(20px + var(--safe-b))}#title .alt{bottom:calc(30px + var(--safe-b))}
+ #title .mark{bottom:calc(96px + var(--safe-b))}#title .mark svg{width:min(40vw,240px)}#title .go{bottom:calc(20px + var(--safe-b))}#title .alt{bottom:calc(30px + var(--safe-b))}#title.layer #introBtn{left:calc(384px + var(--safe-l));bottom:calc(30px + var(--safe-b))}
  .card{max-width:640px}}
 .tod{display:flex;gap:0;margin:4px 0 6px}
 .tod button{flex:1;min-height:46px;border:1px solid var(--line);background:#26282d;font-weight:800;font-size:15px;color:var(--dim)}
@@ -170,3 +171,24 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .troop.item .nm{font-size:12px;line-height:1.1;text-align:center}
 .troop.boss .nm{font-size:12px;line-height:1.1;text-align:center}
 @media (prefers-reduced-motion:reduce){.troop.ready{animation:none}}
+.troop.out:not(.boss){display:none}
+#title #introBtn{position:absolute;left:calc(20px + var(--safe-l));bottom:calc(18px + var(--safe-b));padding:10px 4px;color:var(--dim);font-size:15px;text-decoration:underline;text-underline-offset:4px;background:none;border:0}
+#intro{position:fixed;inset:0;z-index:40;background:#0b0c0f;overflow:hidden}
+#intro[hidden]{display:none}
+#introBg{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(22px) brightness(.45);pointer-events:none}
+#introFrame{position:absolute;inset:0;pointer-events:none}
+#introPic,#introVid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+#introPic[hidden],#introVid[hidden]{display:none}
+#introPic.push{animation:introPush 6.4s linear both}
+@keyframes introPush{from{transform:scale(1)}to{transform:scale(1.07)}}
+#intro::after{content:'';position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(180deg,rgba(11,12,15,0),rgba(11,12,15,.88) 70%);pointer-events:none}
+#introCap{position:absolute;z-index:1;left:calc(22px + var(--safe-l));right:calc(22px + var(--safe-r));bottom:calc(78px + var(--safe-b));font-size:clamp(19px,5.2vw,28px);font-weight:800;line-height:1.25;color:#f3ead2;max-width:24ch;text-shadow:0 2px 10px rgba(0,0,0,.8);opacity:0}
+#introCap.in{animation:introCap .7s .35s ease-out both}
+@keyframes introCap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#introPips{position:absolute;z-index:1;left:calc(22px + var(--safe-l));bottom:calc(40px + var(--safe-b));display:flex;gap:6px}
+#introPips i{width:26px;height:4px;background:rgba(255,255,255,.22)}
+#introPips i.done{background:#e0b64a}#introPips i.now{background:linear-gradient(90deg,#e0b64a 50%,rgba(255,255,255,.22) 50%);background-size:200% 100%;animation:introPip 6s linear both}
+@keyframes introPip{from{background-position:100% 0}to{background-position:0 0}}
+#introSkip{position:absolute;z-index:1;right:calc(16px + var(--safe-r));bottom:calc(22px + var(--safe-b));min-width:72px;min-height:44px;padding:10px 16px;font-weight:800;font-size:15px;color:#f3ead2;background:rgba(11,12,15,.6);border:1px solid rgba(255,255,255,.3);border-radius:4px}
+#introSkip:active{background:rgba(255,255,255,.18)}
+@media (prefers-reduced-motion:reduce){#introPic.push,#introCap.in,#introPips i.now{animation:none}#introCap{opacity:1}}

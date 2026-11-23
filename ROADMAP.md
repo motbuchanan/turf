@@ -4,23 +4,23 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
-**v0.4.1 · Nov 22 2026 · Hit the Streets, part two.** Your three bosses come on every fight you start: The Enforcer
-(Lights Out: a ground slam, and the crew around him hit harder), Deadeye (Ghost: unseen for a few seconds, and she fires harder)
-and The Shot Caller (Hold the Line: nobody around her can fall for a few seconds). Drop a boss like a fighter, then tap its card
-again for its move. Each rival crew's boss now holds its last block. Six one-time items are made at your Corner Store with
-Supplies: Hype Track, First Aid Run and Firecracker Strike, then Ladder and Blackout at store level 2, and Smoke at level 3.
-Pick one in a fight and tap where it should land. Your fights keeps the last 30, each with Watch. A fight cut short by closing
-the app plays out on the next start and counts once.
+**v0.5.2 · Nov 23 2026 · Art pass, part one.** The painted logo is on the title screen and the app has its new icon. A new
+player sees a short intro before the title: painted shots with one line each, silent, about 6 seconds a shot, with Skip; a tap
+moves to the next shot. It plays once, and "Play the intro" on the title plays it again. Four of its five shots are in.
 
+v0.5.1 finished Hold the Block: the Hustler and the Pilot, a skill per fighter at research level 3, and the Block Party board.
+
+v0.5.0 brought the full defense set, traps, streetlights, fence levels, posted crews and captains, and Test your block.
+
+v0.4.1 brought bosses, items and Your fights.
 v0.4.0 brought the streets: six rival crews, 24 blocks, stars that open the next block, and Day or Night for street fights.
 
 Earlier: your block (build, level up, fence, crew colors), ten fighters at the Gym, research at the Workshop, the Pharmacy,
 Hardware Store and Recording Studio, Rep from every raid, and Pops Cassette at his store.
 
 ## Art queue
-- A new logo. The block-letter wordmark is a stand-in.
-- An intro animation built from generated art.
-- A proper app icon.
+- Done Nov 23 2026: painted logo (logo.png; the block-letter wordmark stays as the fallback), app icon, intro shots 1, 2, 3 and 5.
+- Still to come: intro shot 4 (the Viceroy at his window), portraits for the ten bosses, a place in the game for the fighter and boss paintings.
 - Done Nov 20 2026: painted Viceroy portrait, title screen, rescue and keys scenes. Painted Brawler, Shooter, Bruiser and Pops Cassette exist and are waiting for a place in the game (troop info, boss intro).
 
 ## Plan (each phase is tried on a phone before the next)
@@ -31,7 +31,8 @@ Hardware Store and Recording Studio, Rep from every raid, and Pops Cassette at h
    hardware store and recording studio.
 4. **Hit the Streets (v0.4):** part one *shipped Nov 21 2026 (v0.4.0)*: 6 rival crews and 24 blocks, stars, loot, the Day or Night pick.
    Part two *shipped Nov 22 2026 (v0.4.1)*: the first 3 bosses, rival bosses, one-time items, Your fights with Watch, and a fight that survives the app closing.
-5. **Hold the Block (v0.5):** full defenses and traps, house crews and patrolling captains, upgrade effects, skills, bosses 4 and 5.
+5. **Hold the Block (v0.5):** part one *shipped Nov 22 2026 (v0.5.0)*: defenses, traps, streetlights, fence levels, posted crews and captains, Test your block. Part two *shipped Nov 22 2026 (v0.5.1)*: house and Block Party upgrades, a skill per fighter at research 3, the Hustler and the Pilot.
+   Plan text: full defenses and traps, house crews and patrolling captains, upgrade effects, skills, bosses 4 and 5.
 6. **The Crew Online (v0.6):** share blocks, attack each other, defensive replays, Rep board, Crew House reinforcements,
    day and night fights, and same-color confusion when two crews wear the same color.
 7. **Release (v1.0):** How to Play, balance from the first week, full break-it.
@@ -54,13 +55,16 @@ The top of the repo is the live game plus everything needed to rebuild it.
 - **Live game (what the site serves):** index.html, sw.js, manifest.json, icon-192.png, icon-512.png, viceroy.png, title.jpg, event-rescue.jpg, event-keys.jpg.
 - **Source:** shell.html (page skeleton), style.css, base.js (fight sim, shared engine), engine.js (units, buildings, costs, blocks),
   figs.js (people), art.js (buildings and ground), village-iso.js (3D renderer), ui.js (screens), build.py.
-- **Checks:** turfcheck.js, turfsweep.js and campsweep.js (run with node; camptune.js finds the block strengths campsweep checks), gates.py, proof1.py, proof_home.py, proof_flat.py, proof_streets.py, proof_bosses.py (Playwright play-throughs;
+- **Checks:** turfcheck.js, turfsweep.js, campsweep.js and homesweep.js (run with node; camptune.js finds the block strengths campsweep checks), gates.py, proof1.py, proof_home.py, proof_flat.py, proof_streets.py, proof_bosses.py, proof_defense.py, proof_party.py, proof_intro.py (Playwright play-throughs;
   serve dist/ on localhost:8123 first).
 - **To build:** bump VER and DATE in build.py, run `python3 build.py`, run the checks, then upload the changed files from dist/ over the
   ones at the top of the repo. index.html is generated: change the source files, never index.html itself.
 - base.js is shared with Ravenmarrow. Its fight results for Ravenmarrow must not change.
 
 ## Version history
+- v0.5.2 · Nov 23 2026: painted logo, new app icon, the intro (four shots of five).
+- v0.5.1 · Nov 22 2026: Hold the Block part two. The Hustler and the Pilot, a skill per fighter at research level 3, the Block Party board, tougher crew at leveled-up Crash Pads.
+- v0.5.0 · Nov 22 2026: Hold the Block part one. New defenses and traps, streetlights, fence levels, posted crews and captains, Test your block. Bosses scale with your Main House.
 - v0.4.1 · Nov 22 2026: bosses (The Enforcer, Deadeye, The Shot Caller) and rival bosses, six one-time items from the Corner Store, Your fights (last 30, Watch any), fights cut short by closing the app count once. A slow phone no longer shows a live fight seconds behind.
 - v0.4.0 · Nov 21 2026: the streets. Six rival crews, 24 blocks, stars that open the next block, Day or Night for street fights, loot that runs down as you take it.
 - v0.3.7 · Nov 21 2026: Pops Cassette, boss of the Boombox Kings, stands in his store's doorway (game model made from his painted portrait). The Biker wears a black jacket.

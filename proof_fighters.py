@@ -13,6 +13,7 @@ def run(w, h, tag):
     with sync_playwright() as p:
         b = p.chromium.launch(args=['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
         pg = b.new_page(viewport={'width':w,'height':h}); errs = []
+        pg.add_init_script("try{localStorage.setItem('turf.intro.v1','1')}catch(e){}")   # these proofs skip the intro
         pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None); pg.on('pageerror', lambda e: errs.append(str(e)))
         pg.goto(URL); pg.wait_for_timeout(600); pg.evaluate("s => localStorage.setItem('turf.save.v1', s)", json.dumps(save)); pg.reload(); pg.wait_for_timeout(1800)
         pg.click('#goBtn'); pg.wait_for_timeout(900); pg.click('#hTrain'); pg.wait_for_timeout(500)

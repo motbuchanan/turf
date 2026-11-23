@@ -24,6 +24,13 @@ __CSS__
  <div class="mark"><h1 aria-label="Turf"></h1><p>One house on one block. Take the rest of it.</p></div>
  <button class="go" id="goBtn">Start</button>
  <button class="alt" id="watchBtn" hidden>Watch last fight</button>
+ <button class="alt" id="introBtn" hidden>Play the intro</button>
+</div>
+
+<div id="intro" hidden>
+ <img id="introBg" alt=""><div id="introFrame"><img id="introPic" alt=""><video id="introVid" muted playsinline preload="none"></video></div>
+ <p id="introCap"></p><div id="introPips"></div>
+ <button id="introSkip">Skip</button>
 </div>
 
 <div id="story" class="layer">
@@ -52,7 +59,7 @@ __CSS__
 </div>
 
 <div id="home" class="layer">
- <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
+ <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><span class="chip"><i class="ic rep"></i><b id="hRep">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
  <div class="hint" id="hHint" hidden><span id="hHintTxt"></span><button id="hHintDone">Done</button></div>
  <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb main" id="hAttack">Attack</button></div>
  <div class="sheet" id="sheet" hidden><button class="x" id="sheetX">Close</button><div id="sheetBody"></div></div>
