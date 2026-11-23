@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.5.2">
+<meta name="build" content="0.6.0">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -207,6 +207,34 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #introSkip{position:absolute;z-index:1;right:calc(16px + var(--safe-r));bottom:calc(22px + var(--safe-b));min-width:72px;min-height:44px;padding:10px 16px;font-weight:800;font-size:15px;color:#f3ead2;background:rgba(11,12,15,.6);border:1px solid rgba(255,255,255,.3);border-radius:4px}
 #introSkip:active{background:rgba(255,255,255,.18)}
 @media (prefers-reduced-motion:reduce){#introPic.push,#introCap.in,#introPips i.now{animation:none}#introCap{opacity:1}}
+.hb{position:relative}
+.hb .dot{position:absolute;right:-5px;top:-5px;width:14px;height:14px;border-radius:50%;background:#e2603a;border:2px solid #16171b}
+.hb .dot[hidden]{display:none}
+.bar2{height:8px;background:#34363c;margin:2px 0 10px}.bar2 i{display:block;height:100%;background:#e0b64a}
+.mini.go2{background:var(--sodium);color:#1a1209;border-color:#9a5d14;font-weight:800}
+.btn.runback{margin:8px 0 2px;width:100%}
+#resStars i.on{animation:starPop .45s cubic-bezier(.2,1.6,.4,1) both}#resStars i.on:nth-child(2){animation-delay:.25s}#resStars i.on:nth-child(3){animation-delay:.5s}
+@keyframes starPop{from{transform:scale(.2) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#resStars i.on{animation:none}}
+
+/* the coach: first-run tips */
+#coach{position:fixed;z-index:38;left:50%;top:calc(150px + var(--safe-t));transform:translateX(-50%);width:max-content;max-width:min(92vw,440px);background:#0e0f12;border:1px solid var(--sodium);border-left-width:5px;color:var(--ink);padding:10px 12px;border-radius:4px;font-size:15px;line-height:1.35;pointer-events:none;display:flex;gap:10px;align-items:center}
+#coach[hidden]{display:none}
+#coachOff{pointer-events:auto;flex:none;background:none;border:1px solid var(--line);color:var(--dim,#9aa0aa);font:inherit;font-size:12px;padding:6px 8px;border-radius:3px;min-height:32px}
+body.coaching #hud .tip{display:none}
+.hintme{outline:3px solid var(--sodium);outline-offset:3px;animation:hintme 1.1s ease-in-out infinite}
+@keyframes hintme{50%{outline-offset:7px}}
+@media (orientation:landscape) and (max-height:500px){#coach{top:calc(58px + var(--safe-t));left:calc(10px + var(--safe-l));transform:none;max-width:44vw}}
+@media (prefers-reduced-motion:reduce){.hintme{animation:none}}
+#resTip{margin:10px 0 0;padding:8px 10px;border-left:4px solid var(--sodium);background:#16171b;font-size:14px;line-height:1.35;color:var(--ink);text-align:left}
+#resTip[hidden]{display:none}
+@media (orientation:landscape) and (max-height:500px){
+ #result .panel{width:min(94vw,660px);max-height:calc(100vh - 12px);overflow-y:auto;padding:14px 16px 12px}
+ #result .panel h2{font-size:21px;margin-bottom:4px}#result .panel .stars{margin:6px 0 4px}#result .panel .stars i{width:34px;height:34px}#result .panel .pct{margin-bottom:10px}
+ #result .panel .acts{flex-direction:row;flex-wrap:wrap}#result .panel .acts .btn{flex:1 1 150px}}
+.panel{max-height:calc(100vh - 12px);overflow-y:auto}
+#result.fresh .acts{pointer-events:none;opacity:.55}
+#result .acts{transition:opacity .2s}
 
 </style>
 </head>
@@ -227,6 +255,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
  <button id="introSkip">Skip</button>
 </div>
 
+<div id="coach" hidden><span id="coachTxt"></span><button id="coachOff">Tips off</button></div>
+
 <div id="story" class="layer">
  <img class="pic" id="storyPic" alt="" hidden><div class="shade"></div>
  <div class="card" id="card"><div class="face" hidden><img id="faceImg" alt="The Viceroy" width="96" height="96"></div><div><div class="who">The Viceroy</div><div class="say"></div><span class="tap">Tap to continue</span></div></div>
@@ -243,7 +273,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 </div>
 
 <div id="result" class="layer">
- <div class="panel"><h2 id="resTitle"></h2><div class="stars" id="resStars"><i></i><i></i><i></i></div><div class="pct" id="resPct"></div>
+ <div class="panel"><h2 id="resTitle"></h2><div class="stars" id="resStars"><i></i><i></i><i></i></div><div class="pct" id="resPct"></div><p id="resTip" hidden></p>
   <div class="acts"><button class="btn main" id="resNext"></button><button class="btn" id="resWatch">Watch the fight</button><button class="btn" id="resAgain">Run it again</button></div></div>
 </div>
 
@@ -255,12 +285,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 <div id="home" class="layer">
  <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><span class="chip"><i class="ic rep"></i><b id="hRep">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
  <div class="hint" id="hHint" hidden><span id="hHintTxt"></span><button id="hHintDone">Done</button></div>
- <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb main" id="hAttack">Attack</button></div>
+ <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb" id="hJobs">Jobs<i class="dot" hidden></i></button><button class="hb main" id="hAttack">Attack</button></div>
  <div class="sheet" id="sheet" hidden><button class="x" id="sheetX">Close</button><div id="sheetBody"></div></div>
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.5.2 · Nov 23 2026</button>
+<button id="badge">v0.6.0 · Nov 23 2026</button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
 
@@ -834,7 +864,10 @@ const HOME = {
  fence:{cap:[24, 44, 64, 90], cost:[0, 10], line:'Slows anyone on foot. Levels: chain-link, wood, brick, steel.'}
 };
 const SHOP = ['hustle', 'run', 'stash', 'supstash', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof', 'rocket', 'jammer', 'window', 'blower', 'popup', 'light', 'nail', 'manhole', 'closet', 'kite'];
-const MAXLV = {house:4, fence:4, gym:5, workshop:4, crewhouse:1, light:1, nail:2, manhole:1, closet:1, kite:2}, HOUSE_UP = [null, [600, 400], [1500, 1000], [3500, 2500]];
+const MAXLV = {house:4, fence:4, gym:5, workshop:4, crewhouse:1, light:1, nail:2, manhole:1, closet:1, kite:2}, HOUSE_UP = [null, [1500, 1000], [5000, 4000], [9000, 8000]];
+// the Main House also needs a name on the streets: stars earned (every round counts) before it will go to levels 2, 3 and 4
+const HOUSE_STARS = [0, 0, 8, 45, 150];
+function houseStars(nextLv){ return HOUSE_STARS[Math.max(0, Math.min(4, nextLv | 0))] || 0; }
 const UNLOCKS = {brawler:1, shooter:1, bruiser:2, snatcher:2, breacher:3, medic:3, shotgunner:4, drone:4, biker:5, heavy:5};   // the Gym level that brings each fighter in
 const TRAIN = {brawler:20, shooter:30, bruiser:150, snatcher:25, breacher:60, medic:150, shotgunner:90, drone:160, biker:140, heavy:220};   // Cash each
 const SIZE = {brawler:1, shooter:1, bruiser:5, snatcher:1, breacher:2, medic:5, shotgunner:3, drone:4, biker:4, heavy:6};   // beds each
@@ -952,7 +985,8 @@ function campBlock(ci, bi){ const g = campG(ci, bi); if (CAMP_BLOCKS[g]) return 
 }
 // the strength of a block: towers, the Main House and the people on defense grow along the run
 // CAMP_POWER is found by camptune.js so a fair army 3-stars block 1 of a crew about half the time by day, falling to about 28% at block 4
-const CAMP_POWER = [3, 2.68, 2.5, 1.55, 3.29, 2.73, 2.39, 1.35, 5.04, 3.33, 2.26, 1.54, 6, 3.63, 2.18, 1.56, 6.43, 4.99, 3.7, 2.22, 5.33, 5.05, 3.34, 2.69];
+// the first four are set by hand so a first-timer who dumps the starter crew at the front wins block 1 clean (see turfcheck)
+const CAMP_POWER = [.7, .9, 1.1, 1.05, 3.01, 2.75, 2.48, 1.34, 5.04, 3.33, 2.26, 1.54, 6, 3.63, 2.18, 1.56, 6.43, 4.99, 3.7, 2.22, 5.33, 5.05, 3.34, 2.69];
 function campPower(ci, bi){ return CAMP_POWER[campG(ci, bi)]; }
 const BOSS_DEF = {hp:6, atk:2.2, reach:1}, LIGHT_R = 3;
 // who defends a block: n people, of whom `caps` are captains walking a loop around the lot; the rest are posted at the
@@ -967,7 +1001,8 @@ function crewPosts(blk, n, caps, make){ const homes = blk.filter(i => i.k === 'h
  return out; }
 const NIGHT = {loot:.75, reach:.95};
 function campRecipe(ci, bi, seed, counts, research, night, load){
- const c = CREWS[ci], m = campPower(ci, bi), reach = night ? NIGHT.reach : 1, d = c.defender;
+ const round = Math.max(1, Math.min(ROUNDS.max, (load && load.round) | 0 || 1));
+ const c = CREWS[ci], m = campPower(ci, bi) * (1 + ROUNDS.power * (round - 1)), reach = night ? NIGHT.reach : 1, d = c.defender;
  const blk = campBlock(ci, bi), lights = blk.filter(i => i.k === 'light');
  const lit = it => lights.some(l => Math.abs(l.x + .5 - (it.x + 1)) <= LIGHT_R && Math.abs(l.y + .5 - (it.y + 1)) <= LIGHT_R);   // a streetlight keeps guns near it at full reach
  const items = blk.map(it => { const f = fightItem(it);
@@ -980,23 +1015,27 @@ function campRecipe(ci, bi, seed, counts, research, night, load){
  const nd = 2 + bi + (c.extraDef || 0);
  // the crew's boss holds its last block: much tougher than the rest, and it hits hard
  const boss = bi === CAMP.blocks - 1 ? [{look:'boss:' + c.id, hero:true, hp:Math.round(d.hp * m * BOSS_DEF.hp), atk:Math.round(d.atk * m * BOSS_DEF.atk * 10) / 10, speed:d.speed, range:Math.round((d.range + BOSS_DEF.reach) * reach * 100) / 100}] : [];
- return loadout({deployVer:B.DEPLOY_VER, rules:2, seed:seed >>> 0, maxT:1800, guard:0, mode:'camp', camp:[ci, bi], night:night ? 1 : 0, crewColor:c.color,
+ return loadout({deployVer:B.DEPLOY_VER, rules:2, seed:seed >>> 0, maxT:1800, guard:0, mode:'camp', camp:[ci, bi], round, night:night ? 1 : 0, crewColor:c.color,
   items, attackers:army(counts, research),
   defenders:boss.concat(crewPosts(blk, nd, bi >= 1 ? 1 + (bi >= 3 ? 1 : 0) : 0, () => ({look:'def', hp:Math.round(d.hp * m), atk:Math.round(d.atk * m * 10) / 10, speed:d.speed, range:Math.round(d.range * reach * 100) / 100}))), deploys:[]}, load);
 }
 // what a block holds: you take your share of what is left, by how much of it you knocked down (less at night)
-function campPool(ci, bi){ const g = campG(ci, bi); return {cash:400 + 300 * g, sup:250 + 190 * g}; }
-function campLoot(res, ci, bi, took, night){ const p = campPool(ci, bi), t = took || [0, 0], f = res.pct / 100 * (night ? NIGHT.loot : 1);
+// v0.6 gameplay pass: bigger pools; a crew you have cleaned out can be run back at a higher round (tougher, richer), up to round 5
+const ROUNDS = {max:5, power:.5, loot:.4, restock:.15};
+function roundOf(rounds, ci){ return Math.max(1, Math.min(ROUNDS.max, (rounds && rounds[ci]) | 0 || 1)); }
+function campPool(ci, bi, round){ const g = campG(ci, bi), f = 1 + ROUNDS.loot * ((round || 1) - 1); return {cash:Math.round((600 + 340 * g) * f), sup:Math.round((380 + 210 * g) * f)}; }
+function campLoot(res, ci, bi, took, night, round){ const p = campPool(ci, bi, round), t = took || [0, 0], f = res.pct / 100 * (night ? NIGHT.loot : 1);
  return {cash:Math.floor(Math.max(0, p.cash - (t[0] | 0)) * f), sup:Math.floor(Math.max(0, p.sup - (t[1] | 0)) * f)}; }
-function campOpen(camp, block, ci, bi){
+function campOpen(camp, block, ci, bi, rounds){
  if (houseLv(block || []) < CREWS[ci].hl) return false;
  const g = campG(ci, bi); if (!g) return true;
+ if (bi === 0 && roundOf(rounds, ci) > 1) return true;   // a crew you are running back starts open
  const pc = Math.floor((g - 1) / CAMP.blocks), pb = (g - 1) % CAMP.blocks, prev = camp && camp[pc + '-' + pb];
- return !!(prev && prev.s > 0);
+ return !!(prev && prev.s > 0) || (pc !== ci && roundOf(rounds, pc) > 1);   // a crew you beat once stays beaten for the crew after it
 }
-function cleanCamp(o){ const out = {}; if (!o || typeof o !== 'object') return out;
+function cleanCamp(o, rounds){ const out = {}; if (!o || typeof o !== 'object') return out;
  for (let ci = 0; ci < CAMP.crews; ci++) for (let bi = 0; bi < CAMP.blocks; bi++){ const v = o[ci + '-' + bi]; if (!v || typeof v !== 'object') continue;
-  const t = Array.isArray(v.t) ? v.t : [0, 0], p = campPool(ci, bi);
+  const t = Array.isArray(v.t) ? v.t : [0, 0], p = campPool(ci, bi, roundOf(rounds, ci));
   out[ci + '-' + bi] = {s:Math.max(0, Math.min(3, v.s | 0)), t:[Math.max(0, Math.min(p.cash, t[0] | 0)), Math.max(0, Math.min(p.sup, t[1] | 0))]}; }
  return out; }
 
@@ -1052,10 +1091,93 @@ function sampleHome(hl, seed){ const r = rng32(5000 + hl * 97 + (seed | 0) * 13)
  fence.filter((p, i) => i % 9 !== 4).slice(0, capFor('fence', hl)).forEach(p => out.push({key:'f' + (n++), k:'fence', x:p[0], y:p[1], lv:hl}));
  return cleanBlock(out); }
 
+// ---------- v0.6: reasons to come back ----------
+function cleanRounds(o){ const out = {}; if (!o || typeof o !== 'object' || Array.isArray(o)) return out; for (let ci = 0; ci < CAMP.crews; ci++){ const v = Math.max(1, Math.min(ROUNDS.max, (o && o[ci]) | 0 || 1)); if (v > 1) out[ci] = v; } return out; }
+// a crew can be run back once all four of its blocks have three stars
+function canRunBack(camp, rounds, ci){ if (roundOf(rounds, ci) >= ROUNDS.max) return false; for (let bi = 0; bi < CAMP.blocks; bi++){ const v = camp && camp[ci + '-' + bi]; if (!v || v.s < 3) return false; } return true; }
+function starsNow(camp){ let n = 0; for (const k in (camp || {})) n += camp[k].s | 0; return n; }
+function starsAll(save){ let n = starsNow(save.camp); const r = save.rounds || {}; for (const ci in r) n += (roundOf(r, ci) - 1) * CAMP.blocks * 3; return n; }
+// after a fight, every other street block you have taken from gets some of its loot back
+function restock(camp, exceptKey){ for (const k in camp){ if (k === exceptKey) continue; const t = camp[k].t; camp[k].t = [Math.floor(t[0] * (1 - ROUNDS.restock)), Math.floor(t[1] * (1 - ROUNDS.restock))]; } }
+// Rep ranks: a name and a one-time bonus at each step
+const RANKS = [[0, 'New on the block'], [60, 'Corner Kid'], [200, 'Runner'], [500, 'Lieutenant'], [1000, 'Block Captain'], [1800, 'Underboss'], [3000, 'Boss'], [5000, 'Kingpin'], [8000, 'Legend of the block']];
+function rankOf(rep){ let i = 0; while (i + 1 < RANKS.length && rep >= RANKS[i + 1][0]) i++; return i; }
+function rankBonus(i){ return [150 * i, 100 * i]; }
+// The Viceroy's list: three tracks of jobs, each paying once. A job is done when the game's own state says so.
+function jobCtx(save){ const b = save.block || [], camp = save.camp || {}, st = save.stats || {}, res = save.research || {};
+ let three = 0, bossBeat = 0; for (const k in camp){ if (camp[k].s >= 3) three++; if (+k.split('-')[1] === CAMP.blocks - 1 && camp[k].s > 0) bossBeat++; }
+ const r = save.rounds || {}; let roundSum = 0; for (const ci in r){ const done = roundOf(r, ci) - 1; roundSum += done; }
+ const pops = !!(camp['0-3'] && camp['0-3'].s > 0) || roundOf(r, 0) > 1;
+ const towers = b.filter(i => BDEFS[i.k].role === 'tower').length, traps = b.filter(i => BDEFS[i.k].role === 'trap').length;
+ const skills = ORDER.filter(k => (res[k] | 0) >= SKILL_LV).length, party = Object.keys(cleanParty(save.party)).length;
+ return {hl:houseLv(b.length ? b : [{k:'house', lv:1}]), stars:starsAll(save), three:three + roundSum * CAMP.blocks, bossBeat:bossBeat + roundSum, rounds:roundSum, gym:gymLv(b), towers, traps, fences:count(b, 'fence'),
+  woodUp:b.filter(i => i.k === 'fence' && (i.lv | 0) >= 2).length, skills, party, pops, has:k => count(b, k) > 0, beds:armyCap(b), fights:st.fights | 0, made:st.made | 0, tests:st.tests | 0, nights:st.nights | 0, moves:st.moves | 0, rank:rankOf(save.rep | 0)}; }
+const JOBS = {
+ streets:[
+  ['s1', 'Get your first star on the streets', c => c.stars >= 1, [150, 100]],
+  ['s2', 'Three stars on any street block', c => c.three >= 1, [200, 150]],
+  ['s3', 'Take Pops Cassette\'s block (any star on the Boombox Kings\' last block)', c => c.pops, [400, 300]],
+  ['s4', 'Earn 12 stars on the streets', c => c.stars >= 12, [400, 300]],
+  ['s5', 'Win a street fight at night', c => c.nights >= 1, [250, 200]],
+  ['s6', 'Earn 24 stars', c => c.stars >= 24, [700, 500]],
+  ['s7', 'Beat three crew bosses', c => c.bossBeat >= 3, [900, 700]],
+  ['s8', 'Earn 48 stars', c => c.stars >= 48, [1200, 900]],
+  ['s9', 'Run a crew back: finish all four of its blocks with three stars and start Round 2', c => c.rounds >= 1, [1000, 800]],
+  ['s10', 'Earn 72 stars', c => c.stars >= 72, [2000, 1500]],
+  ['s11', 'Earn 120 stars', c => c.stars >= 120, [2500, 2000]],
+  ['s12', 'Earn 200 stars', c => c.stars >= 200, [4000, 3000]]],
+ block:[
+  ['b1', 'Put up 12 pieces of fence', c => c.fences >= 12, [100, 150]],
+  ['b2', 'Level the Main House to 2', c => c.hl >= 2, [300, 300]],
+  ['b3', 'Build a Corner Store', c => c.has('store'), [200, 200]],
+  ['b4', 'Have 3 guns on your block', c => c.towers >= 3, [200, 300]],
+  ['b5', 'Test your block', c => c.tests >= 1, [150, 150]],
+  ['b6', 'Hide 2 traps on your block', c => c.traps >= 2, [200, 250]],
+  ['b7', 'Level the Main House to 3', c => c.hl >= 3, [600, 600]],
+  ['b8', 'Buy something from the Block Party board', c => c.party >= 1, [300, 200]],
+  ['b9', 'Make 20 pieces of fence wood or better', c => c.woodUp >= 20, [300, 500]],
+  ['b10', 'Have 6 guns on your block', c => c.towers >= 6, [500, 700]],
+  ['b11', 'Level the Main House to 4', c => c.hl >= 4, [1200, 1200]],
+  ['b12', 'Have 10 guns on your block', c => c.towers >= 10, [1500, 2000]]],
+ crew:[
+  ['c1', 'Run 3 fights', c => c.fights >= 3, [150, 100]],
+  ['c2', 'Level the Gym to 2 for Bruisers and Snatchers', c => c.gym >= 2, [250, 200]],
+  ['c3', 'Have beds for 30', c => c.beds >= 30, [200, 200]],
+  ['c4', 'Build a Workshop', c => c.has('workshop'), [250, 250]],
+  ['c5', 'Use a boss move 5 times', c => c.moves >= 5, [250, 200]],
+  ['c6', 'Make an item at the Corner Store', c => c.made >= 1, [200, 250]],
+  ['c7', 'Teach one kind of fighter its skill (research level 3)', c => c.skills >= 1, [500, 600]],
+  ['c8', 'Level the Gym to 4 for Shotgunners and Drones', c => c.gym >= 4, [600, 500]],
+  ['c9', 'Reach the rank of Lieutenant', c => c.rank >= 3, [500, 500]],
+  ['c10', 'Teach three kinds of fighter their skills', c => c.skills >= 3, [1000, 1200]],
+  ['c11', 'Level the Gym to 5 for Bikers and Heavies', c => c.gym >= 5, [1000, 800]],
+  ['c12', 'Reach the rank of Boss', c => c.rank >= 6, [2000, 2000]]]
+};
+const JOB_TRACKS = ['streets', 'block', 'crew'];
+// the job showing on each track: the first one not yet paid. {track, id, text, done, reward} or null when the track is finished
+function jobsNow(save){ const ctx = jobCtx(save), got = save.jobs || {};
+ return JOB_TRACKS.map(tr => { const j = JOBS[tr].find(x => !got[x[0]]); return j ? {track:tr, id:j[0], text:j[1], done:!!j[2](ctx), reward:j[3], n:JOBS[tr].indexOf(j) + 1, of:JOBS[tr].length} : null; }); }
+function cleanJobs(o){ const out = {}; JOB_TRACKS.forEach(tr => JOBS[tr].forEach(j => { if (o && o[j[0]]) out[j[0]] = 1; })); return out; }
+// Today's three: picked by the date, counted from the day's own fights, each paying once; a streak of days raises the pay
+const DAILY = [
+ ['fights', 3, 'Run 3 fights'], ['stars', 5, 'Earn 5 stars'], ['three', 1, 'Three stars in one fight'], ['night', 1, 'Win a fight at night'], ['pct', 250, 'Knock down 250% in total'],
+ ['moves', 3, 'Use 3 boss moves'], ['corner', 2, 'Hit the Boombox corner twice'], ['home', 15, 'Bring 15 fighters home alive'], ['wins', 3, 'Win 3 street fights'], ['fights', 6, 'Run 6 fights']];
+function dayKey(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function dailyFor(key){ let h = 0; for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const r = rng32(h), picks = [], kinds = new Set();
+ while (picks.length < 3){ const i = Math.floor(r() * DAILY.length); if (kinds.has(DAILY[i][0])) continue; kinds.add(DAILY[i][0]); picks.push(i); } return picks; }
+function dailyPay(streak){ const s = Math.max(1, Math.min(7, streak | 0)); return [120 + 30 * s, 90 + 20 * s]; }
+// the day's record, rolled over when the date changes: {d, n:{...counts}, got:{0|1|2:1}, streak, on}  (on = the last day a task was claimed)
+function dayRoll(day, key, yesterdayKey){ const d = day && typeof day === 'object' ? day : {}, sk = Math.max(0, Math.min(99, +d.streak || 0)) | 0;
+ // the same day, or a clock set back to an earlier day: nothing resets, so a day's jobs cannot be collected twice
+ if (typeof d.d === 'string' && d.d >= key) return {d:d.d, n:Object.assign({}, d.n), got:Object.assign({}, d.got), streak:sk, on:d.on || ''};
+ return {d:key, n:{}, got:{}, streak:d.on === yesterdayKey ? sk : 0, on:d.on || ''}; }
+function dailyNow(day){ return dailyFor(day.d).map((i, slot) => { const [k, need, text] = DAILY[i]; const have = Math.min(need, (day.n && day.n[k]) | 0); return {slot, text, have, need, done:have >= need, got:!!(day.got && day.got[slot])}; }); }
+
 return {UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
  HOME, SHOP, UNLOCKS, SIZE, START, maxLv, trainCost, upgradeCost, lotsOpen, houseLv, count, capFor, storeCap, armyCap, armySize, gymLv, payout, lootFor,
  starterBlock, fitsAt, freeSpot, reachOk, cleanBlock, raidRecipe, RESEARCH, researchMult, researchCost, researchCap, lvOf, priceCut, price, patchShare, patchedUp, repFor,
- BOSS_LV, CAMP, CAMP_POWER, NIGHT, BOSS_DEF, LIGHT_R, campBlock, fenceName, FENCE_HP, HOME_CREW, HOME_POWER, homeDefenders, homeRecipe, homeStats, practiceRecipe, RIVAL_ARMY, autoDeploy, sampleHome,
+ BOSS_LV, HOUSE_STARS, houseStars, ROUNDS, roundOf, cleanRounds, canRunBack, starsNow, starsAll, restock, RANKS, rankOf, rankBonus, JOBS, JOB_TRACKS, jobCtx, jobsNow, cleanJobs, DAILY, dayKey, dailyFor, dailyPay, dayRoll, dailyNow,
+ CAMP, CAMP_POWER, NIGHT, BOSS_DEF, LIGHT_R, campBlock, fenceName, FENCE_HP, HOME_CREW, HOME_POWER, homeDefenders, homeRecipe, homeStats, practiceRecipe, RIVAL_ARMY, autoDeploy, sampleHome,
  BOSSES, BOSS_ORDER, bossOpen, bossesFor, SWARM, SKILLS, SKILL_LV, hasSkill, PARTY, PARTY_ORDER, cleanParty, partyCost, partyOpen, blockBonuses, ITEMS, ITEM_ORDER, kitCap, kitSize, itemOpen, cleanKit, spellsFor, loadout, campRecipe, campPool, campLoot, campOpen, cleanCamp, campPower};
 })();
 
@@ -2242,14 +2364,14 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.5.2', BUILD_DATE = 'Nov 23 2026';
+const VER = '0.6.0', BUILD_DATE = 'Nov 23 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
 'use strict';
 const B = BASE, T = TURF, $ = id => document.getElementById(id);
 const SAVE_KEY = 'turf.save.v1';
-const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}};
+const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0};
 const GANG_PICK = ['lav', 'teal', 'red', 'green', 'orange', 'blue'];   // gold belongs to the Boombox Kings
 
 // ---------- save (guarded: a phone that blocks storage still plays, it just forgets) ----------
@@ -2258,6 +2380,8 @@ function loadSave(){
  let raw = null; try { raw = localStorage.getItem(SAVE_KEY); } catch (e){}
  let s = {}; try { s = raw ? JSON.parse(raw) || {} : (memSave || {}); } catch (e){ s = {}; }
  const out = Object.assign(JSON.parse(JSON.stringify(DEFAULT_SAVE)), s);
+ out.rankPaid = Math.max(0, Math.min(T.RANKS.length - 1, out.rankPaid | 0));
+ out.guide = typeof s.guide === 'number' && (s.guide === 99 || (s.guide >= 0 && s.guide <= 5)) ? s.guide | 0 : (s.block ? 99 : 0);
  const okRep = r => r && r.recipe && ['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r.recipe[k])) && (r.recipe.mode !== 'camp' || (Array.isArray(r.recipe.camp) && T.CREWS[r.recipe.camp[0]] && r.recipe.camp[1] >= 0 && r.recipe.camp[1] < T.CAMP.blocks));
  out.reports = Array.isArray(out.reports) ? out.reports.filter(okRep).slice(0, 30) : [];
  // anything a save holds is checked before use: a block that fits the rules, whole numbers, a color that exists
@@ -2267,7 +2391,9 @@ function loadSave(){
  out.cash = Math.max(0, Math.min(999999, out.cash | 0)); out.sup = Math.max(0, Math.min(999999, out.sup | 0)); out.nk = Math.max(20, out.nk | 0); out.rep = Math.max(0, Math.min(999999, out.rep | 0));
  const rs = out.research && typeof out.research === 'object' ? out.research : {}; out.research = {}; T.ORDER.forEach(k => { const v = rs[k] | 0; if (v > 1) out.research[k] = Math.min(T.RESEARCH.max, v); });
  if (GANG_PICK.indexOf(out.color) < 0) out.color = 'lav';
- out.camp = T.cleanCamp(out.camp); out.night = out.night === true; out.kit = T.cleanKit(out.kit); out.party = T.cleanParty(out.party);
+ out.rounds = T.cleanRounds(out.rounds); out.camp = T.cleanCamp(out.camp, out.rounds); out.jobs = T.cleanJobs(out.jobs);
+ out.stats = out.stats && typeof out.stats === 'object' ? {fights:out.stats.fights | 0, made:out.stats.made | 0, tests:out.stats.tests | 0, nights:out.stats.nights | 0, moves:out.stats.moves | 0} : {fights:0, made:0, tests:0, nights:0, moves:0};
+ out.day = T.dayRoll(out.day, T.dayKey(new Date()), T.dayKey(new Date(Date.now() - 864e5))); out.night = out.night === true; out.kit = T.cleanKit(out.kit); out.party = T.cleanParty(out.party);
  delete out.pending;
  return out;
 }
@@ -2281,7 +2407,9 @@ function toast(msg, ms, onTap){ const t = $('toast'); t.textContent = msg; t.cla
 $('badge').onclick = () => toast('Turf v' + VER + ' · ' + BUILD_DATE);
 
 // ---------- layers ----------
-function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); }
+function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); 
+ // a result that pops up while you are still tapping fighters in must not eat one of those taps: its buttons wake up after a beat
+ if (id === 'result'){ const r = $('result'); r.classList.add('fresh'); setTimeout(() => r.classList.remove('fresh'), 900); } }
 
 // ---------- the wordmark: TURF in chunky blocks, like the buildings ----------
 function wordmark(){
@@ -2571,19 +2699,26 @@ function settle(Rx, res){
  save.tries++; save.best = Math.max(save.best, stars); if (won && Rx.mode === 'rescue') save.rescued = true;
  if ((Rx.mode === 'raid' || Rx.mode === 'camp') && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
   const sent = new Set((res.deploys || []).filter(d => !d.c && !d.ab).map(d => d.i)), spent = {};
-  Rx.attackers.forEach((a, j) => { if (a.boss || a.swarm || !sent.has(j)) return; save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
+  let walked = 0;   // whoever is still standing at the end walks home; only the ones who fell are gone
+  Rx.attackers.forEach((a, j) => { if (a.boss || a.swarm || !sent.has(j)) return; if (Rx.mode === 'camp' && res.attHp && res.attHp[j] > 0){ walked++; return; } save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
   (res.deploys || []).forEach(d => { if (d.c && save.kit[d.c] > 0){ save.kit[d.c]--; if (!save.kit[d.c]) delete save.kit[d.c]; } });   // items used are gone
   const back = T.patchedUp(save.block, spent); let nb = 0;   // the pharmacy patches some of them up: they come home, beds allowing
   for (const k of T.ORDER) for (let n = 0; n < back[k]; n++) if (T.armySize(save.army) + T.SIZE[k] <= T.armyCap(save.block)){ save.army[k]++; nb++; }
   const landed = (res.deploys || []).some(d => !d.c && !d.ab && Rx.attackers[d.i] && !Rx.attackers[d.i].boss);   // no fighter went in (End pressed at once, or bosses alone): nothing is paid
   let loot = landed ? T.lootFor(res, save.block) : {cash:0, sup:0};
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};   // you take your share of what is left on that block
-   loot = landed ? T.campLoot(res, Rx.camp[0], Rx.camp[1], was.t, Rx.night) : {cash:0, sup:0}; }
+   loot = landed ? T.campLoot(res, Rx.camp[0], Rx.camp[1], was.t, Rx.night, Rx.round) : {cash:0, sup:0}; }
   const got = addRes(loot.cash, loot.sup);   // what fit in your stashes; a block only loses what you actually carried home
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};
    save.camp[key] = {s:Math.max(was.s, landed ? stars : 0), t:[was.t[0] + got.cash, was.t[1] + got.sup]}; lastReport.firstTake = !was.s && stars > 0; }
-  const p = landed ? T.payout(save.block) : {cash:0, sup:0}, pg = addRes(p.cash, p.sup); lastReport.gain = {cash:got.cash + pg.cash, sup:got.sup + pg.sup};
-  const rp = landed ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; }
+  const real = landed && (stars > 0 || res.pct >= 25);   // a fight counts toward payouts, restocking and jobs only if it did real damage
+  const p = real ? T.payout(save.block) : {cash:0, sup:0}, pg = addRes(p.cash, p.sup); lastReport.gain = {cash:got.cash + pg.cash, sup:got.sup + pg.sup};
+  const rank0 = T.rankOf(save.rep), rp = landed ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; lastReport.gain.walked = walked;
+  if (real){ const key = Rx.mode === 'camp' ? Rx.camp[0] + '-' + Rx.camp[1] : ''; T.restock(save.camp, key);   // the other blocks fill back up a little
+   const st = save.stats, d = dayNow(), moves = (res.deploys || []).filter(x => x.ab).length; st.fights++; st.moves += moves; if (Rx.night && stars > 0) st.nights++;
+   const n = d.n, add = (k, v) => n[k] = (n[k] | 0) + v; add('fights', 1); add('stars', stars); add('pct', res.pct); add('moves', moves); add('home', walked); if (stars === 3) add('three', 1);
+   if (Rx.mode === 'raid') add('corner', 1); if (Rx.mode === 'camp' && stars > 0){ add('wins', 1); if (Rx.night) add('night', 1); } }
+  const rank1 = T.rankOf(save.rep); if (rank1 > rank0) lastReport.rankUp = {name:T.RANKS[rank1][1]}; }   // the bonus is collected in Jobs, so a full stash never eats it
  save.reports.unshift(lastReport); save.reports = save.reports.slice(0, 30); saveGame(); clearPending();
  return {stars, won};
 }
@@ -2607,9 +2742,10 @@ function showResult(res, stars, won){
  const mode = lastReport && lastReport.recipe.mode, camp = mode === 'camp', raid = mode === 'raid' || camp, g = lastReport && lastReport.gain;
  const crew = camp ? T.CREWS[lastReport.recipe.camp[0]] : T.CREWS[0];
  $('resTitle').textContent = raid ? (won ? 'You hit ' + crew.name : crew.name + ' held the block') : (won ? 'The Viceroy is out' : 'They held the house');
- setStars($('resStars'), stars); $('resPct').textContent = lastReport && lastReport.noCrew ? 'Nobody from your crew went in, so this one does not count. Bosses back the crew up; they do not take a block alone.' : res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.back ? ' The pharmacy patched up ' + g.back + ' of your crew.' : '') : '');
+ setStars($('resStars'), stars); $('resPct').textContent = lastReport && lastReport.noCrew ? 'Nobody from your crew went in, so this one does not count. Bosses back the crew up; they do not take a block alone.' : res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.walked ? ' ' + g.walked + ' of your crew walked home.' : '') + (g.back ? ' The pharmacy patched up ' + g.back + ' more.' : '') + (lastReport.rankUp ? ' New rank: ' + lastReport.rankUp.name + '. Your bonus is waiting in Jobs.' : rankLine()) : '');
+ { const due = jobsDue(); if (raid && due) setTimeout(() => toast(due === 1 ? 'A job is done. Collect it on your block.' : due + ' jobs are done. Collect them on your block.', 2600), 1200); }
  const Rl = lastReport && lastReport.recipe;
- const again = () => camp ? startAttack(T.campRecipe(Rl.camp[0], Rl.camp[1], seed(), save.army, save.research, !!Rl.night, myLoad())) : raid ? startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))) : startAttack(T.rescueRecipe(seed()));
+ const again = () => camp && !T.campOpen(save.camp, save.block, Rl.camp[0], Rl.camp[1], save.rounds) ? toast('That block is not open right now. Pick one from the streets.') : camp ? startAttack(T.campRecipe(Rl.camp[0], Rl.camp[1], seed(), save.army, save.research, !!Rl.night, myLoad(false, Rl.camp[0]))) : raid ? startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))) : startAttack(T.rescueRecipe(seed()));
  $('resNext').textContent = camp ? 'Back to the streets' : raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
  $('resNext').onclick = () => camp ? (toHome(), openSheet('streets')) : raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
  if (camp && lastReport.firstTake && lastReport.recipe.camp[1] === T.CAMP.blocks - 1) setTimeout(() => toast('That was the last of ' + crew.name + ' turf', 2600), 600);
@@ -2639,7 +2775,7 @@ function watch(rep){
 }
 let watchFromList = false, practiceRep = null;
 // Test my block: a rival crew built for your Main House level hits your own layout; you watch, nothing is lost or gained
-function practice(){ if (!save.block) return; const Rp = T.practiceRecipe(save.block, seed(), MY_CREW, T.blockBonuses(save)), res = B.simRaid(JSON.parse(JSON.stringify(Rp))).result;
+function practice(){ if (!save.block) return; save.stats.tests++; saveGame(); const Rp = T.practiceRecipe(save.block, seed(), MY_CREW, T.blockBonuses(save)), res = B.simRaid(JSON.parse(JSON.stringify(Rp))).result;
  practiceRep = T.reportFrom(Rp, res); closeSheet(); try { watch(practiceRep); } catch (e){ practiceRep = null; toast("The test couldn't run"); toHome(); } }
 function showPractice(){ const r = practiceRep, held = !r.coreDown;
  $('resTitle').textContent = held ? 'Your block held' : 'They took your Main House'; setStars($('resStars'), r.stars);
@@ -2687,10 +2823,13 @@ const costText = c => !c ? '' : (c[0] ? c[0] + ' Cash' : '') + (c[0] && c[1] ? '
 const has = c => save.cash >= c[0] && save.sup >= c[1];
 function pay(c){ save.cash -= c[0]; save.sup -= c[1]; }
 // stashes cap what you can hold; returns what actually went in
+// today's record, rolled over if the date has changed since it was last touched
+function dayNow(){ const n = new Date(); save.day = T.dayRoll(save.day, T.dayKey(n), T.dayKey(new Date(n.getFullYear(), n.getMonth(), n.getDate() - 1))); return save.day; }
 function addRes(cash, sup){ const cap = T.storeCap(save.block), c0 = save.cash, s0 = save.sup;
  save.cash = Math.max(c0, Math.min(cap.cash, c0 + cash)); save.sup = Math.max(s0, Math.min(cap.sup, s0 + sup)); return {cash:save.cash - c0, sup:save.sup - s0}; }
 function gangHex(c){ const m = ART.MATS[MINI.M[MINI.GANGS[c][0]]] || [185, 163, 255]; return 'rgb(' + m[0] + ',' + m[1] + ',' + m[2] + ')'; }
 function homeHud(){
+ { const dot = $('hJobs').querySelector('.dot'); dot.hidden = !jobsDue(); }
  const cap = T.storeCap(save.block); $('hCash').textContent = save.cash; $('hSup').textContent = save.sup;
  $('hCash').parentNode.classList.toggle('full', save.cash >= cap.cash); $('hSup').parentNode.classList.toggle('full', save.sup >= cap.sup);
  $('hRep').textContent = save.rep; $('hArmy').textContent = T.armySize(save.army) + '/' + T.armyCap(save.block); $('hCrew').querySelector('.ic').style.background = gangHex(MY_CREW);
@@ -2747,6 +2886,7 @@ function levelFences(key){ const it = item(key); if (!it || it.k !== 'fence' || 
  pay(c); list.forEach(f => f.lv = lv + 1); saveGame(); homePaint(); openSheet('info'); toast(list.length + ' pieces are ' + T.fenceName(lv + 1) + ' now'); }
 function levelUp(key){
  const it = item(key); if (!it) return; if (it.k === 'fence' && it.lv >= T.houseLv(save.block)){ toast('Level the Main House first'); return; } const c0 = T.upgradeCost(it.k, it.lv); if (!c0) return; const c = T.price(save.block, c0);
+ if (it.k === 'house' && T.starsAll(save) < T.houseStars(it.lv + 1)){ toast('Needs ' + T.houseStars(it.lv + 1) + ' stars on the streets. You have ' + T.starsAll(save) + '.'); return; }
  if (!has(c)){ toast('Needs ' + costText(c)); return; }
  pay(c); it.lv++; saveGame(); homePaint(); openSheet('info');
  if (it.k === 'house'){ cam('home'); toast('The lot got bigger. New limits on everything.', 2600); } else toast(T.BDEFS[it.k].name + ' is level ' + it.lv);
@@ -2765,11 +2905,28 @@ function train(k, n){
 function partyText(p){ const out = []; if (p && p.watch) out.push('guns +' + 6 * p.watch + '%'); if (p && p.cookout) out.push('crew health +' + 10 * p.cookout + '%'); if (p && p.mural) out.push('buildings +' + 8 * p.mural + '%'); return out.length ? 'Block Party: ' + out.join(', ') : ''; }
 function partyUp(k){ const lv = (save.party[k] | 0), c = T.partyCost(k, lv); if (!c || !T.partyOpen(save.block, lv)) return;
  if (!has(c)){ toast('Needs ' + costText(c)); return; } pay(c); save.party[k] = lv + 1; saveGame(); homeHud(); openSheet('party'); toast(T.PARTY[k].name + ' is level ' + (lv + 1)); }
+// ---------- jobs, today's three, ranks, rounds (v0.6) ----------
+function jobsDue(){ if (!save.block) return 0; const d = dayNow(); return T.jobsNow(save).filter(j => j && j.done).length + T.dailyNow(d).filter(t => t.done && !t.got).length + (rankOwed() ? 1 : 0); }
+function rankOwed(){ const n = (save.rankPaid | 0) + 1; return n <= T.rankOf(save.rep) ? n : 0; }   // the next rank bonus not yet collected
+function rankClaim(){ const n = rankOwed(); if (!n) return; const b = T.rankBonus(n); if (!roomFor(b)){ toast('Your stashes are too full to take this. Spend some first.'); return; }
+ save.rankPaid = n; const g = addRes(b[0], b[1]); saveGame(); homeHud(); openSheet('jobs'); toast('+' + g.cash + ' Cash, +' + g.sup + ' Supplies'); }
+function rankLine(){ const rk = T.rankOf(save.rep), nx = T.RANKS[rk + 1]; return nx ? ' ' + (nx[0] - save.rep) + ' Rep to ' + nx[1] + '.' : ''; }
+// rewards that do not fit your stashes are not lost: collecting waits until all of it fits
+function roomFor(c){ const cap = T.storeCap(save.block); return cap.cash - save.cash >= Math.min(c[0], cap.cash) && cap.sup - save.sup >= Math.min(c[1], cap.sup); }
+function jobClaim(id){ const j = T.jobsNow(save).find(x => x && x.id === id); if (!j || !j.done) return;
+ if (!roomFor(j.reward)){ toast('Your stashes are too full to take this. Spend some first.'); return; }
+ save.jobs[id] = 1; const g = addRes(j.reward[0], j.reward[1]); saveGame(); homeHud(); openSheet('jobs'); toast('+' + g.cash + ' Cash, +' + g.sup + ' Supplies'); }
+function dailyClaim(slot){ const d = dayNow(), t = T.dailyNow(d)[slot]; if (!t || !t.done || t.got) return;
+ const first = d.on !== d.d, pay = T.dailyPay(d.streak + (first ? 1 : 0)); if (!roomFor(pay)){ toast('Your stashes are too full to take this. Spend some first.'); return; }
+ if (first){ d.streak = Math.min(99, d.streak + 1); d.on = d.d; } d.got[slot] = 1; const g = addRes(pay[0], pay[1]); saveGame(); homeHud(); openSheet('jobs'); toast('+' + g.cash + ' Cash, +' + g.sup + ' Supplies'); }
+let runArmed = -1;
+function runBack(ci){ if (!T.canRunBack(save.camp, save.rounds, ci)) return; const r = T.roundOf(save.rounds, ci) + 1;
+ for (let bi = 0; bi < T.CAMP.blocks; bi++) delete save.camp[ci + '-' + bi]; save.rounds[ci] = r; saveGame(); openSheet('streets'); toast(T.CREWS[ci].name + ' are back for Round ' + r); }
 function make(k){
  const it = T.ITEMS[k]; if (!it || !T.itemOpen(save.block, k)) return;
  if (T.kitSize(save.kit) >= T.kitCap(save.block)){ toast('No room. Level up the Corner Store to carry more.'); return; }
  const c = [0, it.cost]; if (!has(c)){ toast('Needs ' + costText(c)); return; }
- pay(c); save.kit[k] = (save.kit[k] | 0) + 1; saveGame(); toast(it.name + ' made'); homeHud(); openSheet('crew'); }
+ pay(c); save.kit[k] = (save.kit[k] | 0) + 1; save.stats.made++; saveGame(); toast(it.name + ' made'); homeHud(); openSheet('crew'); }
 function ago(at){ const m = Math.round((Date.now() - at) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; }
 function research(k){
  const lv = save.research[k] || 1, c = T.researchCost(k, lv);
@@ -2814,7 +2971,8 @@ function openSheet(kind){
    else if (it.lv < 4) h += '<p class="stat">' + esc(T.fenceName(it.lv + 1)) + ' comes in at Main House level ' + (it.lv + 1) + '.</p>';
    if (it.lv >= 4) h += '<p class="stat">Top level.</p>';
    h += '<button class="btn" data-act="unfence">Take it down, ' + fenceRefund(it) + ' Supplies back</button>'; }
-  else { h += c ? '<button class="btn main' + (has(c) ? '' : ' no') + '" data-act="up">Level up for ' + costText(c) + '</button>' : '<p class="stat">Top level.</p>';
+  else { if (it.k === 'house' && c){ const need = T.houseStars(it.lv + 1), have = T.starsAll(save); h += '<p class="stat">' + (have >= need ? 'You have the ' + need + ' stars the next level needs.' : 'The next level needs ' + need + ' stars on the streets. You have ' + have + '.') + '</p>'; }
+   h += c ? '<button class="btn main' + (has(c) && (it.k !== 'house' || T.starsAll(save) >= T.houseStars(it.lv + 1)) ? '' : ' no') + '" data-act="up">Level up for ' + costText(c) + '</button>' : '<p class="stat">Top level.</p>';
    if (it.k === 'workshop') h += '<button class="btn" data-act="lab">Research</button>';
    h += '<p>' + (gl3d ? 'Drag it to move it.' : 'Tap an open spot to move it there.') + '</p>'; } }
  else if (kind === 'shop'){ const b = save.block, lv = T.houseLv(b);
@@ -2828,6 +2986,19 @@ function openSheet(kind){
    if (GROUP(k) !== lastG){ lastG = GROUP(k); h += '</div><h4>' + lastG + '</h4><div class="rows">'; }
    h += '<button class="row' + (off ? ' no' : '') + '" data-buy="' + k + '"><span class="mid"><span class="nm">' + esc(T.BDEFS[k].name) + '</span><br><span class="sub">' + esc(T.HOME[k].line) + '</span></span><span class="pr">' + (cap ? n + ' of ' + cap + '<br>' + costText(c) : 'House level ' + (T.HOME[k].cap.indexOf(1) + 1)) + '</span></button>'; });
   h += '</div>'; }
+ else if (kind === 'jobs'){ const d = dayNow(), rk = T.rankOf(save.rep), nx = T.RANKS[rk + 1], pay = T.dailyPay(d.streak + (d.on === d.d ? 0 : 1));
+  h = '<h3>Jobs<span>' + esc(T.RANKS[rk][1]) + '</span></h3>';
+  h += '<p class="stat">' + (nx ? save.rep + ' of ' + nx[0] + ' Rep to ' + esc(nx[1]) + ', worth ' + costText(T.rankBonus(rk + 1)) + '.' : save.rep + ' Rep. Top rank.') + '</p>';
+  { const ow = rankOwed(); if (ow) h += '<div class="rows"><div class="row"><span class="mid"><span class="nm">Rank bonus: ' + esc(T.RANKS[ow][1]) + '</span><br><span class="sub">Pays ' + costText(T.rankBonus(ow)) + '.</span></span><button class="mini go2" data-rank="1">Collect</button></div></div>'; }
+  if (nx) h += '<div class="bar2"><i style="width:' + Math.round(100 * (save.rep - T.RANKS[rk][0]) / (nx[0] - T.RANKS[rk][0])) + '%"></i></div>';
+  h += '<h4>Today<span>' + (d.streak ? d.streak + (d.streak === 1 ? ' day' : ' days') + ' in a row' : 'pays ' + costText(pay) + ' each') + '</span></h4><div class="rows">';
+  T.dailyNow(d).forEach(t => { h += '<div class="row' + (t.got ? ' no' : '') + '"><span class="mid"><span class="nm">' + esc(t.text) + '</span><br><span class="sub">' + (t.got ? 'Collected.' : t.have + ' of ' + t.need + '. Pays ' + costText(pay) + '.') + '</span></span>'
+   + (t.done && !t.got ? '<button class="mini go2" data-daily="' + t.slot + '">Collect</button>' : '') + '</div>'; });
+  h += '</div><p>New jobs every day. Do at least one a day and the pay climbs for a week.</p><h4>The Viceroy\'s list</h4><div class="rows">';
+  T.jobsNow(save).forEach((j, i) => { const nm = ['On the streets', 'On your block', 'With your crew'][i];
+   if (!j){ h += '<div class="row no"><span class="mid"><span class="nm">' + nm + '</span><br><span class="sub">All done.</span></span></div>'; return; }
+   h += '<div class="row"><span class="mid"><span class="nm">' + esc(j.text) + '</span><br><span class="sub">' + nm + ', ' + j.n + ' of ' + j.of + '. Pays ' + costText(j.reward) + '.</span></span>' + (j.done ? '<button class="mini go2" data-job="' + j.id + '">Collect</button>' : '') + '</div>'; });
+  h += '</div>' + (save.guide === 99 ? '<button class="btn" data-act="tips">Show the how-to-play tips again</button>' : ''); }
  else if (kind === 'party'){ const bo = T.blockBonuses(save);
   h = '<h3>Block Party</h3><p>Things the whole neighborhood chips in on. They make your whole block harder to hit.</p><div class="rows">';
   T.PARTY_ORDER.forEach(k => { const p = T.PARTY[k], lv = bo.party[k] | 0, c = T.partyCost(k, lv), open = c && T.partyOpen(save.block, lv), can = open && has(c);
@@ -2841,16 +3012,17 @@ function openSheet(kind){
     + (can ? '<button class="mini" data-lab="' + k + '">Lv ' + (lv + 1) + '</button>' : '') + '</div>'; });
   h += '</div>'; }
  else if (kind === 'streets'){ let got = 0; for (const k in save.camp) got += save.camp[k].s;
-  h = '<h3>The streets<span>' + got + ' of ' + T.CAMP.crews * T.CAMP.blocks * 3 + ' stars</span></h3>';
+  h = '<h3>The streets<span>' + T.starsAll(save) + ' stars</span></h3>';
   h += '<div class="tod"><button data-tod="day" class="' + (save.night ? '' : 'on') + '">Day</button><button data-tod="night" class="' + (save.night ? 'on' : '') + '">Night</button></div>';
   h += '<p class="stat">' + (save.night ? 'Night: their guns reach a little less. 75% of the loot.' : 'Day: full loot, full reach.') + '</p><div class="rows">';
   h += '<button class="row" data-hit="-1"><span class="mid"><span class="nm">The Boombox corner</span><br><span class="sub">Loot for your crew, any time. Bosses sit this one out.</span></span></button>';
   T.CREWS.forEach((c, ci) => { const hl = T.houseLv(save.block || []) >= c.hl;
-   h += '<div class="crewhd"><i style="background:' + gangHex(c.color) + '"></i><span class="mid"><span class="nm">' + esc(c.name) + '</span><br><span class="sub">' + esc(hl ? c.turf : 'Opens at Main House level ' + c.hl + '.') + '</span></span></div><div class="blocks">';
-   for (let bi = 0; bi < T.CAMP.blocks; bi++){ const v = save.camp[ci + '-' + bi], open = T.campOpen(save.camp, save.block, ci, bi), st = v ? v.s : 0;
-    const p = T.campPool(ci, bi), t = v ? v.t : [0, 0], left = Math.max(0, p.cash - t[0]) + Math.max(0, p.sup - t[1]);
+   h += '<div class="crewhd"><i style="background:' + gangHex(c.color) + '"></i><span class="mid"><span class="nm">' + esc(c.name) + (T.roundOf(save.rounds, ci) > 1 ? ', Round ' + T.roundOf(save.rounds, ci) : '') + '</span><br><span class="sub">' + esc(hl ? c.turf : 'Opens at Main House level ' + c.hl + '.') + '</span></span></div><div class="blocks">';
+   for (let bi = 0; bi < T.CAMP.blocks; bi++){ const v = save.camp[ci + '-' + bi], open = T.campOpen(save.camp, save.block, ci, bi, save.rounds), st = v ? v.s : 0;
+    const p = T.campPool(ci, bi, T.roundOf(save.rounds, ci)), t = v ? v.t : [0, 0], left = Math.max(0, p.cash - t[0]) + Math.max(0, p.sup - t[1]);
     h += '<button class="blk' + (open ? '' : ' no') + '" data-hit="' + ci + '" data-b="' + bi + '"' + (open ? '' : ' aria-disabled="true"') + '><span class="nm">' + (bi === T.CAMP.blocks - 1 ? esc(c.boss) : 'Block ' + (bi + 1)) + '</span><span class="st">' + [0, 1, 2].map(n => '<i class="' + (n < st ? 'on' : '') + '"></i>').join('') + '</span><span class="sub">' + (open ? (left ? left + ' loot left' : 'Picked clean') : 'Locked') + '</span></button>'; }
-   h += '</div>'; });
+   h += '</div>';
+   if (T.canRunBack(save.camp, save.rounds, ci)){ const r = T.roundOf(save.rounds, ci) + 1; h += '<button class="btn main runback" data-runback="' + ci + '">Run it back: Round ' + r + '. Tougher, ' + Math.round(T.ROUNDS.loot * 100 * (r - 1)) + '% more loot</button>'; } });
   h += '<button class="row" data-act="practice"><span class="mid"><span class="nm">Test your block</span><br><span class="sub">A rival crew your size hits your own block while you watch. Nothing is lost.</span></span></button>';
   h += '<button class="row" data-act="fights"><span class="mid"><span class="nm">Your fights</span><br><span class="sub">' + (save.reports.length ? 'The last ' + Math.min(30, save.reports.length) + ' you started. Watch any of them again.' : 'None yet. Every fight you start is kept here.') + '</span></span></button>';
   h += '</div><p>Each block opens once the one before it has a star. A block keeps what you take: hit it again and there is less to carry home.</p>'; }
@@ -2886,7 +3058,11 @@ function openSheet(kind){
 function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); }
 $('sheetX').onclick = () => { const was = sheetKind; closeSheet(); if (was === 'info'){ homeSel = null; if (gl3d) VIL.select(null); else FB.scene(null); } };
 $('sheetBody').addEventListener('click', e => {
- const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch],[data-party]'); if (!t) return;
+ const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch],[data-party],[data-runback],[data-job],[data-daily],[data-rank]'); if (!t) return;
+ if (t.dataset.rank){ rankClaim(); return; }
+ if (t.dataset.runback){ const ci = +t.dataset.runback; if (runArmed !== ci){ runArmed = ci; t.textContent = 'Sure? They come back tougher. Your stars are kept. Tap again.'; return; } runArmed = -1; runBack(ci); return; }
+ if (t.dataset.job){ jobClaim(t.dataset.job); return; }
+ if (t.dataset.daily){ dailyClaim(+t.dataset.daily); return; }
  if (t.dataset.party){ partyUp(t.dataset.party); return; }
  if (t.dataset.act === 'party'){ openSheet('party'); return; }
  if (t.dataset.make){ make(t.dataset.make); return; }
@@ -2901,6 +3077,7 @@ $('sheetBody').addEventListener('click', e => {
  else if (t.dataset.train) train(t.dataset.train, +t.dataset.n);
  else if (t.dataset.col) setColor(t.dataset.col);
  else if (t.dataset.act === 'up') levelUp(homeSel);
+ else if (t.dataset.act === 'tips'){ save.guide = T.armySize(save.army) > 0 ? 2 : 0; saveGame(); closeSheet(); coach(); }
  else if (t.dataset.act === 'upall') levelFences(homeSel);
  else if (t.dataset.act === 'unfence'){ const it = item(homeSel); if (it){ homeSel = null; closeSheet(); fenceAt(it.x, it.y, false); } }
  else if (t.dataset.act === 'lay' || t.dataset.act === 'pull'){ fenceMode = t.dataset.act === 'lay' ? 'paint' : 'erase'; homeSel = null; closeSheet(); setEdit(); homeHud();
@@ -2910,15 +3087,48 @@ $('hHintDone').onclick = () => { fenceMode = null; setEdit(); homeHud(); };
 $('hBuild').onclick = () => openSheet('shop');
 $('hTrain').onclick = $('hCrew').onclick = () => openSheet('crew');
 $('hAttack').onclick = () => openSheet('streets');
+$('hJobs').onclick = () => openSheet('jobs');
+// The coach: a first-run guide. It reads what the player is looking at and moves on only when they have done the thing. save.guide: 0 to 5 are the steps, 99 is off.
+const COACH = {
+ crew0:['Start with your crew. Tap Crew.', 'hCrew'],
+ crew1:['Tap a fighter to hire one. They cost Cash and sleep in your Crash Pad. Fill the beds, then close this.'],
+ go0:['Crew is ready. Tap Attack to see the streets.', 'hAttack'],
+ go1:['Six crews hold these streets. Tap block 1 to start a fight.'],
+ f0:['Tap a fighter card at the bottom, then tap the street outside the fence. Every tap sends one in.'],
+ f1:['They pick their own targets. Send the rest in. Half the block is one star, the Main House is two, everything is three.'],
+ res:['Stars open the next block. Whoever is still standing walks home, and the loot is in your stashes.'],
+ spend:['Spend the loot. Tap Build for new buildings, or tap any building to level it up. Jobs pays extra.', 'hBuild']};
+let coachKey = null;
+function coach(){ const el = $('coach'); let g = save.guide, key = null;
+ if (g !== 99 && save.rescued && save.block && $('intro').hidden){
+  const scr = ['hud', 'result', 'home'].find(k => $(k).classList.contains('on')), sent = scr === 'hud' && sim && R && R.attackers.some((a, i) => queued[i] || sim.placed(i));
+  if (g === 0 && scr === 'home' && sheetKind === 'crew') g = 1;
+  if (g === 1 && scr === 'home' && sheetKind !== 'crew' && T.armySize(save.army) > 0) g = 2;
+  if (g <= 2 && scr === 'hud') g = 3;
+  if (g === 3 && scr === 'result') g = 4;
+  if (g === 4 && scr === 'home') g = 5;
+  if (g === 5 && scr === 'home' && sheetKind && sheetKind !== 'streets') g = 99;
+  if (g !== save.guide){ save.guide = g; saveGame(); }
+  if (scr === 'home') key = g === 0 ? 'crew0' : g === 1 ? (sheetKind === 'crew' ? 'crew1' : 'crew0') : g === 2 ? (sheetKind === 'streets' ? 'go1' : sheetKind ? null : 'go0') : g === 5 && !sheetKind ? 'spend' : null;
+  else if (scr === 'hud' && g === 3) key = sent ? 'f1' : 'f0';
+  else if (scr === 'result' && g === 4) key = 'res'; }
+ document.body.classList.toggle('coaching', !!key);
+ // portrait with a sheet open: sit just above the sheet, never on it
+ { let top = ''; if (key && sheetKind && !$('sheet').hidden && innerHeight > innerWidth){ const st = $('sheet').getBoundingClientRect().top, h = el.offsetHeight || 80; if (st - h - 8 < 150) top = Math.max(4, st - h - 8) + 'px'; } if (el.style.top !== top) el.style.top = top; }
+ if (key === coachKey) return; coachKey = key; el.hidden = !key || key === 'res';   // on the result screen the tip sits inside the panel, under the numbers
+ $('resTip').hidden = key !== 'res'; if (key === 'res') $('resTip').textContent = COACH.res[0]; document.querySelectorAll('.hintme').forEach(n => n.classList.remove('hintme'));
+ if (key){ $('coachTxt').textContent = COACH[key][0]; if (COACH[key][1]) $(COACH[key][1]).classList.add('hintme'); } }
+$('coachOff').onclick = () => { save.guide = 99; saveGame(); coach(); toast('Tips are off. Turn them back on from Jobs.'); };
+setInterval(coach, 350);
 function hit(ci, bi){
  if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; }
- if (ci >= 0 && !T.campOpen(save.camp, save.block, ci, bi)){ toast(T.houseLv(save.block || []) < T.CREWS[ci].hl ? 'Opens at Main House level ' + T.CREWS[ci].hl : 'Get a star on the block before it first'); return; }
+ if (ci >= 0 && !T.campOpen(save.camp, save.block, ci, bi, save.rounds)){ toast(T.houseLv(save.block || []) < T.CREWS[ci].hl ? 'Opens at Main House level ' + T.CREWS[ci].hl : 'Get a star on the block before it first'); return; }
  closeSheet();
  if (ci < 0){ startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))); return; }
- startAttack(T.campRecipe(ci, bi, seed(), save.army, save.research, save.night, myLoad())); }
+ startAttack(T.campRecipe(ci, bi, seed(), save.army, save.research, save.night, myLoad(false, ci))); }
 // what you bring besides fighters: your bosses and every item you have made
 // the Boombox corner is your crew's loot run: bosses sit that one out (it never runs dry, so they would farm it for free)
-function myLoad(corner){ return {bosses:corner ? [] : T.BOSS_ORDER, kit:Object.assign({}, save.kit), hl:T.houseLv(save.block || [])}; }
+function myLoad(corner, ci){ return {bosses:corner ? [] : T.BOSS_ORDER, kit:Object.assign({}, save.kit), hl:T.houseLv(save.block || []), round:ci >= 0 ? T.roundOf(save.rounds, ci) : 1}; }
 // the flat map has no dragging: tap a building to pick it, then tap an open spot to move it there
 function homeGround(gx, gy){
  const x = Math.floor(gx), y = Math.floor(gy);
@@ -2937,6 +3147,9 @@ function focusOn(x, y){ if (!gl3d) return; const v = VIL.view(), r = $('stage').
 function toHome(){
  if (!save.block){ save.block = T.starterBlock(); save.cash = T.START.cash; save.sup = T.START.sup; save.army = Object.assign({}, T.START.army); save.nk = 20; saveGame(); firstHome = true; }
  if (gl3d) VIL.battle(null); lightFor(null); homeSel = null; fenceMode = null; closeSheet(); show('home'); homePaint(); setEdit(); cam('home');
+ // never stuck: with nobody left and no money to train anyone, the Viceroy sends a few Brawlers over
+ if (!T.armySize(save.army) && save.cash < T.trainCost('brawler') * 4){ save.army.brawler = Math.min(6, T.armyCap(save.block)); saveGame(); setTimeout(() => toast('The Viceroy sent ' + save.army.brawler + ' Brawlers over. On the house.', 3000), 600); }
+ homeHud();
  if (firstHome){ firstHome = false; openSheet('crew'); }
 }
 

@@ -4,7 +4,19 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
-**v0.5.2 · Nov 23 2026 · Art pass, part one.** The painted logo is on the title screen and the app has its new icon. A new
+**v0.6.0 · Nov 23 2026 · Gameplay pass.** Reasons to come back and keep climbing:
+- Fighters still standing at the end of a fight walk home. Only the ones who fell are spent.
+- Street blocks fill back up a little after every fight, so there is always something worth hitting.
+- Run it back: three-star all four blocks of a crew and they return tougher with more loot, up to Round 5. Every round's stars count.
+- Rep ranks, nine of them from New on the block to Legend of the block. Each rank pays a bonus.
+- Jobs: three new ones every day (pay climbs for a week of showing up) and the Viceroy's list of 36 long jobs.
+- The Main House needs stars as well as Cash: 8, 45 and 150 for levels 2, 3 and 4.
+- The first crew is much easier: a new player who sends everyone in at the front wins the first block with nearly the whole crew walking home. A player with nobody and no money is sent six Brawlers.
+- A first-run coach walks a new player from hiring a crew to the first street fight and spending the loot. Tips can be turned off, and back on from Jobs.
+
+Next up, from the first outside playtest (Nov 23 2026): a rally flag to steer fighters during a fight (v0.6.1, waiting on a yes), and a cinematic replay with street-level shots (v0.6.2).
+
+v0.5.2 was art pass, part one. ** The painted logo is on the title screen and the app has its new icon. A new
 player sees a short intro before the title: painted shots with one line each, silent, about 6 seconds a shot, with Skip; a tap
 moves to the next shot. It plays once, and "Play the intro" on the title plays it again. Four of its five shots are in.
 
