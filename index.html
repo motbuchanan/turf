@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.7.4">
+<meta name="build" content="0.7.6">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -274,6 +274,34 @@ button.row:active{transform:translateY(1px);background:#2c2f35}
 #home.on ~ #sndBtn span{display:none}
 #intro:not([hidden]) ~ #sndBtn{display:flex;z-index:41;top:auto;right:auto;left:calc(16px + var(--safe-l));bottom:calc(22px + var(--safe-b))}
 #intro:not([hidden]) ~ #sndBtn span{display:inline}
+/* the Viceroy's help card: top of the screen in portrait (sheets sit at the bottom), left side in landscape (sheets sit right) */
+#vic{position:fixed;z-index:39;left:50%;top:calc(112px + var(--safe-t));transform:translateX(-50%);width:min(92vw,480px);display:flex;gap:12px;align-items:flex-start;background:#0e0f12;border:1px solid #8f6fd0;border-left-width:5px;border-radius:4px;padding:12px;color:var(--ink);box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#vic[hidden]{display:none}
+#vicFace{flex:none;width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:50% 20%;background:#2a2340;border:2px solid #8f6fd0}
+#vic .vb{flex:1;min-width:0}
+#vic .who{font-weight:800;font-size:14px;color:#c9b4f2;display:flex;justify-content:space-between;gap:8px}
+#vicPg{color:var(--dim);font-weight:600}
+#vicTxt{margin:4px 0 10px;font-size:clamp(15px,4vw,17px);line-height:1.4}
+#vic .vbtn{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#vic .vbtn button{min-height:44px;min-width:84px;padding:10px 14px;border-radius:4px;font-weight:800;font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+#vicNext{background:var(--sodium)!important;color:#1a1408!important;border-color:var(--sodium)!important}
+#vic .vbtn button:active{filter:brightness(.85)}
+body.vicon #coach{display:none!important}
+@media (orientation:landscape) and (max-height:500px){#vic{top:calc(58px + var(--safe-t));left:calc(10px + var(--safe-l));transform:none;width:min(46vw,440px)}}
+.hb.ask{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 14px 8px 8px}
+.hb.ask img{width:34px;height:34px;border-radius:50%;object-fit:cover;object-position:50% 20%;border:2px solid #8f6fd0;background:#2a2340}
+button.chip{color:var(--ink);border:0;font-family:inherit}
+button.chip:active{background:#2a2c31}
+@media (orientation:portrait) and (max-height:700px){#vic{padding:10px;gap:10px}#vicFace{width:44px;height:44px}#vicTxt{font-size:15px;margin:2px 0 8px}}
+/* the card never runs off a short screen: its text scrolls instead, and toasts move out of its way */
+#vic{max-height:calc(100vh - 120px - var(--safe-t));overflow:hidden}
+#vic .vb{display:flex;flex-direction:column;align-self:stretch;min-height:0}
+#vicTxt{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+@media (orientation:landscape) and (max-height:500px){#vic{max-height:calc(100vh - 66px - var(--safe-t) - var(--safe-b));width:min(58vw,520px)}#vicTxt{font-size:15px}#vicFace{width:48px;height:48px}}
+body.vicon #toast{top:auto;bottom:calc(84px + var(--safe-b))}
+@media (orientation:landscape) and (max-height:500px){body.sheetup #vic{width:calc(100vw - min(48vw,430px) - 36px - var(--safe-l) - var(--safe-r))}}
+/* landscape: start below the version badge so it stays tappable */
+@media (orientation:landscape) and (max-height:500px){#vic{top:calc(90px + var(--safe-t));max-height:calc(100vh - 98px - var(--safe-t) - var(--safe-b))}}
 
 </style>
 </head>
@@ -294,6 +322,7 @@ button.row:active{transform:translateY(1px);background:#2c2f35}
  <button id="introSkip">Skip</button>
 </div>
 
+<div id="vic" hidden><img id="vicFace" alt="" src="viceroy.png" width="64" height="64"><div class="vb"><div class="who">The Viceroy<span id="vicPg"></span></div><p id="vicTxt"></p><div class="vbtn"><button id="vicShow" hidden>Show me</button><button id="vicNext">Next</button></div></div></div>
 <div id="coach" hidden><span id="coachTxt"></span><button id="coachOff">Tips off</button></div>
 
 <div id="story" class="layer">
@@ -322,14 +351,14 @@ button.row:active{transform:translateY(1px);background:#2c2f35}
 </div>
 
 <div id="home" class="layer">
- <div class="res"><span class="chip"><i class="ic cash"></i><b id="hCash">0</b></span><span class="chip"><i class="ic sup"></i><b id="hSup">0</b></span><span class="chip"><i class="ic rep"></i><b id="hRep">0</b></span><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
+ <div class="res"><button class="chip" data-help="cash" aria-label="Cash"><i class="ic cash"></i><b id="hCash">0</b></button><button class="chip" data-help="sup" aria-label="Supplies"><i class="ic sup"></i><b id="hSup">0</b></button><button class="chip" data-help="rep" aria-label="Rep"><i class="ic rep"></i><b id="hRep">0</b></button><button class="chip" id="hCrew" aria-label="Your crew"><i class="ic crew"></i><b id="hArmy">0/0</b></button></div>
  <div class="hint" id="hHint" hidden><span id="hHintTxt"></span><button id="hHintDone">Done</button></div>
- <div class="dock"><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb" id="hJobs">Jobs<i class="dot" hidden></i></button><button class="hb main" id="hAttack">Attack</button></div>
+ <div class="dock"><button class="hb ask" id="hHelp" aria-label="Ask the Viceroy"><img src="viceroy.png" alt="" width="30" height="30"><span>Ask</span></button><button class="hb" id="hBuild">Build</button><button class="hb" id="hTrain">Crew</button><button class="hb" id="hJobs">Jobs<i class="dot" hidden></i></button><button class="hb main" id="hAttack">Attack</button></div>
  <div class="sheet" id="sheet" hidden><button class="x" id="sheetX">Close</button><div id="sheetBody"></div></div>
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.7.4 · Nov 24 2026</button>
+<button id="badge">v0.7.6 · Nov 24 2026</button>
 <button id="sndBtn" aria-label="Sound"><svg viewBox="0 0 20 18" width="20" height="18" aria-hidden="true"><path class="spk" d="M2 6h4l5-4v14l-5-4H2z"/><path class="w1" d="M13.5 6.2a4 4 0 0 1 0 5.6"/><path class="w2" d="M15.8 3.6a7.5 7.5 0 0 1 0 10.8"/><path class="x" d="M13.5 6.5l5 5M18.5 6.5l-5 5"/></svg><span>Sound on</span></button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
@@ -2758,14 +2787,14 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.7.4', BUILD_DATE = 'Nov 24 2026';
+const VER = '0.7.6', BUILD_DATE = 'Nov 24 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
 'use strict';
 const B = BASE, T = TURF, $ = id => document.getElementById(id);
 const SAVE_KEY = 'turf.save.v1';
-const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0, name:'', crewCode:'', hitAt:{}, shared:[], outbox:[], seenRaids:[], pvpDay:null};
+const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0, name:'', crewCode:'', seen:{}, vicOff:false, hitAt:{}, shared:[], outbox:[], seenRaids:[], pvpDay:null};
 const GANG_PICK = ['lav', 'teal', 'red', 'green', 'orange', 'blue'];   // gold belongs to the Boombox Kings
 
 // ---------- save (guarded: a phone that blocks storage still plays, it just forgets) ----------
@@ -2778,7 +2807,8 @@ function loadSave(){
  { const h = {}; if (s.hitAt && typeof s.hitAt === 'object') for (const k of Object.keys(s.hitAt).slice(0, 80)) if (+s.hitAt[k] > 0) h[String(k).slice(0, 40)] = +s.hitAt[k]; out.hitAt = h; }
  out.shared = (Array.isArray(s.shared) ? s.shared : []).filter(x => typeof x === 'string' && x.length <= 4000).slice(0, 3);
  out.outbox = (Array.isArray(s.outbox) ? s.outbox : []).filter(o => o && typeof o.to === 'string' && typeof o.pay === 'string' && o.pay.length <= 6500).map(o => ({to:o.to.slice(0, 40), pay:o.pay, id:typeof o.id === 'string' ? o.id.slice(0, 20) : ''})).slice(-5);
- { const pd = s.pvpDay; out.pvpDay = pd && typeof pd === 'object' && typeof pd.d === 'string' ? {d:pd.d.slice(0, 10), paid:Math.max(0, pd.paid | 0), hits:Math.max(0, pd.hits | 0), held:Math.max(0, pd.held | 0)} : null; }
+ { const pd = s.pvpDay; out.pvpDay = pd && typeof pd === 'object' && typeof pd.d === 'string' ? {d:pd.d.slice(0, 10), paid:Math.max(0, pd.paid | 0), hits:Math.max(0, pd.hits | 0), held:Math.max(0, pd.held | 0), corner:Math.max(0, pd.corner | 0)} : null; }
+ { const sn = {}; if (s.seen && typeof s.seen === 'object' && !Array.isArray(s.seen)) for (const k of Object.keys(s.seen).slice(0, 120)) if (/^[a-z_0-9]{1,24}$/.test(k)) sn[k] = 1; out.seen = sn; } out.vicOff = s.vicOff === true;
  out.seenRaids = (Array.isArray(s.seenRaids) ? s.seenRaids : []).filter(x => typeof x === 'string').slice(0, 60);
  out.rankPaid = Math.max(0, Math.min(T.RANKS.length - 1, out.rankPaid | 0));
  out.guide = typeof s.guide === 'number' && (s.guide === 99 || (s.guide >= 0 && s.guide <= 5)) ? s.guide | 0 : (s.block ? 99 : 0);
@@ -2834,7 +2864,7 @@ SND.onState(() => sndLabel());
 $('sndBtn').onclick = e => { e.stopPropagation(); if ($('sndBtn').dataset.locked !== '1' && !SND.justUnlocked()) SND.cycle(); const cur = ['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on'));
  if (!$('intro').hidden) SND.scene('intro'); else if (cur) sndScene(cur); setTimeout(sndLabel, 120); SND.fx('tap'); };
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button,.row[data-act],.row[data-job],[data-k]'); if (b && b.id !== 'sndBtn') SND.fx('tap', .8); setTimeout(sndLabel, 150); }, true);
-function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); sndScene(id);
+function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); sndScene(id); if (id !== 'home' && typeof vicClose === 'function' && !$('vic').hidden) vicClose(true);
 
  // a result that pops up while you are still tapping fighters in must not eat one of those taps: its buttons wake up after a beat
  if (id === 'result'){ const r = $('result'); r.classList.add('fresh'); setTimeout(() => r.classList.remove('fresh'), 900); } }
@@ -3090,9 +3120,11 @@ function startAttack(recipe){
  cam('attack');
  if (gl3d && !sidewaysTold && innerWidth < innerHeight){ sidewaysTold = true; setTimeout(() => toast('Turn your phone sideways to see the whole block', 2600), 400); }
  show('hud'); cancelAnimationFrame(raf); raf = requestAnimationFrame(run);
+ if (R.night && !save.vicOff && !save.seen.night) vic('night');
 }
 function run(now){
  raf = requestAnimationFrame(run);
+ if (!$('vic').hidden){ lastT = now; return; }   // the Viceroy is talking: the fight waits
  const dt = Math.min(.25, (now - (lastT || now)) / 1000); lastT = now; acc += dt;   // rAF pauses with the screen off, so a locked phone pauses the fight
  let n = 0; while (acc >= B.TICK && n < 4 && !finished){ acc -= B.TICK; n++; if (!sim.step()){ finish(); break; } afterTick(); }
  if (sim.done() && !finished) finish();
@@ -3156,19 +3188,21 @@ function settle(Rx, res){
  if ((Rx.mode === 'raid' || Rx.mode === 'camp' || Rx.mode === 'pvp') && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
   const sent = new Set((res.deploys || []).filter(d => !d.c && !d.ab).map(d => d.i)), spent = {};
   let walked = 0;   // whoever is still standing at the end walks home; only the ones who fell are gone
-  Rx.attackers.forEach((a, j) => { if (a.boss || a.swarm || !sent.has(j)) return; if (Rx.mode !== 'raid' && res.attHp && res.attHp[j] > 0){ walked++; return; } save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
+  Rx.attackers.forEach((a, j) => { if (a.boss || a.swarm || !sent.has(j)) return; if (res.attHp && res.attHp[j] > 0){ walked++; return; } save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
   (res.deploys || []).forEach(d => { if (d.c && save.kit[d.c] > 0){ save.kit[d.c]--; if (!save.kit[d.c]) delete save.kit[d.c]; } });   // items used are gone
   const back = T.patchedUp(save.block, spent); let nb = 0;   // the pharmacy patches some of them up: they come home, beds allowing
   for (const k of T.ORDER) for (let n = 0; n < back[k]; n++) if (T.armySize(save.army) + T.SIZE[k] <= T.armyCap(save.block)){ save.army[k]++; nb++; }
   const landed = (res.deploys || []).some(d => !d.c && !d.ab && Rx.attackers[d.i] && !Rx.attackers[d.i].boss);   // no fighter went in (End pressed at once, or bosses alone): nothing is paid
-  const pvpPaid = Rx.mode !== 'pvp' || pvpDay().paid < PVP_DAY.paid; if (Rx.mode === 'pvp' && landed && pvpPaid) pvpDay().paid++; if (Rx.mode === 'pvp' && !pvpPaid) lastReport.unpaid = true;   // online hits pay 8 times a day
+  // online hits pay 8 times a day; the Boombox corner never runs dry, so with survivors walking home it pays 6 times a day (else it is a free farm)
+  const pvpPaid = Rx.mode === 'pvp' ? pvpDay().paid < PVP_DAY.paid : Rx.mode === 'raid' ? pvpDay().corner < CORNER_DAY : true;
+  if (landed && pvpPaid){ if (Rx.mode === 'pvp') pvpDay().paid++; if (Rx.mode === 'raid') pvpDay().corner++; } if (!pvpPaid) lastReport.unpaid = Rx.mode;
   let loot = !landed || !pvpPaid ? {cash:0, sup:0} : Rx.mode === 'pvp' ? T.pvpLoot(res, Rx.pvp.hl, Rx.night) : T.lootFor(res, save.block);
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};   // you take your share of what is left on that block
    loot = landed ? T.campLoot(res, Rx.camp[0], Rx.camp[1], was.t, Rx.night, Rx.round) : {cash:0, sup:0}; }
   const got = addRes(loot.cash, loot.sup);   // what fit in your stashes; a block only loses what you actually carried home
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};
    save.camp[key] = {s:Math.max(was.s, landed ? stars : 0), t:[was.t[0] + got.cash, was.t[1] + got.sup]}; lastReport.firstTake = !was.s && stars > 0; }
-  const real = landed && (stars > 0 || res.pct >= 25);   // a fight counts toward payouts, restocking and jobs only if it did real damage
+  const real = landed && pvpPaid && (stars > 0 || res.pct >= 25);   // a fight counts toward payouts, restocking and jobs only if it did real damage
   const p = real ? T.payout(save.block) : {cash:0, sup:0}, pg = addRes(p.cash, p.sup); lastReport.gain = {cash:got.cash + pg.cash, sup:got.sup + pg.sup};
   const rank0 = T.rankOf(save.rep), rp = landed && pvpPaid ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; lastReport.gain.walked = walked;
   if (real){ const key = Rx.mode === 'camp' ? Rx.camp[0] + '-' + Rx.camp[1] : ''; T.restock(save.camp, key);   // the other blocks fill back up a little
@@ -3200,7 +3234,7 @@ function showResult(res, stars, won){
  const mode = lastReport && lastReport.recipe.mode, camp = mode === 'camp', pvp = mode === 'pvp', raid = mode === 'raid' || camp || pvp, g = lastReport && lastReport.gain;
  const crew = camp ? T.CREWS[lastReport.recipe.camp[0]] : T.CREWS[0];
  $('resTitle').textContent = pvp ? (won ? 'You hit ' + lastReport.recipe.pvp.name : lastReport.recipe.pvp.name + ' held the block') : raid ? (won ? 'You hit ' + crew.name : crew.name + ' held the block') : (won ? 'The Viceroy is out' : 'They held the house');
- setStars($('resStars'), stars); $('resPct').textContent = lastReport && lastReport.noCrew ? 'Nobody from your crew went in, so this one does not count. Bosses back the crew up; they do not take a block alone.' : res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.walked ? ' ' + g.walked + ' of your crew walked home.' : '') + (g.back ? ' The pharmacy patched up ' + g.back + ' more.' : '') + (lastReport.unpaid ? ' Online hits pay ' + PVP_DAY.paid + ' times a day. This one was for the record.' : '') + (lastReport.rankUp ? ' New rank: ' + lastReport.rankUp.name + '. Your bonus is waiting in Jobs.' : rankLine()) : '');
+ setStars($('resStars'), stars); $('resPct').textContent = lastReport && lastReport.noCrew ? 'Nobody from your crew went in, so this one does not count. Bosses back the crew up; they do not take a block alone.' : res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.walked ? ' ' + g.walked + ' of your crew walked home.' : '') + (g.back ? ' The pharmacy patched up ' + g.back + ' more.' : '') + (lastReport.unpaid ? (lastReport.unpaid === 'raid' ? ' The corner pays ' + CORNER_DAY + ' times a day. This one was practice; come back tomorrow, or hit the streets.' : ' Online hits pay ' + PVP_DAY.paid + ' times a day. This one was for the record.') : '') + (lastReport.rankUp ? ' New rank: ' + lastReport.rankUp.name + '. Your bonus is waiting in Jobs.' : rankLine()) : '');
  { const due = jobsDue(); if (raid && due) setTimeout(() => toast(due === 1 ? 'A job is done. Collect it on your block.' : due + ' jobs are done. Collect them on your block.', 2600), 1200); }
  const Rl = lastReport && lastReport.recipe;
  const again = () => camp && !T.campOpen(save.camp, save.block, Rl.camp[0], Rl.camp[1], save.rounds) ? toast('That block is not open right now. Pick one from the streets.') : camp ? startAttack(T.campRecipe(Rl.camp[0], Rl.camp[1], seed(), save.army, save.research, !!Rl.night, myLoad(false, Rl.camp[0]))) : raid ? startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))) : startAttack(T.rescueRecipe(seed()));
@@ -3502,6 +3536,7 @@ function openSheet(kind){
     h += '<div class="row' + (open ? '' : ' no') + '" data-item="' + k + '"><span class="mid"><span class="nm">' + esc(it.name) + ' x' + (save.kit[k] | 0) + '</span><br><span class="sub">' + (open ? esc(it.line) : 'Comes in at Corner Store level ' + it.store + '.') + '</span></span>'
      + (open ? '<button class="mini" data-make="' + k + '">+ ' + it.cost + '</button>' : '') + '</div>'; });
    h += '</div>'; } }
+ else if (kind === 'help') h = vicSheet();
  else if (kind === 'online'){ h = onlineSheet(); if (save.crewCode) setTimeout(() => netSync(false), 50); }
  else if (kind === 'fights'){
   h = '<h3>Your fights<span>' + save.reports.length + '</span></h3>';
@@ -3515,14 +3550,17 @@ function openSheet(kind){
  body.querySelectorAll('[data-item]').forEach(r => { const c = itemIcon(r.dataset.item); c.style.width = c.style.height = '64px'; r.insertBefore(c, r.firstChild); });
  body.querySelectorAll('[data-ico]').forEach(r => { const n = anyIcon(r.dataset.ico, +r.dataset.size || 56); if (!n) return; const w = document.createElement('span'); w.className = 'tile'; w.appendChild(n); r.insertBefore(w, r.firstChild); });
  $('sheet').hidden = false; $('home').classList.add('sheeton');
+ document.body.classList.add('sheetup'); vicFirst(kind); vicPlace();
 }
-function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); }
+function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); document.body.classList.remove('sheetup'); if (typeof vicPlace === 'function') vicPlace(); }
 $('sheetX').onclick = () => { const was = sheetKind; closeSheet(); if (was === 'info'){ homeSel = null; if (gl3d) VIL.select(null); else FB.scene(null); } };
 $('sheetBody').addEventListener('click', e => {
- const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch],[data-party],[data-runback],[data-job],[data-daily],[data-rank],[data-pvp]'); if (!t) return;
+ const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch],[data-party],[data-runback],[data-job],[data-daily],[data-rank],[data-pvp],[data-help]'); if (!t) return;
  if (t.dataset.rank){ rankClaim(); return; }
  if (t.dataset.runback){ const ci = +t.dataset.runback; if (runArmed !== ci){ runArmed = ci; t.textContent = 'Sure? They come back tougher. Your stars are kept. Tap again.'; return; } runArmed = -1; runBack(ci); return; }
  if (t.dataset.job){ jobClaim(t.dataset.job); return; }
+ if (t.dataset.help){ vic(t.dataset.help); return; }
+ if (t.dataset.act === 'viceroy'){ save.vicOff = !save.vicOff; if (save.vicOff) save.guide = 99; saveGame(); openSheet('help'); toast(save.vicOff ? 'Tips off. Ask me any time.' : 'Tips on.'); return; }
  if (t.dataset.daily){ dailyClaim(+t.dataset.daily); return; }
  if (t.dataset.party){ partyUp(t.dataset.party); return; }
  if (t.dataset.act === 'party'){ openSheet('party'); return; }
@@ -3540,7 +3578,7 @@ $('sheetBody').addEventListener('click', e => {
  else if (t.dataset.train) train(t.dataset.train, +t.dataset.n);
  else if (t.dataset.col) setColor(t.dataset.col);
  else if (t.dataset.act === 'up') levelUp(homeSel);
- else if (t.dataset.act === 'tips'){ save.guide = T.armySize(save.army) > 0 ? 2 : 0; saveGame(); closeSheet(); coach(); }
+ else if (t.dataset.act === 'tips'){ save.guide = T.armySize(save.army) > 0 ? 2 : 0; save.vicOff = false; saveGame(); closeSheet(); coach(); }
  else if (t.dataset.act === 'upall') levelFences(homeSel);
  else if (t.dataset.act === 'unfence'){ const it = item(homeSel); if (it){ homeSel = null; closeSheet(); fenceAt(it.x, it.y, false); } }
  else if (t.dataset.act === 'lay' || t.dataset.act === 'pull'){ fenceMode = t.dataset.act === 'lay' ? 'paint' : 'erase'; homeSel = null; closeSheet(); setEdit(); homeHud();
@@ -3563,7 +3601,8 @@ function onlineLeave(){ if (!save.crewCode) return; const was = save.crewCode; s
 // everything online in one pass: share my block, send any attack still waiting, read the crew, and count attacks on my block
 // Limits that keep it fair when someone plays dirty: only crew mates' attacks count, 3 per check-in, one per raider an hour, 6 a day, and a held block earns Rep 3 times a day.
 const PVP_DAY = {paid:8, hits:6, held:3};
-function pvpDay(){ const k = T.dayKey(new Date()); if (!save.pvpDay || save.pvpDay.d !== k) save.pvpDay = {d:k, paid:0, hits:0, held:0}; return save.pvpDay; }
+const CORNER_DAY = 6;
+function pvpDay(){ const k = T.dayKey(new Date()); if (!save.pvpDay || save.pvpDay.d !== k) save.pvpDay = {d:k, paid:0, hits:0, held:0, corner:0}; if (!(save.pvpDay.corner >= 0)) save.pvpDay.corner = 0; return save.pvpDay; }
 async function netSync(force){ if (!save.crewCode || !save.block || netBusy || (!force && Date.now() - netAt < 20000)) return; netBusy = true; netAt = Date.now(); const code = save.crewCode, refresh = () => { if (sheetKind === 'online') openSheet('online'); };
  netMsg = 'Checking in...'; refresh();
  try {
@@ -3713,13 +3752,110 @@ function coach(){ const el = $('coach'); let g = save.guide, key = null;
   if (scr === 'home') key = g === 0 ? 'crew0' : g === 1 ? (sheetKind === 'crew' ? 'crew1' : 'crew0') : g === 2 ? (sheetKind === 'streets' ? 'go1' : sheetKind ? null : 'go0') : g === 5 && !sheetKind ? 'spend' : null;
   else if (scr === 'hud' && g === 3) key = sent ? 'f1' : 'f0';
   else if (scr === 'result' && g === 4) key = 'res'; }
- document.body.classList.toggle('coaching', !!key);
+ document.body.classList.toggle('coaching', !!key); if (key && typeof vicClose === 'function' && !$('vic').hidden) vicClose(true);   // the first-run coach has the floor
  // portrait with a sheet open: sit just above the sheet, never on it
  { let top = ''; if (key && sheetKind && !$('sheet').hidden && innerHeight > innerWidth){ const st = $('sheet').getBoundingClientRect().top, h = el.offsetHeight || 80; if (st - h - 8 < 150) top = Math.max(4, st - h - 8) + 'px'; } if (el.style.top !== top) el.style.top = top; }
  if (key === coachKey) return; coachKey = key; el.hidden = !key || key === 'res';   // on the result screen the tip sits inside the panel, under the numbers
  $('resTip').hidden = key !== 'res'; if (key === 'res') $('resTip').textContent = COACH.res[0]; document.querySelectorAll('.hintme').forEach(n => n.classList.remove('hintme'));
  if (key){ $('coachTxt').textContent = COACH[key][0]; if (COACH[key][1]) $(COACH[key][1]).classList.add('hintme'); } }
-$('coachOff').onclick = () => { save.guide = 99; saveGame(); coach(); toast('Tips are off. Turn them back on from Jobs.'); };
+$('coachOff').onclick = () => { save.guide = 99; save.vicOff = true; saveGame(); coach(); toast('Tips are off. Turn them back on from Ask, next to Build.', 2800); };
+// ---------- the Viceroy's help: tap a money chip, ask him from home, or let him explain each screen the first time you open it ----------
+const vicCap = () => T.storeCap(save.block || []), vicHouse = () => T.houseLv(save.block || []);
+const VIC = {
+ cash:{t:'Cash', ico:'b:stash:1', say:() => ["That green stack is Cash, darling. It keeps the music playing.",
+  "You take it off rival blocks. Your Hustle tables pay a little more after every fight that wins a star or knocks down a quarter of the block, and Jobs pay too.",
+  "Cash hires your crew, goes into most new buildings and the Main House, and pays for the Block Party. Your stash holds " + vicCap().cash + ". Anything past that stays on the street, so spend it or grow the Cash Stash."]},
+ sup:{t:'Supplies', ico:'b:supstash:1', say:() => ["The crate is Supplies. Lumber, sandbags, wire. Not glamorous, but neither is a stage before the lights come up.",
+  "It comes off rival blocks, and your Supply Run van brings some home after every fight that does real damage. A Corner Store adds a fifth more on the Boombox corner.",
+  "Supplies pay for leveling up your buildings, fences and guns, items for the crew, and research in the Workshop. Your stash holds " + vicCap().sup + ". " + (T.count(save.block || [], 'supstash') ? "Level up the Supply Stash to hold more." : "Build a Supply Stash to hold more.")]},
+ rep:{t:'Rep and ranks', ico:'star', show:'jobs', say:() => { const rk = T.rankOf(save.rep), nx = T.RANKS[rk + 1];
+  return ["And that coin is Rep. Your name on these streets. Honey, it is not for sale.",
+   "You can't spend it, and nobody can take it from you. Every fight earns some, more for stars and for how much you knock down. A Studio on your lot adds more, and holding your block against a friend online is worth 5, up to three times a day.",
+   nx ? "You're " + T.RANKS[rk][1] + " now. " + (nx[0] - save.rep) + " more Rep to " + nx[1] + ", and every new rank pays a bonus. You collect it in Jobs." : "You're " + T.RANKS[rk][1] + ". Nothing above you now but the sky."]; }},
+ crew:{t:'Your crew and beds', ico:'f:brawler', show:'crew', say:() => ["Your crew, sugar. Pick a color up top. It's the only way to tell your people from theirs in a fight.",
+  "Tap + to hire. Each fighter costs Cash and takes beds, and you've filled " + T.armySize(save.army) + " of " + T.armyCap(save.block || []) + ". Bigger fighters take more beds. Level up the Crash Pad for more.",
+  "Read the line under each one. Some break fences, some go for the guns, some fly over everything. A good crew mixes them.",
+  "After a fight, whoever is still standing walks home. The fallen are gone, so fill the beds again. Bosses come on every street fight for free, and items are one-time tricks made at a Corner Store."]},
+ fight:{t:'How a fight works', ico:'star3', say:() => ["In a fight, tap a card at the bottom, then tap the street outside their fence. Every tap sends one in.",
+  "Your people pick their own targets. Want them somewhere else? Plant a Flag on a building and everyone close by goes for it.",
+  "Drop a boss, then tap the boss card again for the move. Items land wherever you tap on the block.",
+  "End calls it early. Whoever is still standing walks back to your block. The Boombox corner pays loot and Rep 6 times a day; after that it's practice."]},
+ streets:{t:'The streets', ico:'h:pops', show:'streets', say:() => ["Six crews hold these streets, four blocks each. The Boombox Kings come first. They owe us.",
+  "Stars open the next block. Knock down half a block for one star, take their Main House for two, flatten everything for three.",
+  "Pick day or night before you go. At night their guns reach a little less, unless a light is close, and you carry home a quarter less. Night has its own jobs.",
+  "The later crews also want a bigger Main House before they let you in. A block fills back up a little after every fight. Three-star all four of a crew's blocks and you can Run it back: tougher, richer, up to Round 5."]},
+ night:{t:'Night fights', ico:'moon', say:() => ["Night work. In the dark their guns reach a little less, unless one of their lights is nearby.",
+  "You'll carry home a quarter less. That's the price of the dark. The fight waits until you tap Got it."]},
+ build:{t:'Building', ico:'b:hustle:1', show:'shop', say:() => ["Ah, construction. Everything in here goes on your lot.",
+  "New buildings mostly cost Cash. Leveling them up costs Supplies. Money buildings pay out after every fight that does real damage. Guns, fences and traps make your block harder to take once your crew is online.",
+  "Tap any building on your block to level it up, or drag it somewhere better. The Main House sets every limit, so keep an eye on it."]},
+ house:{t:'Your Main House', ico:'b:house:1', show:'house', say:() => { const lv = vicHouse(), need = T.houseStars(lv + 1), have = T.starsAll(save);
+  return ["This is your Main House, level " + lv + ". Everything on the lot answers to it: how big the lot is, and how many of everything you can have.",
+   lv < 4 ? (() => { const c = T.price(save.block, T.upgradeCost('house', lv)) || [0, 0]; return "Level " + (lv + 1) + " costs " + c[0] + " Cash, " + c[1] + " Supplies and " + need + " stars from the streets. You have " + have + " stars." + (have >= need ? " That's enough. Go on." : " Go win some.") + (c[1] > vicCap().sup ? " Your Supply Stash can't hold that much yet, so grow it first." : ""); })() : "It's as big as it gets. I'm proud of you.",
+   "Once it's level 2, the Block Party board in here opens. The whole neighborhood chips in to make your block tougher."]; }},
+ jobs:{t:'Jobs', ico:'star', show:'jobs', say:() => ["Jobs. I pay for good work.",
+  "Three new ones every day. Do at least one a day and the pay climbs for a week straight.",
+  "My own list runs longer and pays better. When a job is done, tap Collect. Rank bonuses wait in here too."]},
+ lab:{t:'Research', ico:'b:workshop:1', show:'lab', say:() => ["The Workshop. Spend Supplies here and every fighter of a kind gets tougher, now and for good.",
+  "Each level adds a tenth more health and damage, and level 3 adds a skill. The Workshop's own level sets how far research can go: level 1 reaches level 2, so level the Workshop for the skills."]},
+ party:{t:'Block Party', ico:'b:house:2', show:'party', say:() => ["The Block Party. The whole neighborhood chips in, and you cover it in Cash.",
+  "Neighborhood Watch makes your guns hit harder, the Cookout gives your defenders more health, and the Mural Wall toughens every building. More levels open as the Main House grows."]},
+ online:{t:'Your crew online', ico:'f:shooter', show:'online', say:() => ["Going online means real friends and real blocks. You need a name and a crew code.",
+  "A crew code is just a word you all agree on, 4 to 12 letters and numbers. Everyone who types the same code is one crew. Make up your own and give it to your friends. Capitals don't matter.",
+  "Your crew sees your block, name, color, Rep, Main House level, stars and Block Party. When you hit someone, they get the crew and gear you sent so their phone can replay it. Nothing else leaves this phone.",
+  "You can hit each crew mate once an hour, once their Main House is level 2. Your hits pay loot 8 times a day.",
+  "A hit on you costs up to 12% of your stashes, less the less they knock down, even when you hold. You can be hit 6 times a day at most. Holding earns 5 Rep, up to three times a day. The board ranks the crew by Rep."]},
+ hit:{t:'Getting hit', ico:'b:porch:1', show:'fights', say:() => ["Somebody from your crew hit your block while you were out.",
+  "Your phone replayed it when you came back. Watch it under Your crew online or Your fights on the streets screen, and see exactly where they got in.",
+  "Then fix it. Move your guns, add fences, set a trap, or tap Test your block on the streets screen and watch a rival try."]},
+ fights:{t:'Your fights', ico:'star3', show:'fights', say:() => ["The last 30 fights are kept here, hits on your block included. Tap one to watch it again. Test your block runs are not kept.",
+  "Hits on your own block land here too, once your crew is online. Watching where they got in is the cheapest lesson in town."]}
+};
+const VIC_LIST = ['cash', 'sup', 'rep', 'crew', 'fight', 'streets', 'night', 'build', 'house', 'jobs', 'lab', 'party', 'online', 'hit', 'fights'];
+const VIC_SHEET = {shop:'build', crew:'crew', jobs:'jobs', streets:'streets', online:'online', lab:'lab', party:'party', fights:'fights'};
+// the walk-on parts of the walkthrough, after the first fight: one per trip home, each said once
+const VIC_NUDGE = [
+ {k:'rank', when:() => rankOwed(), key:() => 'n_rank' + rankOwed(), say:() => ["You made " + T.RANKS[rankOwed()][1] + ". There's a bonus with your name on it in Jobs."], show:'jobs'},
+ {k:'hit', when:() => save.reports.some(r => r.def), key:() => 'hit', topic:'hit'},
+ {k:'house', when:() => { const lv = vicHouse(); return lv < 4 && T.starsAll(save) >= T.houseStars(lv + 1); }, key:() => 'n_house' + vicHouse(), say:() => ["You have the stars for Main House level " + (vicHouse() + 1) + ". Bigger lot, higher limits, new buildings. Tap it to see what it costs."], show:'house'},
+ {k:'full', when:() => { const c = vicCap(); return save.cash >= c.cash * .95 || save.sup >= c.sup * .95; }, key:() => 'n_full', say:() => ["A stash is full, darling. Whatever you win past the top stays on the street. Spend it, or grow the stash."], show:'shop'},
+ {k:'runback', when:() => T.CREWS.some((c, ci) => T.canRunBack(save.camp, save.rounds, ci)), key:() => 'n_runback', say:() => ["You've taken every block from a crew. Want more? Run it back from the streets screen. They come back tougher, and richer."], show:'streets'},
+ {k:'online', when:() => vicHouse() >= 2 && !save.crewCode, key:() => 'n_online', say:() => ["Your house is big enough for company now. Go online with a crew code and you can hit your friends' real blocks, and they can hit yours."], show:'online'},
+ {k:'party', when:() => T.partyOpen(save.block || [], 0), key:() => 'n_party', say:() => ["The Block Party board on your Main House is open. The neighborhood chips in, you cover it in Cash, and the whole block gets tougher."], show:'party'},
+ {k:'lab', when:() => T.count(save.block || [], 'workshop') > 0, key:() => 'n_lab', say:() => ["You've got a Workshop. Tap it and pick Research. Every fighter of a kind gets tougher for good."], show:'lab'}];
+let vicQ = null;
+function vicUp(){ return !$('vic').hidden; }
+function vicShow(lines, show, key){ if (!lines || !lines.length) return; vicQ = {lines:lines.slice(), show:show || null, i:0, key:key || ''}; $('vic').hidden = false; document.body.classList.add('vicon'); vicPaint(); SND.fx('cast', .5); }
+function vicPaint(){ const q = vicQ; if (!q) return; const last = q.i >= q.lines.length - 1;
+ $('vicTxt').textContent = q.lines[q.i]; $('vicPg').textContent = q.lines.length > 1 ? (q.i + 1) + ' of ' + q.lines.length : '';
+ $('vicNext').textContent = last ? 'Got it' : 'Next'; $('vicShow').hidden = !(last && q.show); vicPlace(); }
+// on a tall phone with a sheet open, sit just above the sheet; slide up to the top edge if that is the only room
+function vicPlace(){ const el = $('vic'); if (el.hidden) return; el.style.top = ''; if (innerWidth > innerHeight || $('sheet').hidden || !sheetKind) return;
+ const st = $('sheet').getBoundingClientRect().top, r = el.getBoundingClientRect(); if (r.bottom + 8 > st) el.style.top = Math.max(4, st - r.height - 8) + 'px'; }
+addEventListener('resize', () => vicPlace());
+function vicClose(cut){ const q = vicQ; if (cut && q && q.key && q.i < q.lines.length - 1){ delete save.seen[q.key]; saveGame(); } vicQ = null; $('vic').hidden = true; document.body.classList.remove('vicon'); coach(); }
+function vic(topic){ const v = VIC[topic]; if (!v) return; save.seen[topic] = 1; saveGame(); vicShow(v.say(), v.show, topic); }
+function vicGo(where){ vicClose(); if (!$('home').classList.contains('on')) return;
+ if (where === 'house'){ const h = (save.block || []).find(i => i.k === 'house'); if (!h) return; if (!$('home').classList.contains('on')) toHome(); homeSel = h.key; homePaint(); openSheet('info'); focusOn(h.x + 1, h.y + 1); return; }
+ if (where === 'lab' && !T.count(save.block || [], 'workshop')){ openSheet('shop'); toast('Build a Workshop first. It opens at Main House level 2.', 2600); return; }
+ if (where === 'party' && !T.partyOpen(save.block || [], 0)){ toast('The Block Party opens at Main House level 2.', 2400); return; }
+ if (!$('home').classList.contains('on')) toHome(); openSheet(where); }
+$('vicNext').onclick = e => { e.stopPropagation(); if (!vicQ) return; if (vicQ.i < vicQ.lines.length - 1){ vicQ.i++; vicPaint(); } else vicClose(); };
+$('vicShow').onclick = e => { e.stopPropagation(); const w = vicQ && vicQ.show; if (w) vicGo(w); };
+$('vic').addEventListener('click', e => { e.stopPropagation(); if (e.target === $('vic') || e.target.closest('.vb')) $('vicNext').onclick(e); });
+// the first time a screen opens, he says what it is for (not while the first-run coach is talking, not with tips off)
+function vicFirst(kind){ const topic = VIC_SHEET[kind] || (kind === 'info' && homeSel && item(homeSel) && item(homeSel).k === 'house' ? 'house' : null);
+ if (!topic || save.vicOff || save.seen[topic] || vicUp() || save.guide !== 99 || document.body.classList.contains('coaching')) return; setTimeout(() => { if (sheetKind === kind && !vicUp() && !save.seen[topic] && !document.body.classList.contains('coaching')) vic(topic); }, 350); }
+function vicNudge(){ if (save.vicOff || save.guide !== 99 || vicUp() || sheetKind || document.body.classList.contains('coaching') || !$('home').classList.contains('on') || !save.block) return;
+ for (const n of VIC_NUDGE){ let k; try { if (!n.when()) continue; k = n.key(); } catch (e){ continue; } if (save.seen[k]) continue; save.seen[k] = 1; saveGame();
+  if (n.topic) vic(n.topic); else vicShow(n.say(), n.show, k); return; } }
+// the help sheet: everything he can explain, and the switch for his tips
+function vicSheet(){ let h = '<h3>Ask the Viceroy</h3><p>Ask me anything, sugar. Tap a topic.</p><div class="rows">';
+ VIC_LIST.forEach(k => { const v = VIC[k]; h += '<button class="row" data-help="' + k + '" data-ico="' + v.ico + '"><span class="mid"><span class="nm">' + esc(v.t) + '</span></span></button>'; });
+ return h + '</div><button class="btn" data-act="viceroy">' + (save.vicOff ? 'My tips are off. Turn them on' : 'Turn my tips off') + '</button><p>With tips on, I explain each screen the first time you open it and point out what to do next. You can always ask me here.</p>'; }
+document.querySelector('#home .res').addEventListener('click', e => { const c = e.target.closest('[data-help]'); if (c){ e.stopPropagation(); vic(c.dataset.help); } });
+$('hHelp').onclick = () => openSheet('help');
+
 setInterval(coach, 350);
 function hit(ci, bi){
  if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; }
@@ -3752,6 +3888,7 @@ function toHome(){
  if (!T.armySize(save.army) && save.cash < T.trainCost('brawler') * 4){ save.army.brawler = Math.min(6, T.armyCap(save.block)); saveGame(); setTimeout(() => toast('The Viceroy sent ' + save.army.brawler + ' Brawlers over. On the house.', 3000), 600); }
  homeHud(); netSync(false); if (MY_CREW !== 'lav') setTimeout(() => Object.keys(MY_BOSS).forEach(k => tintFace(k, MY_CREW)), 1500);
  if (firstHome){ firstHome = false; openSheet('crew'); }
+ setTimeout(vicNudge, 1400);
 }
 
 // ---------- updates: a new build on the server prompts a reload ----------

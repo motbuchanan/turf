@@ -4,6 +4,16 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
+**v0.7.6 · Nov 24 2026 · The corner works like the streets.** On the Boombox corner, whoever is still standing at the end now walks home, the same as on the streets. The corner never runs dry, so it pays loot and Rep 6 times a day; after that a run is practice, and the result screen says so. The Viceroy's lines match.
+
+**v0.7.5 · Nov 24 2026 · The Viceroy explains.**
+- Tap Cash, Supplies or Rep on your block and the Viceroy tells you, in his own words, where it comes from, what it buys and how much you can hold.
+- Ask, next to Build, lists 15 topics: Cash, Supplies, Rep, your crew and beds, how a fight works, the streets, night fights, building, the Main House, Jobs, research, the Block Party, your crew online (what a crew code is, what is shared, what a hit costs), getting hit, and your fights. Most have a Show me button that takes you there.
+- The first time you open each screen, he says what it is for. After that he stays quiet.
+- After the first-run tips, he keeps walking you through: when you have the stars for the next Main House, a rank bonus to collect, a full stash, Run it back, going online, the Block Party, the Workshop, and your first time being hit. One at a time, each once.
+- The first night fight waits while he explains the dark.
+- One switch in Ask turns all his tips off or back on. Ask still answers either way.
+
 **v0.7.4 · Nov 24 2026 · Sound, and a cleaner intro.**
 - Music and sound effects, all made by the game itself in code: no audio files and no sound from the video clips.
 - A loop for every scene: the intro and title (slow and dark, drums arrive on the third bar), your block (laid-back soul), each rival crew's turf (Boombox Kings old-school boom bap, Gold Note jazzy keys and upright bass, The Basement dusty and muffled, Afterhours club funk, The Yard slow and heavy with an organ, Chrome Tide West Coast funk with a sliding lead), online fights (half-time with deep 808s), and a quiet one after a fight. Night fights play the same loop, muffled.
