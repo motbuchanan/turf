@@ -4,6 +4,13 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
+**v0.7.4 · Nov 24 2026 · Sound, and a cleaner intro.**
+- Music and sound effects, all made by the game itself in code: no audio files and no sound from the video clips.
+- A loop for every scene: the intro and title (slow and dark, drums arrive on the third bar), your block (laid-back soul), each rival crew's turf (Boombox Kings old-school boom bap, Gold Note jazzy keys and upright bass, The Basement dusty and muffled, Afterhours club funk, The Yard slow and heavy with an organ, Chrome Tide West Coast funk with a sliding lead), online fights (half-time with deep 808s), and a quiet one after a fight. Night fights play the same loop, muffled.
+- Effects: drops, boss arrivals and boss moves, items, the Flag whistle, gunfire, bursts, ricochets, the Leaf Blower, hits, buildings coming down, a fighter falling, traps, each star, a win or lose sting, building, leveling up, collecting a job, a soft tap on buttons, and a short buzz when something is not allowed. Replays have the fight sounds too.
+- Nothing plays until you tap (phones require it). The sound button on the intro, title, story and home screens reads Tap for sound until then, then cycles Sound on, Effects only, Sound off. Your pick is remembered. Sound pauses when you leave the app.
+- Intro: shot 3 is the new landscape clip. The flashes at the start of each shot are gone: each picture and clip now fades in over the one before instead of swapping, and a clip only shows once its first frame is drawn.
+
 **v0.7.3 · Nov 24 2026 · Menus with pictures, and an update badge.**
 - Tap the version badge to check for an update. If there is a newer build it installs it and reloads; if not, it says you have the newest version.
 - Build: every row shows a small picture of what it builds, drawn from the game's own models (chain-link as see-through wire, gunners standing on the porch and roof). Counts sit next to the name; costs show as Cash and Supplies marks.

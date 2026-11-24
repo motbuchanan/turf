@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.7.3">
+<meta name="build" content="0.7.4">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -192,9 +192,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 #intro[hidden]{display:none}
 #introBg{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(22px) brightness(.45);pointer-events:none}
 #introFrame{position:absolute;inset:0;pointer-events:none}
-#introPic,#introVid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
-#introPic[hidden],#introVid[hidden]{display:none}
-#introPic.push{animation:introPush 6.4s linear both}
+#introFrame .ilayer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .45s ease}
+#introFrame .ilayer.on{opacity:1}
+#introFrame .ilayer.push{animation:introPush 6.4s linear both}
 @keyframes introPush{from{transform:scale(1)}to{transform:scale(1.07)}}
 #intro::after{content:'';position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(180deg,rgba(11,12,15,0),rgba(11,12,15,.88) 70%);pointer-events:none}
 #introCap{position:absolute;z-index:1;left:calc(22px + var(--safe-l));right:calc(22px + var(--safe-r));bottom:calc(78px + var(--safe-b));font-size:clamp(19px,5.2vw,28px);font-weight:800;line-height:1.25;color:#f3ead2;max-width:24ch;text-shadow:0 2px 10px rgba(0,0,0,.8);opacity:0}
@@ -206,7 +206,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 @keyframes introPip{from{background-position:100% 0}to{background-position:0 0}}
 #introSkip{position:absolute;z-index:1;right:calc(16px + var(--safe-r));bottom:calc(22px + var(--safe-b));min-width:72px;min-height:44px;padding:10px 16px;font-weight:800;font-size:15px;color:#f3ead2;background:rgba(11,12,15,.6);border:1px solid rgba(255,255,255,.3);border-radius:4px}
 #introSkip:active{background:rgba(255,255,255,.18)}
-@media (prefers-reduced-motion:reduce){#introPic.push,#introCap.in,#introPips i.now{animation:none}#introCap{opacity:1}}
+@media (prefers-reduced-motion:reduce){#introFrame .ilayer.push,#introCap.in,#introPips i.now{animation:none}#introCap{opacity:1}}
 .hb{position:relative}
 .hb .dot{position:absolute;right:-5px;top:-5px;width:14px;height:14px;border-radius:50%;background:#e2603a;border:2px solid #16171b}
 .hb .dot[hidden]{display:none}
@@ -259,6 +259,22 @@ body.coaching #hud .tip{display:none}
 button.row:active{transform:translateY(1px);background:#2c2f35}
 .row .btnrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 
+/* sound switch: on the title, story and home screens, and over the intro */
+#sndBtn{position:fixed;z-index:31;display:none;align-items:center;gap:8px;min-width:44px;min-height:44px;padding:10px 13px;background:rgba(14,15,18,.82);border:1px solid var(--line);border-radius:4px;font-weight:700;font-size:15px;color:var(--ink)}
+#sndBtn:active{background:#2a2c31}
+#sndBtn svg{flex:none;display:block}
+#sndBtn .spk{fill:currentColor}
+#sndBtn .w1,#sndBtn .w2,#sndBtn .x{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+#sndBtn .x,#sndBtn[data-mode=off] .w1,#sndBtn[data-mode=off] .w2,#sndBtn[data-mode=fx] .w2{display:none}
+#sndBtn[data-mode=off] .x{display:inline}
+#sndBtn[data-locked="1"]{border-color:#e7c25a;color:#f3e3b0}
+#title.on ~ #sndBtn{display:flex;top:calc(10px + var(--safe-t));left:calc(10px + var(--safe-l))}
+#story.on ~ #sndBtn{display:flex;top:calc(10px + var(--safe-t));right:calc(10px + var(--safe-r))}
+#home.on:not(.sheeton) ~ #sndBtn{display:flex;top:calc(62px + var(--safe-t));right:calc(10px + var(--safe-r))}
+#home.on ~ #sndBtn span{display:none}
+#intro:not([hidden]) ~ #sndBtn{display:flex;z-index:41;top:auto;right:auto;left:calc(16px + var(--safe-l));bottom:calc(22px + var(--safe-b))}
+#intro:not([hidden]) ~ #sndBtn span{display:inline}
+
 </style>
 </head>
 <body>
@@ -273,7 +289,7 @@ button.row:active{transform:translateY(1px);background:#2c2f35}
 </div>
 
 <div id="intro" hidden>
- <img id="introBg" alt=""><div id="introFrame"><img id="introPic" alt=""><video id="introVid" muted playsinline preload="none"></video></div>
+ <img id="introBg" alt=""><div id="introFrame"></div>
  <p id="introCap"></p><div id="introPips"></div>
  <button id="introSkip">Skip</button>
 </div>
@@ -313,7 +329,8 @@ button.row:active{transform:translateY(1px);background:#2c2f35}
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.7.3 · Nov 24 2026</button>
+<button id="badge">v0.7.4 · Nov 24 2026</button>
+<button id="sndBtn" aria-label="Sound"><svg viewBox="0 0 20 18" width="20" height="18" aria-hidden="true"><path class="spk" d="M2 6h4l5-4v14l-5-4H2z"/><path class="w1" d="M13.5 6.2a4 4 0 0 1 0 5.6"/><path class="w2" d="M15.8 3.6a7.5 7.5 0 0 1 0 10.8"/><path class="x" d="M13.5 6.5l5 5M18.5 6.5l-5 5"/></svg><span>Sound on</span></button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
 
@@ -1344,6 +1361,218 @@ function why(e){ const m = String(e && e.message || e);
  if (/RESOURCE_EXHAUSTED|QUOTA/i.test(m)) return 'The server is over its free limit for today. Try again tomorrow.';
  return 'Online hit a snag: ' + m.slice(0, 90); }
 return {FIREBASE_CONFIG, FIGHT_VER, PACK, packBlock, unpackBlock, cleanName, cleanCode, cleanColor, cleanPlayer, makePayload, cleanPayload, payloadRecipe, newId:rid, setup, uid, share, crew, postRaid, inbox, clearRaid, leave, why, signedIn:() => !!loadSess()};
+})();
+
+
+// ===== TURF SOUND =====
+// Every sound in the game is made here, in code, with the Web Audio API: no audio files, nothing licensed, nothing from the video clips.
+// Music: one original loop per scene and per rival crew, played bar by bar by a small step sequencer.
+// Sound effects: short synthesized hits for taps, building, fights and rewards.
+// Nothing plays until the player has touched the game (phones require it), and one switch turns music, effects or both off.
+const SND = (() => {
+const KEY = 'turf.audio.v1';
+let ac = null, master = null, musicBus = null, musicTone = null, sfxBus = null, verb = null, fxVerb = null, noiseBuf = null, crackleBuf = null, onState = null, unlockedAt = -1e9;
+let opts = {music:true, sfx:true};
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && typeof o === 'object'){ opts.music = o.music !== false; opts.sfx = o.sfx !== false; } } catch (e){}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(opts)); } catch (e){} };
+const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+
+// ---------- the signal chain: music and effects each have their own level; music passes a filter (closed at night) and a short room ----------
+function build(ctx, out){
+ const g = n => { const x = ctx.createGain(); x.gain.value = n; return x; };
+ const m = g(.9), mus = g(opts.music ? .62 : 0), tone = ctx.createBiquadFilter(), sfx = g(opts.sfx ? .8 : 0), comp = ctx.createDynamicsCompressor();
+ tone.type = 'lowpass'; tone.frequency.value = 18000; tone.Q.value = .5;
+ comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = .004; comp.release.value = .18;
+ mus.connect(tone); tone.connect(m); sfx.connect(m); m.connect(comp); comp.connect(out);
+ // a small room: a decaying noise burst as the impulse
+ const len = Math.floor(ctx.sampleRate * 1.6), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+ for (let c = 0; c < 2; c++){ const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+ const cv = ctx.createConvolver(); cv.buffer = ir; const vg = g(.22); cv.connect(vg); vg.connect(mus);
+ const fcv = ctx.createConvolver(); fcv.buffer = ir; const fvg = g(.22); fcv.connect(fvg); fvg.connect(sfx);
+ // white noise and vinyl crackle, made once
+ const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+ const cb = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate), cd = cb.getChannelData(0);
+ for (let i = 0; i < cd.length; i++){ cd[i] = (Math.random() * 2 - 1) * .015; if (Math.random() < .0009) cd[i] += (Math.random() < .5 ? -1 : 1) * (.25 + Math.random() * .5); }
+ return {ctx, master:m, musicBus:mus, musicTone:tone, sfxBus:sfx, verb:cv, fxVerb:fcv, noiseBuf:nb, crackleBuf:cb};
+}
+
+// ---------- instruments: each schedules one note on `X` (a chain from build) into `dest` at time t ----------
+function env(X, t, a, peak, dec, sus, rel, dur){ const G = X.ctx.createGain(), p = G.gain; p.setValueAtTime(0, t); p.linearRampToValueAtTime(peak, t + a); p.setTargetAtTime(peak * sus, t + a, dec / 3); p.setTargetAtTime(0, t + dur, rel / 3); return G; }
+function osc(X, type, f, t, stop){ const o = X.ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.start(t); o.stop(stop); return o; }
+function noise(X, t, stop){ const s = X.ctx.createBufferSource(); s.buffer = X.noiseBuf; s.loop = true; s.start(t, Math.random() * 1.5); s.stop(stop); return s; }
+function filt(X, type, f, q){ const b = X.ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q || .7; return b; }
+const wet = (X, node, amt) => { if (!amt) return; const s = X.ctx.createGain(); s.gain.value = amt; node.connect(s); s.connect(X.verb); };
+const I = {
+ kick(X, d, t, v = 1, lo = 44){ const o = osc(X, 'sine', 160, t, t + .5), G = X.ctx.createGain(); o.frequency.exponentialRampToValueAtTime(lo, t + .11);
+  G.gain.setValueAtTime(v, t); G.gain.exponentialRampToValueAtTime(.001, t + .42); o.connect(G); G.connect(d);
+  const c = osc(X, 'square', 1200, t, t + .02), cg = X.ctx.createGain(); cg.gain.setValueAtTime(v * .08, t); cg.gain.exponentialRampToValueAtTime(.001, t + .015); c.connect(cg); cg.connect(d); },
+ snare(X, d, t, v = 1, rv = .18){ const n = noise(X, t, t + .3), bp = filt(X, 'bandpass', 1900, .9), G = env(X, t, .001, v * .7, .12, 0, .05, .02); n.connect(bp); bp.connect(G); G.connect(d); wet(X, G, rv);
+  const o = osc(X, 'triangle', 196, t, t + .2), og = X.ctx.createGain(); og.gain.setValueAtTime(v * .5, t); og.gain.exponentialRampToValueAtTime(.001, t + .12); o.connect(og); og.connect(d); },
+ clap(X, d, t, v = 1, rv = .25){ const n = noise(X, t, t + .35), bp = filt(X, 'bandpass', 1300, 1.2), G = X.ctx.createGain(); n.connect(bp); bp.connect(G); G.connect(d); wet(X, G, rv);
+  const p = G.gain; p.setValueAtTime(0, t); [0, .011, .022].forEach(o => { p.setValueAtTime(v * .8, t + o); p.setTargetAtTime(0, t + o + .002, .004); }); p.setValueAtTime(v * .7, t + .033); p.setTargetAtTime(0, t + .035, .06); },
+ hat(X, d, t, v = 1, open = false){ const n = noise(X, t, t + (open ? .35 : .08)), hp = filt(X, 'highpass', 7200, .8), G = env(X, t, .001, v * .32, open ? .2 : .03, 0, .02, .01); n.connect(hp); hp.connect(G); G.connect(d); },
+ shaker(X, d, t, v = 1){ const n = noise(X, t, t + .1), hp = filt(X, 'bandpass', 6000, 1.5), G = env(X, t, .012, v * .18, .05, 0, .02, .02); n.connect(hp); hp.connect(G); G.connect(d); },
+ rim(X, d, t, v = 1){ const o = osc(X, 'square', 820, t, t + .05), G = X.ctx.createGain(); G.gain.setValueAtTime(v * .16, t); G.gain.exponentialRampToValueAtTime(.001, t + .04); o.connect(G); G.connect(d); },
+ b808(X, d, t, m, dur, v = 1, slideTo){ const o = osc(X, 'sine', mf(m + 12), t, t + dur + .5), G = env(X, t, .004, v * .9, dur, .7, .25, dur), sh = X.ctx.createWaveShaper(), cv = new Float32Array(256);
+  for (let i = 0; i < 256; i++){ const x = i / 128 - 1; cv[i] = Math.tanh(2.2 * x); } sh.curve = cv;
+  o.frequency.exponentialRampToValueAtTime(mf(m), t + .05); if (slideTo != null) o.frequency.exponentialRampToValueAtTime(mf(slideTo), t + dur * .9);
+  o.connect(sh); sh.connect(G); G.connect(d); },
+ bass(X, d, t, m, dur, v = 1, cut = 700, type = 'sawtooth'){ const o = osc(X, type, mf(m), t, t + dur + .3), lp = filt(X, 'lowpass', cut * 2.4, 6), G = env(X, t, .005, v * .5, .25, .55, .08, dur);
+  lp.frequency.setValueAtTime(cut * 3, t); lp.frequency.setTargetAtTime(cut, t, .06); o.connect(lp); lp.connect(G); G.connect(d); },
+ upright(X, d, t, m, dur, v = 1){ const o = osc(X, 'triangle', mf(m), t, t + dur + .3), lp = filt(X, 'lowpass', 900, 1), G = env(X, t, .006, v * .75, .3, .25, .1, dur); o.connect(lp); lp.connect(G); G.connect(d); },
+ keys(X, d, t, ms, dur, v = 1, rv = .3){ ms.forEach(m => { const f = mf(m), o = osc(X, 'sine', f, t, t + dur + .8), o2 = osc(X, 'sine', f * 2, t, t + .4), G = env(X, t, .004, v * .14, 1.2, .35, .5, dur), g2 = X.ctx.createGain();
+  g2.gain.setValueAtTime(v * .05, t); g2.gain.exponentialRampToValueAtTime(.001, t + .35); o.connect(G); o2.connect(g2); g2.connect(G); G.connect(d); wet(X, G, rv); }); },
+ pad(X, d, t, ms, dur, v = 1, rv = .4){ ms.forEach(m => [-6, 6].forEach(dt => { const o = osc(X, 'sawtooth', mf(m), t, t + dur + 1); o.detune.value = dt; const lp = filt(X, 'lowpass', 1100, .6), G = env(X, t, .5, v * .035, 1, 1, .8, dur); o.connect(lp); lp.connect(G); G.connect(d); wet(X, G, rv); })); },
+ stab(X, d, t, ms, dur, v = 1, bright = 2400){ ms.forEach(m => { const o = osc(X, 'sawtooth', mf(m), t, t + dur + .3), o2 = osc(X, 'square', mf(m) * 1.003, t, t + dur + .3), lp = filt(X, 'lowpass', bright, 2), G = env(X, t, .004, v * .07, .1, .4, .07, dur);
+  lp.frequency.setValueAtTime(bright * 1.8, t); lp.frequency.setTargetAtTime(bright * .6, t, .08); o.connect(lp); o2.connect(lp); lp.connect(G); G.connect(d); wet(X, G, .15); }); },
+ lead(X, d, t, m, dur, v = 1, from){ const o = osc(X, 'sine', mf(from != null ? from : m), t, t + dur + .4), o2 = osc(X, 'sawtooth', mf(from != null ? from : m), t, t + dur + .4), lfo = osc(X, 'sine', 5.6, t, t + dur + .4), lg = X.ctx.createGain(), lp = filt(X, 'lowpass', 3200, 1), G = env(X, t, .03, v * .1, .4, .8, .2, dur), sg = X.ctx.createGain();
+  if (from != null){ o.frequency.exponentialRampToValueAtTime(mf(m), t + .09); o2.frequency.exponentialRampToValueAtTime(mf(m), t + .09); }
+  lg.gain.value = 9; lfo.connect(lg); lg.connect(o.detune); lg.connect(o2.detune); sg.gain.value = .25; o2.connect(sg); sg.connect(lp); o.connect(lp); lp.connect(G); G.connect(d); wet(X, G, .35); },
+ bell(X, d, t, m, dur, v = 1){ const f = mf(m), c = osc(X, 'sine', f, t, t + dur + 1.5), md = osc(X, 'sine', f * 3.5, t, t + dur + 1.5), mg = X.ctx.createGain(), G = env(X, t, .002, v * .12, 1.4, .0, .6, dur);
+  mg.gain.setValueAtTime(f * 1.8, t); mg.gain.exponentialRampToValueAtTime(f * .1, t + 1); md.connect(mg); mg.connect(c.frequency); c.connect(G); G.connect(d); wet(X, G, .45); },
+ organ(X, d, t, ms, dur, v = 1){ ms.forEach(m => [1, 2, 3].forEach((h, k) => { const o = osc(X, 'sine', mf(m) * h, t, t + dur + .4), G = env(X, t, .03, v * [.06, .03, .015][k], .3, .9, .15, dur); o.connect(G); G.connect(d); wet(X, G, .3); })); },
+ scratch(X, d, t, v = 1, len = .16){ const n = noise(X, t, t + len + .05), bp = filt(X, 'bandpass', 900, 6), G = env(X, t, .004, v * .5, .05, .8, .02, len);
+  bp.frequency.setValueAtTime(500, t); bp.frequency.exponentialRampToValueAtTime(2600, t + len * .45); bp.frequency.exponentialRampToValueAtTime(700, t + len); n.connect(bp); bp.connect(G); G.connect(d); },
+ crackle(X, d, t, dur, v = 1){ const s = X.ctx.createBufferSource(), G = X.ctx.createGain(), lp = filt(X, 'lowpass', 5000, .5); s.buffer = X.crackleBuf; s.loop = true; G.gain.value = v * .9; s.connect(lp); lp.connect(G); G.connect(d); s.start(t, Math.random() * 3); s.stop(t + dur); },
+ riser(X, d, t, dur, v = 1){ const n = noise(X, t, t + dur + .05), bp = filt(X, 'bandpass', 300, 3), G = env(X, t, dur * .9, v * .25, .05, 1, .05, dur); bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(5000, t + dur); n.connect(bp); bp.connect(G); G.connect(d); wet(X, G, .3); },
+ crash(X, d, t, v = 1){ const n = noise(X, t, t + 1.8), hp = filt(X, 'highpass', 5000, .5), G = env(X, t, .002, v * .28, 1.1, 0, .4, .05); n.connect(hp); hp.connect(G); G.connect(d); wet(X, G, .3); }
+};
+
+// ---------- the songs: each plays one bar at a time; `bar` counts up from 0 so a song can build ----------
+// pattern helper: 'x' loud, 'o' normal, 'g' ghost, '.' rest, one character per 16th note
+// swing: every second sixteenth lands a little late (set per song before each bar is scheduled)
+let SWING = .5;
+const hits = (p, fn) => { for (let i = 0; i < p.length; i++){ const c = p[i]; if (c !== '.' && c !== '-') fn(i % 2 ? i + (SWING - .5) * 2 : i, c === 'x' ? 1 : c === 'o' ? .75 : c === 'O' ? .75 : .35, c); } };
+const S = {
+ // the intro and title: dark and patient, A minor, Rhodes over vinyl; the drums come in on bar 3
+ intro:{bpm:78, swing:.56, crackle:.7, bar(X, d, t, s, b, a){ const ch = [[57, 60, 64, 67, 71], [53, 57, 60, 64, 67], [50, 53, 57, 60, 64], [52, 56, 59, 62, 65]][b % 4], root = [45, 41, 38, 40][b % 4];
+  I.keys(X, d, t, ch, s * 15, .9); I.b808(X, d, t, root - 12, s * 6, .55);
+  if (b % 4 === 0 || b % 4 === 2) [[76, 0], [74, 6], [72, 10]].forEach(([m, k]) => I.bell(X, d, t + k * s, m, s * 2, .55));
+  if (a.from + b >= 2){ hits('x.....o...o.....', (i, v) => I.kick(X, d, t + i * s, v)); hits('....x.......x...', (i, v) => I.snare(X, d, t + i * s, v * .85, .3)); hits('..g...g...g...g.', (i, v) => I.hat(X, d, t + i * s, v)); } }},
+ // your block: laid-back soul, D major, swung, warm keys and a walking bass
+ home:{bpm:90, swing:.58, crackle:.25, bar(X, d, t, s, b){ const ch = [[55, 59, 62, 66, 69], [54, 57, 61, 64], [52, 55, 59, 62, 66], [57, 61, 64, 67, 71]][b % 4], rt = [43, 42, 40, 45][b % 4];
+  hits('x..x....x.x.....', (i, v) => I.kick(X, d, t + i * s, v * .9)); hits('....x.......x...', (i, v) => I.snare(X, d, t + i * s, v * .8)); hits('o.g.o.g.o.g.o.go', (i, v) => I.hat(X, d, t + i * s, v)); hits('..g...g...g...g.', (i, v) => I.shaker(X, d, t + i * s, v * 2));
+  hits('x.....o...o.....', (i, v) => I.keys(X, d, t + i * s, ch, s * (i ? 3 : 5), v));
+  [[0, rt], [3, rt + 7], [6, rt + 12], [8, rt + 7], [10, rt + 5], [14, rt + 4]].forEach(([k, m]) => I.upright(X, d, t + k * s, m, s * 1.6, .8)); }},
+ // after a fight: just the keys and the crackle
+ after:{bpm:80, swing:.55, crackle:.5, bar(X, d, t, s, b){ const ch = [[55, 59, 62, 66], [52, 55, 59, 62]][b % 2]; I.keys(X, d, t, ch, s * 14, .7); I.pad(X, d, t, ch.map(m => m - 12), s * 15, .7); }},
+ // the Boombox Kings: old-school boom bap, C minor, with a scratch on the turnaround
+ boombox:{bpm:96, swing:.6, crackle:.3, bar(X, d, t, s, b){ hits('x......xx..x....', (i, v) => I.kick(X, d, t + i * s, v)); hits('....x.......x..g', (i, v) => I.snare(X, d, t + i * s, v)); hits('o.o.o.o.o.o.o.oO', (i, v, c) => I.hat(X, d, t + i * s, v * .8, c === 'O'));
+  const bl = [[0, 36], [3, 36], [6, 39], [8, 41], [11, 39], [14, 34]]; bl.forEach(([k, m]) => I.bass(X, d, t + k * s, m, s * 1.8, .9, 500));
+  if (b % 2 === 0) I.stab(X, d, t + 2 * s, [60, 63, 67, 70], s * 1.5, .8, 1800); if (b % 4 === 3){ I.scratch(X, d, t + 13 * s, .8); I.scratch(X, d, t + 14.5 * s, .7, .1); } }},
+ // Gold Note: jazzy and expensive, F minor ii-V, brushes and an upright
+ goldnote:{bpm:88, swing:.64, bar(X, d, t, s, b){ const ch = [[53, 56, 60, 63, 67], [46, 50, 53, 56, 60], [51, 55, 58, 62, 65], [48, 51, 55, 58, 62]][b % 4], rt = [41, 34, 39, 36][b % 4];
+  hits('x.........x.....', (i, v) => I.kick(X, d, t + i * s, v * .7)); hits('....o.......o...', (i, v) => I.rim(X, d, t + i * s, v)); hits('o.go.go.o.go.go.', (i, v) => I.shaker(X, d, t + i * s, v * 2.2));
+  hits('..o....o..o...o.', (i, v) => I.keys(X, d, t + i * s, ch, s * 2, v * .9, .35));
+  [0, 4, 8, 12].forEach((k, n) => I.upright(X, d, t + k * s, rt + [0, 7, 12, 11][n] - 12, s * 3.4, .9)); }},
+ // The Basement: dusty lo-fi, E minor, heavy bass, everything a little muffled
+ basement:{bpm:84, swing:.55, crackle:.8, tone:2600, bar(X, d, t, s, b){ const ch = [[52, 55, 59, 62, 66], [48, 52, 55, 59]][b % 2];
+  hits('x.....x...x.....', (i, v) => I.kick(X, d, t + i * s, v, 40)); hits('....x........x..', (i, v) => I.snare(X, d, t + i * s, v * .9, .25)); hits('o...o.g.o...o.g.', (i, v) => I.hat(X, d, t + i * s, v * .7));
+  I.pad(X, d, t, ch, s * 15, .9); [[0, 28], [6, 31], [10, 33], [14, 26]].forEach(([k, m]) => I.bass(X, d, t + k * s, m, s * 3.5, .75, 260, 'square')); }},
+ // Afterhours: Minneapolis-style club funk, straight sixteenths, big claps, synth stabs, a bright hook on the fourth bar
+ afterhours:{bpm:112, swing:.5, bar(X, d, t, s, b){ const ch = b % 2 ? [57, 61, 64, 67, 71] : [52, 55, 59, 62, 66];
+  hits('x.....x...x..o..', (i, v) => I.kick(X, d, t + i * s, v)); hits('....x.......x...', (i, v) => I.clap(X, d, t + i * s, v, .35)); hits('xgogxgogxgogxgog', (i, v) => I.hat(X, d, t + i * s, v * .7));
+  [[0, 28], [3, 40], [4, 28], [7, 38], [10, 28], [11, 40], [14, 35]].forEach(([k, m]) => I.bass(X, d, t + k * s, m + (b % 2 ? 5 : 0), s * .8, .9, 900, 'square'));
+  hits('..x....o..x...o.', (i, v) => I.stab(X, d, t + i * s, ch, s * .7, v, 3000));
+  if (b % 4 === 3) [[0, 76], [2, 79], [4, 81], [7, 79], [10, 76], [12, 74]].forEach(([k, m]) => I.lead(X, d, t + k * s, m, s * 1.6, .9)); }},
+ // The Yard: slow and heavy, F sharp minor, half-time snare, an organ drone
+ yard:{bpm:74, swing:.5, bar(X, d, t, s, b){ hits('x........xx.....', (i, v) => I.kick(X, d, t + i * s, v, 38)); hits('........x.......', (i, v) => I.snare(X, d, t + i * s, v, .55)); hits('o...o...o...o.o.', (i, v) => I.hat(X, d, t + i * s, v * .6));
+  I.organ(X, d, t, [42, 54, 57, 61], s * 15, .8); I.b808(X, d, t, 30, s * 8, .65); if (b % 2) I.bell(X, d, t + 12 * s, 69, s * 3, .5); }},
+ // Chrome Tide: West Coast funk, C minor, a whining high lead that slides into its notes, a rubbery bass
+ chrometide:{bpm:92, swing:.57, bar(X, d, t, s, b){ const ch = [[48, 51, 55, 58], [53, 56, 60, 63], [46, 50, 53, 56], [51, 55, 58, 62]][b % 4], rt = [36, 41, 34, 39][b % 4];
+  hits('x......xx.x.....', (i, v) => I.kick(X, d, t + i * s, v)); hits('....x.......x...', (i, v) => { I.snare(X, d, t + i * s, v * .7); I.clap(X, d, t + i * s, v * .6); }); hits('o.o.o.o.o.o.o.o.', (i, v) => I.hat(X, d, t + i * s, v * .7));
+  [[0, rt], [3, rt + 12], [5, rt], [8, rt + 7], [10, rt + 10], [11, rt + 12], [14, rt + 7]].forEach(([k, m]) => I.bass(X, d, t + k * s, m, s * 1.2, .9, 650, 'triangle'));
+  I.keys(X, d, t + 2 * s, ch.map(m => m + 12), s * 3, .6);
+  if (b % 2 === 1) [[0, 84, 82], [4, 82, 84], [8, 79, 82], [12, 77, 79]].forEach(([k, m, f]) => I.lead(X, d, t + k * s, m, s * 3.3, .9, f)); }},
+ // online fights: trap half-time, G minor, 808 slides and hi-hat rolls
+ pvp:{bpm:70, swing:.5, bar(X, d, t, s, b){ hits('x..o.......x..o.', (i, v) => I.kick(X, d, t + i * s, v)); hits('........x.......', (i, v) => I.clap(X, d, t + i * s, v, .3));
+  for (let i = 0; i < 16; i++){ const roll = (b % 2 === 1 && (i === 6 || i === 14)); if (roll) for (let r = 0; r < 3; r++) I.hat(X, d, t + (i + r / 3) * s, .5); else I.hat(X, d, t + i * s, i % 2 ? .35 : .6); }
+  I.b808(X, d, t, 31, s * 5, .7); I.b808(X, d, t + 6 * s, 34, s * 4, .62, 31); I.b808(X, d, t + 11 * s, 31, s * 4, .66);
+  [[0, 67], [3, 70], [6, 74], [10, 72], [12, 70]].forEach(([k, m]) => I.bell(X, d, t + k * s, m, s * 2, .5)); }}
+};
+S.title = S.intro;   // the title plays the intro with its drums in from the start
+// which song goes with which scene
+const SONG_FOR = {boombox:'boombox', goldnote:'goldnote', basement:'basement', afterhours:'afterhours', yard:'yard', chrometide:'chrometide'};
+
+// ---------- the live player: schedules a bar ahead; a new song fades the old one out ----------
+let cur = null, timer = 0, night = false;
+function startSong(name, from){ if (!ac) return; const song = S[name]; if (!song) return; stopSong();
+ const g = ac.createGain(); g.gain.value = 0; g.connect(musicBus); g.gain.setTargetAtTime(1, ac.currentTime + .05, .2);
+ const send = ac.createGain(); send.connect(verb); const X = {ctx:ac, verb:send, noiseBuf, crackleBuf}; cur = {name, song, g, send, X, bar:0, from:from || 0, next:ac.currentTime + .1};
+ setTone(); tick(); timer = setInterval(tick, 50); }
+function stopSong(){ if (!cur) return; const c = cur; cur = null; clearInterval(timer); const now = ac.currentTime; [c.g.gain, c.send.gain].forEach(p => { try { if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(now); else { const v = p.value; p.cancelScheduledValues(now); p.setValueAtTime(v, now); } p.setTargetAtTime(0, now, .12); } catch (e){} });
+ setTimeout(() => { try { c.g.disconnect(); c.send.disconnect(); } catch (e){} }, 4000); }
+function barLen(song){ return 60 / song.bpm * 4; }
+function tick(){ if (!cur) return; const c = cur;
+ if (c.next < ac.currentTime){ const L = barLen(c.song), k = Math.ceil((ac.currentTime - c.next) / L); c.next += k * L; c.bar += k; }   // after a stall: skip the missed bars, stay on the beat
+ while (c.next < ac.currentTime + .35){ const t0 = c.next, step = barLen(c.song) / 16; SWING = c.song.swing || .5;
+  try { c.song.bar(c.X, c.g, t0, step, c.bar, c); if (c.song.crackle) I.crackle(c.X, c.g, t0, barLen(c.song) + .05, c.song.crackle); } catch (e){}
+  c.bar++; c.next += barLen(c.song); } }
+function setTone(){ if (!musicTone) return; const f = Math.min(cur && cur.song.tone ? cur.song.tone : 18000, night ? 1700 : 18000); musicTone.frequency.setTargetAtTime(f, ac.currentTime, .3); }
+
+// ---------- sound effects ----------
+const last = {};
+function fx(name, v = 1){ if (!ac || !opts.sfx || ac.state !== 'running') return; const now = ac.currentTime, gap = FX_GAP[name] || .03; if (last[name] && now - last[name] < gap) return; last[name] = now;
+ const X = {ctx:ac, verb:fxVerb, noiseBuf, crackleBuf}, d = sfxBus, t = now + .005; try { FX[name] && FX[name](X, d, t, v); } catch (e){} }
+const FX_GAP = {gun:.07, rifle:.12, boom:.1, hit:.09, down:.12, zap:.1, gust:.3, tap:.04, crumble:.25, trap:.15};
+const FX = {
+ tap(X, d, t, v){ const o = osc(X, 'sine', 1400, t, t + .05), G = X.ctx.createGain(); o.frequency.exponentialRampToValueAtTime(700, t + .03); G.gain.setValueAtTime(.12 * v, t); G.gain.exponentialRampToValueAtTime(.001, t + .045); o.connect(G); G.connect(d); },
+ build(X, d, t, v){ I.kick(X, d, t, .7 * v, 70); const n = noise(X, t, t + .12), bp = filt(X, 'bandpass', 700, 2), G = env(X, t, .001, .45 * v, .05, 0, .03, .02); n.connect(bp); bp.connect(G); G.connect(d); I.rim(X, d, t + .09, .8 * v); },
+ levelup(X, d, t, v){ [72, 76, 79, 84].forEach((m, i) => I.bell(X, d, t + i * .07, m, .2, .8 * v)); },
+ cash(X, d, t, v){ [84, 88, 91].forEach((m, i) => { const o = osc(X, 'square', mf(m), t + i * .06, t + i * .06 + .18), G = env(X, t + i * .06, .002, .06 * v, .1, 0, .05, .05); o.connect(G); G.connect(d); }); FX.tap(X, d, t + .2, .6 * v); },
+ drop(X, d, t, v){ const n = noise(X, t, t + .16), lp = filt(X, 'lowpass', 1500, 1), G = env(X, t, .01, .3 * v, .08, 0, .04, .05); lp.frequency.setValueAtTime(2500, t); lp.frequency.exponentialRampToValueAtTime(300, t + .12); n.connect(lp); lp.connect(G); G.connect(d); I.kick(X, d, t + .08, .35 * v, 90); },
+ boss(X, d, t, v){ I.kick(X, d, t, 1 * v, 36); I.riser(X, d, t, .25, .8 * v); I.crash(X, d, t + .25, .5 * v); },
+ move(X, d, t, v){ I.riser(X, d, t, .35, v); I.kick(X, d, t + .35, .9 * v, 38); I.crash(X, d, t + .35, .6 * v); },
+ cast(X, d, t, v){ I.riser(X, d, t, .3, .8 * v); [67, 74].forEach((m, i) => I.bell(X, d, t + .1 + i * .08, m, .3, .7 * v)); },
+ flag(X, d, t, v){ const o = osc(X, 'sine', 1900, t, t + .5), G = env(X, t, .01, .12 * v, .2, .8, .1, .32); o.frequency.setValueAtTime(1900, t); o.frequency.linearRampToValueAtTime(2400, t + .12); o.frequency.linearRampToValueAtTime(1900, t + .26); o.connect(G); G.connect(d); },
+ gun(X, d, t, v){ const n = noise(X, t, t + .12), bp = filt(X, 'bandpass', 1600, .6), G = env(X, t, .0005, .38 * v, .04, 0, .03, .01); n.connect(bp); bp.connect(G); G.connect(d); I.kick(X, d, t, .25 * v, 80); },
+ rifle(X, d, t, v){ const n = noise(X, t, t + .4), hp = filt(X, 'highpass', 900, .5), G = env(X, t, .0005, .42 * v, .12, 0, .1, .02); n.connect(hp); hp.connect(G); G.connect(d); wet(X, G, .4); },
+ boom(X, d, t, v){ I.kick(X, d, t, 1 * v, 32); const n = noise(X, t, t + .7), lp = filt(X, 'lowpass', 900, .7), G = env(X, t, .002, .5 * v, .35, 0, .2, .05); lp.frequency.setTargetAtTime(200, t, .2); n.connect(lp); lp.connect(G); G.connect(d); wet(X, G, .3); },
+ zap(X, d, t, v){ const o = osc(X, 'sawtooth', 2400, t, t + .15), G = env(X, t, .001, .08 * v, .06, 0, .03, .04); o.frequency.exponentialRampToValueAtTime(300, t + .12); o.connect(G); G.connect(d); },
+ gust(X, d, t, v){ const n = noise(X, t, t + .6), bp = filt(X, 'bandpass', 400, 1.5), G = env(X, t, .15, .25 * v, .2, .6, .2, .35); bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(1600, t + .4); n.connect(bp); bp.connect(G); G.connect(d); },
+ hit(X, d, t, v){ I.kick(X, d, t, .45 * v, 60); const n = noise(X, t, t + .08), bp = filt(X, 'bandpass', 500, 1.5), G = env(X, t, .001, .3 * v, .03, 0, .02, .01); n.connect(bp); bp.connect(G); G.connect(d); },
+ down(X, d, t, v){ const o = osc(X, 'sine', 220, t, t + .3), G = env(X, t, .002, .18 * v, .1, 0, .05, .05); o.frequency.exponentialRampToValueAtTime(70, t + .2); o.connect(G); G.connect(d); },
+ crumble(X, d, t, v){ I.kick(X, d, t, .9 * v, 30); const n = noise(X, t, t + 1.4), lp = filt(X, 'lowpass', 600, .5), G = env(X, t, .01, .55 * v, .7, .3, .4, .6); lp.frequency.setTargetAtTime(150, t + .1, .4); n.connect(lp); lp.connect(G); G.connect(d); wet(X, G, .35);
+  for (let i = 0; i < 6; i++) I.rim(X, d, t + .08 + Math.random() * .5, .35 * v); },
+ trap(X, d, t, v){ const o = osc(X, 'square', 300, t, t + .12), G = env(X, t, .001, .14 * v, .05, 0, .03, .03); o.connect(G); G.connect(d); FX.hit(X, d, t + .02, .6 * v); },
+ star(X, d, t, v){ [79, 86, 91].forEach((m, i) => I.bell(X, d, t + i * .05, m + (v > 1 ? 2 : 0), .3, .9)); },
+ win(X, d, t){ I.crash(X, d, t, .7); [60, 64, 67, 72, 76, 79].forEach((m, i) => I.stab(X, d, t + i * .09, [m, m + 12], .25, 1.2, 3200)); I.kick(X, d, t, 1); I.kick(X, d, t + .54, .9); },
+ lose(X, d, t){ [67, 63, 60, 55].forEach((m, i) => I.keys(X, d, t + i * .22, [m, m - 12], .5, 1.3)); I.kick(X, d, t + .9, .8, 34); },
+ nope(X, d, t, v){ [0, .09].forEach(k => { const o = osc(X, 'square', 180, t + k, t + k + .07), G = env(X, t + k, .002, .07 * v, .04, 0, .02, .04); o.connect(G); G.connect(d); }); }
+};
+
+// ---------- switching on, the setting, and pausing when the app is in the background ----------
+function unlock(){ try {
+  if (!ac){ const C = window.AudioContext || window.webkitAudioContext; if (!C) return false; try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e){}   // iOS: play even with the ringer switch on silent
+   ac = new C(); const B = build(ac, ac.destination); master = B.master; musicBus = B.musicBus; musicTone = B.musicTone; sfxBus = B.sfxBus; verb = B.verb; fxVerb = B.fxVerb; noiseBuf = B.noiseBuf; crackleBuf = B.crackleBuf;
+   ac.onstatechange = () => { if (ac.state === 'running' && opts.music && wanted && (!cur || cur.name !== wanted)) startSong(wanted, wanted === 'title' ? 2 : 0); try { onState && onState(); } catch (e){} }; }
+  if (ac.state !== 'running' && (opts.music || opts.sfx) && !document.hidden) ac.resume().catch(() => {}); return true; } catch (e){ return false; } }
+let wanted = null;   // the song the current scene asks for, even before sound is allowed
+function scene(name, isNight){ wanted = name; night = !!isNight; if (!ac || ac.state !== 'running' || !opts.music){ if (cur && (!opts.music || cur.name !== name)) stopSong(); if (ac) setTone(); return; }
+ if (!name){ stopSong(); return; } if (cur && cur.name === name){ setTone(); return; } startSong(name, name === 'title' ? 2 : 0); }
+function setOpts(o){ Object.assign(opts, o); save(); if (!ac) return; musicBus.gain.setTargetAtTime(opts.music ? .62 : 0, ac.currentTime, .05); sfxBus.gain.setTargetAtTime(opts.sfx ? .8 : 0, ac.currentTime, .05);
+ if (!opts.music) stopSong(); if (!opts.music && !opts.sfx){ setTimeout(() => { if (!opts.music && !opts.sfx) ac.suspend().catch(() => {}); }, 300); return; }
+ if (ac.state !== 'running' && !document.hidden) ac.resume().catch(() => {}); else if (opts.music && wanted && (!cur || cur.name !== wanted)) scene(wanted, night); }
+// the switch cycles: everything on, sounds only, everything off
+function cycle(){ if (opts.music && opts.sfx) setOpts({music:false, sfx:true}); else if (opts.sfx) setOpts({music:false, sfx:false}); else setOpts({music:true, sfx:true}); return label(); }
+function label(){ return opts.music && opts.sfx ? 'Sound: on' : opts.sfx ? 'Sound: effects only' : 'Sound: off'; }
+function gesture(){ const was = ac && ac.state === 'running'; if (!was && (opts.music || opts.sfx)) unlockedAt = performance.now(); if (!unlock()) return; }
+function justUnlocked(){ return performance.now() - unlockedAt < 700; }
+if (typeof document !== 'undefined'){
+ ['pointerdown', 'keydown', 'touchend'].forEach(e => addEventListener(e, gesture, {capture:true, passive:true}));
+ document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend().catch(() => {}); else if (opts.music || opts.sfx) ac.resume().catch(() => {}); try { onState && onState(); } catch (e){} });
+}
+
+// ---------- render a song to a buffer without playing it (for previews and tests) ----------
+async function render(name, bars, sampleRate = 44100){ const song = S[name], len = bars * barLen(song) + 2, C = window.OfflineAudioContext || window.webkitOfflineAudioContext, off = new C(2, Math.ceil(len * sampleRate), sampleRate);
+ const B = build(off, off.destination); B.musicBus.gain.value = .62; const X = {ctx:off, verb:B.verb, noiseBuf:B.noiseBuf, crackleBuf:B.crackleBuf}, c = {from:name === 'title' ? 2 : 0};
+ if (song.tone) B.musicTone.frequency.value = song.tone;
+ SWING = song.swing || .5; for (let b = 0; b < bars; b++){ const t0 = .05 + b * barLen(song); song.bar(X, B.musicBus, t0, barLen(song) / 16, b, c); if (song.crackle) I.crackle(X, B.musicBus, t0, barLen(song) + .05, song.crackle); }
+ return off.startRendering(); }
+async function renderFx(name, v = 1){ const C = window.OfflineAudioContext || window.webkitOfflineAudioContext, off = new C(2, 44100 * 2.2, 44100), B = build(off, off.destination); B.sfxBus.gain.value = .8;
+ FX[name]({ctx:off, verb:B.fxVerb, noiseBuf:B.noiseBuf, crackleBuf:B.crackleBuf}, B.sfxBus, .02, v); return off.startRendering(); }
+
+return {scene, fx, cycle, label, setOpts, justUnlocked, onState:f => { onState = f; }, opts:() => Object.assign({}, opts), unlock, gesture, render, renderFx, songs:Object.keys(S), effects:Object.keys(FX), state:() => ({on:!!ac && ac.state === 'running', song:cur && cur.name, wanted, night}), SONG_FOR};
 })();
 
 
@@ -2529,7 +2758,7 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.7.3', BUILD_DATE = 'Nov 24 2026';
+const VER = '0.7.4', BUILD_DATE = 'Nov 24 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
@@ -2573,7 +2802,7 @@ let save = loadSave();
 
 // ---------- toast ----------
 let toastT = 0;
-function toast(msg, ms, onTap){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); t.classList.toggle('act', !!onTap); t.onclick = onTap || null;
+function toast(msg, ms, onTap){ if (/^(Needs |No |Pick a troop|Too close|Nobody is close|Level |Opens at|Tap on the block)/.test(msg)) SND.fx('nope'); const t = $('toast'); t.textContent = msg; t.classList.add('on'); t.classList.toggle('act', !!onTap); t.onclick = onTap || null;
  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on', 'act'), ms || 1800); }
 // tap the version badge: look for a newer build on the server and, if there is one, install it and reload
 let badgeBusy = false;
@@ -2592,7 +2821,21 @@ $('badge').onclick = () => { if (badgeBusy) return; badgeBusy = true; toast('Tur
  }).catch(() => { toast('Could not check for an update right now. You have v' + VER + '.', 3500); done(); }); };
 
 // ---------- layers ----------
-function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); 
+// ---------- sound: which loop each screen plays (audio.js makes every sound) ----------
+let sndRecipe = null;
+function songFor(id){ if (id === 'title' || id === 'story') return 'title'; if (id === 'home') return 'home'; if (id === 'result') return 'after';
+ if (id === 'hud' || id === 'watch'){ const Rx = id === 'hud' ? R : sndRecipe; if (!Rx) return 'home'; if (Rx.mode === 'pvp') return 'pvp'; if (Rx.mode === 'camp' && T.CREWS[Rx.camp[0]]) return SND.SONG_FOR[T.CREWS[Rx.camp[0]].id] || 'boombox';
+  if (Rx.mode === 'practice') return 'yard'; return 'boombox'; } return null; }
+function sndScene(id){ const Rx = id === 'hud' ? R : id === 'watch' ? sndRecipe : null; SND.scene(songFor(id), !!(Rx && Rx.night)); sndLabel(); }
+function sndLabel(){ const b = $('sndBtn'); if (!b) return; const st = SND.state(), o = SND.opts(), locked = !st.on && (o.music || o.sfx);
+ b.dataset.locked = locked ? '1' : ''; b.dataset.mode = !o.music && !o.sfx ? 'off' : !o.music ? 'fx' : 'on';
+ b.querySelector('span').textContent = locked ? 'Tap for sound' : o.music && o.sfx ? 'Sound on' : o.sfx ? 'Effects only' : 'Sound off'; }
+SND.onState(() => sndLabel());
+$('sndBtn').onclick = e => { e.stopPropagation(); if ($('sndBtn').dataset.locked !== '1' && !SND.justUnlocked()) SND.cycle(); const cur = ['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on'));
+ if (!$('intro').hidden) SND.scene('intro'); else if (cur) sndScene(cur); setTimeout(sndLabel, 120); SND.fx('tap'); };
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button,.row[data-act],.row[data-job],[data-k]'); if (b && b.id !== 'sndBtn') SND.fx('tap', .8); setTimeout(sndLabel, 150); }, true);
+function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); sndScene(id);
+
  // a result that pops up while you are still tapping fighters in must not eat one of those taps: its buttons wake up after a beat
  if (id === 'result'){ const r = $('result'); r.classList.add('fresh'); setTimeout(() => r.classList.remove('fresh'), 900); } }
 
@@ -2614,21 +2857,35 @@ $('title').querySelector('h1').innerHTML = wordmark();
 // Only shots whose files are in the repo are listed, so nothing is asked for that is not there. Shot 4 ('They boxed him in his own house.',
 // intro-4.jpg and intro-4.mp4) goes back in between 3 and 5 when its art is done.
 // each shot: file number, its line, and the point of the picture to keep in view when it is zoomed to fill more of the screen
-const INTRO_SHOTS = [[1, 'Every block belongs to somebody.', '50% 58%'], [2, 'This one belonged to the Viceroy.', '44% 45%'], [3, 'Then the Boombox Kings came for it.', '50% 34%'],
+const INTRO_SHOTS = [[1, 'Every block belongs to somebody.', '50% 58%'], [2, 'This one belonged to the Viceroy.', '44% 45%'], [3, 'Then the Boombox Kings came for it.', '52% 46%'],
  [5, 'Tonight, somebody new walks up the street.', '50% 50%']];
 const INTRO_KEY = 'turf.intro.v1', SHOT_MS = 6000;
-let introList = [], introAt = -1, introT = 0, introDone = null;
+let introList = [], introAt = -1, introT = 0, introDone = null, introVidOn = false, introPushT = 0;
 function introSeen(){ try { return localStorage.getItem(INTRO_KEY) === '1'; } catch (e){ return true; } }
 // find which shots have a still; calls back with the list (possibly empty)
 function introFind(cb){ let left = INTRO_SHOTS.length; const ok = [];
  INTRO_SHOTS.forEach(([n, line, focus], i) => { const im = new Image(); const fin = good => { if (good) ok[i] = {n, line, focus, ar:im.naturalWidth / im.naturalHeight}; if (!--left) cb(ok.filter(Boolean)); };
   im.onload = () => fin(true); im.onerror = () => fin(false); im.src = 'intro-' + n + '.jpg'; }); }
 function introPlay(done){ introDone = done || null;
- introFind(list => { if (!list.length){ introEnd(); return; } introList = list; $('introPips').innerHTML = list.map(() => '<i></i>').join(''); $('intro').hidden = false; introShot(0); }); }
-function introShot(i){ clearTimeout(introT); if (i >= introList.length){ introEnd(); return; } introAt = i; const s = introList[i], pic = $('introPic'), vid = $('introVid'), src = 'intro-' + s.n + '.jpg';
- introFit(); $('introBg').src = src; pic.classList.remove('push'); pic.src = src; pic.hidden = false; void pic.offsetWidth; pic.classList.add('push');
- vid.hidden = true; vid.oncanplay = () => { if (introAt !== i) return; const p = vid.play(); if (p && p.then) p.then(() => { if (introAt === i){ vid.hidden = false; pic.hidden = true; } }).catch(() => {}); };
- vid.onerror = () => {}; vid.muted = true; vid.src = 'intro-' + s.n + '.mp4'; try { vid.load(); } catch (e){}
+ introFind(list => { if (!list.length){ introEnd(); return; } introList = list; $('introPips').innerHTML = list.map(() => '<i></i>').join(''); $('intro').hidden = false; SND.scene('intro'); sndLabel(); introShot(0); }); }
+// Each shot is a new picture and clip laid over the last one and faded in, so there is never a blank frame between shots
+// and no hard jump from the still to the moving clip. The old layers are removed once the new one has faded in.
+function introLayers(keep){ [...$('introFrame').children].forEach(el => { if (keep && keep.indexOf(el) >= 0) return; if (el.tagName === 'VIDEO'){ try { el.pause(); el.removeAttribute('src'); el.load(); } catch (e){} } el.remove(); }); }
+function introShot(i){ clearTimeout(introT); clearTimeout(introPushT); if (i >= introList.length){ introEnd(); return; } introAt = i; introVidOn = false;
+ const s = introList[i], f = $('introFrame'), src = 'intro-' + s.n + '.jpg', old = [...f.children];
+ old.forEach(el => el.removeAttribute('id'));
+ const pic = new Image(), vid = document.createElement('video'); pic.alt = ''; pic.className = 'ilayer'; pic.id = 'introPic';
+ vid.className = 'ilayer'; vid.id = 'introVid'; vid.muted = true; vid.defaultMuted = true; vid.playsInline = true; vid.setAttribute('playsinline', ''); vid.setAttribute('muted', ''); vid.preload = 'auto';
+ f.appendChild(pic); f.appendChild(vid); introFit();
+ const retire = keep => setTimeout(() => { if (introAt === i) introLayers(keep); }, 520);
+ const showPic = () => { if (introAt !== i || pic.classList.contains('on')) return; pic.classList.add('on'); $('introBg').src = src; retire([pic, vid]);
+  introPushT = setTimeout(() => { if (introAt === i && !introVidOn) pic.classList.add('push'); }, 1400); };   // no clip yet: let the still drift slowly instead
+ pic.onload = () => { if (pic.decode) pic.decode().then(showPic, showPic); else showPic(); }; pic.onerror = showPic; pic.src = src;
+ const vidIn = () => { if (introAt !== i || vid.classList.contains('on')) return; introVidOn = true; clearTimeout(introPushT); vid.classList.add('on'); retire([vid]); };
+ // fade the clip in only once its first frame is actually on screen (some phones paint a black frame first)
+ vid.addEventListener('playing', () => { if (vid.requestVideoFrameCallback) vid.requestVideoFrameCallback(() => vidIn()); else setTimeout(vidIn, 80); setTimeout(vidIn, 600); }, {once:true});
+ vid.oncanplay = () => { if (introAt !== i) return; const p = vid.play(); if (p && p.catch) p.catch(() => {}); };
+ vid.onerror = () => {}; vid.src = 'intro-' + s.n + '.mp4'; try { vid.load(); } catch (e){}
  $('introCap').textContent = s.line; $('introCap').classList.remove('in'); void $('introCap').offsetWidth; $('introCap').classList.add('in');
  [...$('introPips').children].forEach((p, k) => p.className = k < i ? 'done' : k === i ? 'now' : '');
  introT = setTimeout(() => introShot(i + 1), SHOT_MS); }
@@ -2637,8 +2894,9 @@ function introShot(i){ clearTimeout(introT); if (i >= introList.length){ introEn
 function introFit(){ const s = introList[introAt]; if (!s) return; const va = innerWidth / innerHeight, z = Math.max(1, Math.min(1.7, s.ar > va ? s.ar / va : va / s.ar)), f = $('introFrame');
  f.style.transformOrigin = s.focus; f.style.transform = 'scale(' + z.toFixed(3) + ')'; }
 addEventListener('resize', introFit);
-function introEnd(){ clearTimeout(introT); introAt = -1; const vid = $('introVid'); try { vid.pause(); vid.removeAttribute('src'); vid.load(); } catch (e){}
- $('intro').hidden = true; try { localStorage.setItem(INTRO_KEY, '1'); } catch (e){} $('introBtn').hidden = false; const d = introDone; introDone = null; if (d) d(); }
+function introEnd(){ clearTimeout(introT); clearTimeout(introPushT); introAt = -1; introVidOn = false; introLayers();
+ $('intro').hidden = true; try { localStorage.setItem(INTRO_KEY, '1'); } catch (e){} $('introBtn').hidden = false; const d = introDone; introDone = null; if (d) d();
+ { const cur = ['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on')); if (cur) sndScene(cur); } }
 $('introSkip').onclick = e => { e.stopPropagation(); introEnd(); };
 $('intro').onclick = () => { if (introAt >= 0) introShot(introAt + 1); };   // a tap moves to the next shot
 $('introBtn').onclick = () => introPlay();
@@ -2792,7 +3050,7 @@ function buildBar(){
 function barTap(k){
  if (k[0] === 'b' && k[1] === ':'){ const i = bossIndex(k.slice(2));   // a boss already on the block: use the ability
   if (i >= 0 && (queued[i] || sim.placed(i))){ if (abUsed[i] || finished) return; if (!sim.placed(i)){ toast('One moment, still on the way in'); return; }
-   if (sim.ability(i)){ abUsed[i] = 1; savePending(true); const A = R.attackers[i].ability, u = sim.units[i]; if (A.kind === 'slam' || A.kind === 'hold') pushRing({x:u.x, y:u.y, r:A.r, t0:sim.tick(), t1:sim.tick() + (A.kind === 'slam' ? 10 : A.len), m:A.kind === 'slam' ? 9 : 12, follow:A.kind === 'hold' ? i : null}); toast(T.BOSSES[k.slice(2)].abName); refreshBar(); }
+   if (sim.ability(i)){ SND.fx('move'); abUsed[i] = 1; savePending(true); const A = R.attackers[i].ability, u = sim.units[i]; if (A.kind === 'slam' || A.kind === 'hold') pushRing({x:u.x, y:u.y, r:A.r, t0:sim.tick(), t1:sim.tick() + (A.kind === 'slam' ? 10 : A.len), m:A.kind === 'slam' ? 9 : 12, follow:A.kind === 'hold' ? i : null}); toast(T.BOSSES[k.slice(2)].abName); refreshBar(); }
    else if (R.attackers[i].ability.kind === 'bounce' && sim.units[i] && sim.units[i].alive) toast('No guns in reach yet');
    else { abUsed[i] = 1; refreshBar(); }
    return; } }
@@ -2822,7 +3080,7 @@ function blockOf(Rx){ return Rx.items.map(b => ({key:b.key, k:b.k, x:b.x, y:b.y,
 function lightFor(Rx){ if (gl3d) VIL.setHour(Rx && (Rx.mode === 'camp' || Rx.mode === 'pvp') ? (Rx.night ? 22.5 : 13) : null); }
 function startAttack(recipe){
  R = recipe; setBlock(blockOf(R), R.mode === 'practice' ? 'own' : 'enemy', R.crewColor); vicOn = R.mode === 'rescue'; lightFor(R); if (gl3d) VIL.edit(null);
- sim = B.raidStart(R, {record:true}); finished = false; coreAt = 0; queued = {}; acc = 0; lastT = 0; viceroyFree = false; lastDown = 'x';
+ sim = B.raidStart(R, {record:true}); liveStars = 0; finished = false; coreAt = 0; queued = {}; acc = 0; lastT = 0; viceroyFree = false; lastDown = 'x';
  counts = {}; R.attackers.forEach(a => { if (a.swarm) return; const k = a.boss ? 'b:' + a.boss : a.type; counts[k] = (counts[k] || 0) + 1; }); for (const k in (R.kit || {})) counts['i:' + k] = R.kit[k];
  sel = nextSel(); barShown = null; rings = []; abUsed = {};
  const m = meta(R); units = m.u; items = m.it; zone = B.dropZone(R);
@@ -2849,10 +3107,20 @@ function afterTick(){
  paint(down);
  let lost = 0, total = 0; items.forEach((b, i) => { if (!b.max) return; total += b.max; lost += b.max - Math.max(0, f.b[i]); });
  const pct = Math.round(100 * lost / (total || 1)), coreI = R.items.findIndex(b => b.role === 'core'), coreDown = f.b[coreI] <= 0;
- $('pct').textContent = pct + '%'; setStars($('hudStars'), (pct >= 50 ? 1 : 0) + (coreDown ? 1 : 0) + (pct >= 100 ? 1 : 0));
+ $('pct').textContent = pct + '%'; const nStar = (pct >= 50 ? 1 : 0) + (coreDown ? 1 : 0) + (pct >= 100 ? 1 : 0); if (nStar > liveStars){ liveStars = nStar; SND.fx('star', nStar); } setStars($('hudStars'), nStar);
+ try { fightSfx(f, sim.tick() > 1 ? sim.frames[sim.frames.length - 2] : null, R); } catch (e){}
  if (coreDown && !coreAt){ coreAt = t; if (R.mode === 'rescue'){ viceroyFree = true; lastDown = 'x'; paint(down); toast('The Viceroy is free'); } }
  if (coreAt && R.mode === 'rescue' && t - coreAt === 25) sim.end();   // the rescue wraps up a moment after the house falls
 }
+// the fight's sounds, read off two frames in a row (live and in Watch alike)
+let liveStars = 0;
+function fightSfx(f, p, Rx){ if (!f) return;
+ (f.s || []).forEach(s => SND.fx(s[4] === 0 ? 'gun' : s[4] === 3 ? 'rifle' : s[4] === 1 ? 'zap' : s[4] === 2 ? 'boom' : 'gust', s[4] === 2 ? .7 : s[4] === 3 ? .6 : 1));
+ if (f.tr) SND.fx('trap');
+ if (!p) return;
+ for (let i = 0; i < f.b.length; i++){ if (p.b[i] > 0 && f.b[i] <= 0){ const role = Rx.items[i] && Rx.items[i].role; SND.fx(role === 'wall' ? 'hit' : 'crumble', role === 'core' ? 1.3 : role === 'wall' ? 1 : .9); if (role === 'core') SND.fx('boom'); }
+  else if (f.b[i] < p.b[i]) SND.fx('hit', .35); }
+ if (p.u.length){ const was = {}; p.u.forEach(u => was[u[0]] = u[6]); f.u.forEach(u => { if (was[u[0]] && !u[6] && !u[3]) SND.fx('down'); }); } }
 function clock(t){ const left = Math.max(0, Math.ceil((R ? R.maxT : 1800) / 10 - t / 10)); return Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); }
 function setStars(el, n){ el.querySelectorAll('i').forEach((s, i) => s.classList.toggle('on', i < n)); }
 function onGround(x, y){
@@ -2862,13 +3130,13 @@ function onGround(x, y){
  if (sel[0] === 'i' && sel[1] === ':'){ const c = sel.slice(2), sp = R.spells[c];   // items land anywhere on the block
   if (!(x >= 0 && y >= 0 && x < B.W && y < B.H)){ toast('Tap on the block itself'); return; }
   if (sp.kind === 'rally' && !sim.reach(c, x, y)){ toast('Nobody is close enough to hear that. Plant it nearer your crew.'); return; }
-  if (!sim.cast(c, x, y)) return; pushRing({x, y, r:sp.r, t0:sim.tick(), t1:sim.tick() + (sp.len || 8), m:RING_M[sp.kind] || 9});
+  if (!sim.cast(c, x, y)) return; SND.fx(sp.kind === 'rally' ? 'flag' : 'cast'); pushRing({x, y, r:sp.r, t0:sim.tick(), t1:sim.tick() + (sp.len || 8), m:RING_M[sp.kind] || 9});
   if (sp.kind === 'rally'){ pushRing({x, y, r:.9, t0:sim.tick(), t1:sim.tick() + 60, m:33}); toast('Flag planted. Your crew in the ring is going for it.'); }
   counts[sel]--; if (!counts[sel]) sel = nextSel(); refreshBar(); $('tip').style.opacity = 0; savePending(true); return; }
  if (!B.canDrop(R, x, y)){ if (gl3d) VIL.flashZone(zone); else FB.flash(zone); toast(counts['i:flag'] && R.attackers.some((a, j) => sim.placed(j)) ? 'New fighters go in from the street. To steer the ones already in, use the Flag card.' : 'Too close to their block. Drop on the street.', 2600); return; }
  const boss = sel[0] === 'b' && sel[1] === ':' ? sel.slice(2) : null;
  const i = R.attackers.findIndex((a, j) => (boss ? a.boss === boss : a.type === sel && !a.boss) && !queued[j] && !sim.placed(j));
- if (i < 0 || !sim.deploy(i, x, y)) return;
+ if (i < 0 || !sim.deploy(i, x, y)) return; SND.fx(boss ? 'boss' : 'drop');
  queued[i] = 1; counts[sel]--; if (!counts[sel]) sel = nextSel(); refreshBar(); savePending(true);
  $('tip').style.opacity = 0;
 }
@@ -2941,22 +3209,22 @@ function showResult(res, stars, won){
  if (camp && lastReport.firstTake && lastReport.recipe.camp[1] === T.CAMP.blocks - 1) setTimeout(() => toast('That was the last of ' + crew.name + ' turf', 2600), 600);
  $('resAgain').textContent = raid ? 'Hit them again' : 'Run it again'; $('resAgain').onclick = again;
  $('resAgain').style.display = pvp ? 'none' : (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
- practiceRep = null; $('resWatch').onclick = resWatchReal; show('result');
+ practiceRep = null; $('resWatch').onclick = resWatchReal; show('result'); SND.fx(won ? 'win' : 'lose');
 }
 $('resWatch').onclick = () => watch(lastReport);
 const resWatchReal = $('resWatch').onclick;
 function seed(){ return (Date.now() ^ (Math.random() * 4294967296)) >>> 0; }
 
 // ---------- Watch: the saved recipe fought again, frame by frame ----------
-let wSpeed = 1, wPaused = false, wFrames = null, wI = 0, wRaf = 0;
+let wSpeed = 1, wPaused = false, wFrames = null, wI = 0, wRaf = 0, wLastSfx = -1;
 function watch(rep){
  if (!rep) return; const Rw = JSON.parse(JSON.stringify(rep.recipe)); setBlock(blockOf(Rw), Rw.mode === 'practice' || rep.def ? 'own' : 'enemy', Rw.crewColor); vicOn = Rw.mode === 'rescue'; lightFor(Rw); if (gl3d) VIL.edit(null);
  const out = B.simRaid(Rw, {record:true}), m = meta(Rw); { const pt = partyText(Rw.party); if (pt) setTimeout(() => toast(pt, 2600), 500); }
  wFrames = out.frames; units = m.u; items = m.it; viceroyFree = false; lastDown = 'x'; paint(null); wSpeed = 1; wPaused = false;
  $('wPlay').textContent = 'Pause'; $('wSpeed').textContent = '2x'; $('watchLbl').textContent = 'Replay · ' + rep.stars + (rep.stars === 1 ? ' star' : ' stars');
- const onTick = i => { const f = wFrames[i], down = downOf(Rw.items, f), coreI = Rw.items.findIndex(b => b.role === 'core');
+ const onTick = i => { const f = wFrames[i], down = downOf(Rw.items, f), coreI = Rw.items.findIndex(b => b.role === 'core'); try { for (let j = Math.max(wLastSfx + 1, i - 6); j <= i; j++) fightSfx(wFrames[j], j > 0 ? wFrames[j - 1] : null, Rw); } catch (e){} wLastSfx = i;
   if (vicOn && f.b[coreI] <= 0 && !viceroyFree){ viceroyFree = true; lastDown = 'x'; } paint(down); };
- show('watch'); cam('watch');
+ sndRecipe = Rw; wLastSfx = -1; show('watch'); cam('watch');
  const wr = ringsOf(Rw);
  const onTick2 = i => { onTick(i); if (wr.length){ const f = wFrames[i]; wr.forEach(r => { if (r.follow != null){ const u = f.u.find(q => q[0] === r.follow); if (u){ r.x = u[1]; r.y = u[2]; } } }); } };
  if (gl3d){ VIL.battle({frames:wFrames, tick:B.TICK, units, items, speed:1, follow:true, zoom:VIL.view().zoom, onTick:onTick2, onEnd:endWatch}); VIL.rings(wr); }
@@ -3067,18 +3335,18 @@ function buy(k){
  const spot = T.freeSpot(b, k); if (!spot){ toast('No room on the lot. Move things or level up the Main House.'); return; }
  const it = {key:'b' + (save.nk++), k, x:spot[0], y:spot[1], lv:1}; b.push(it);
  if (!T.reachOk(b)){ b.pop(); toast('No spot that leaves a way in. Move a fence first.'); return; }
- pay(c); saveGame(); homeSel = it.key; homePaint(); openSheet('info'); focusOn(it.x + 1, it.y + 1);
+ pay(c); SND.fx('build'); saveGame(); homeSel = it.key; homePaint(); openSheet('info'); focusOn(it.x + 1, it.y + 1);
  toast(gl3d ? 'Placed. Drag it where you want it.' : 'Placed. Tap an open spot to move it.', 2400);
 }
 // every fence piece at this one's level goes up one, if you can pay for all of them
 function levelFences(key){ const it = item(key); if (!it || it.k !== 'fence' || it.lv >= T.houseLv(save.block)) return; const lv = it.lv || 1, list = save.block.filter(f => f.k === 'fence' && (f.lv || 1) === lv);
  const c = [0, T.price(save.block, T.upgradeCost('fence', lv))[1] * list.length]; if (!has(c)){ toast('Needs ' + costText(c)); return; }
- pay(c); list.forEach(f => f.lv = lv + 1); saveGame(); homePaint(); openSheet('info'); toast(list.length + ' pieces are ' + T.fenceName(lv + 1) + ' now'); }
+ pay(c); SND.fx('levelup'); list.forEach(f => f.lv = lv + 1); saveGame(); homePaint(); openSheet('info'); toast(list.length + ' pieces are ' + T.fenceName(lv + 1) + ' now'); }
 function levelUp(key){
  const it = item(key); if (!it) return; if (it.k === 'fence' && it.lv >= T.houseLv(save.block)){ toast('Level the Main House first'); return; } const c0 = T.upgradeCost(it.k, it.lv); if (!c0) return; const c = T.price(save.block, c0);
  if (it.k === 'house' && T.starsAll(save) < T.houseStars(it.lv + 1)){ toast('Needs ' + T.houseStars(it.lv + 1) + ' stars on the streets. You have ' + T.starsAll(save) + '.'); return; }
  if (!has(c)){ toast('Needs ' + costText(c)); return; }
- pay(c); it.lv++; saveGame(); homePaint(); openSheet('info');
+ pay(c); SND.fx('levelup'); it.lv++; saveGame(); homePaint(); openSheet('info');
  if (it.k === 'house'){ cam('home'); toast('The lot got bigger. New limits on everything.', 2600); } else toast(T.BDEFS[it.k].name + ' is level ' + it.lv);
 }
 function train(k, n){
@@ -3104,7 +3372,7 @@ function rankLine(){ const rk = T.rankOf(save.rep), nx = T.RANKS[rk + 1]; return
 // rewards that do not fit your stashes are not lost: collecting waits until all of it fits
 function roomFor(c){ const cap = T.storeCap(save.block); return cap.cash - save.cash >= Math.min(c[0], cap.cash) && cap.sup - save.sup >= Math.min(c[1], cap.sup); }
 function jobClaim(id){ const j = T.jobsNow(save).find(x => x && x.id === id); if (!j || !j.done) return;
- if (!roomFor(j.reward)){ toast('Your stashes are too full to take this. Spend some first.'); return; }
+ if (!roomFor(j.reward)){ toast('Your stashes are too full to take this. Spend some first.'); return; } SND.fx('cash');
  save.jobs[id] = 1; const g = addRes(j.reward[0], j.reward[1]); saveGame(); homeHud(); openSheet('jobs'); toast('+' + g.cash + ' Cash, +' + g.sup + ' Supplies'); }
 function dailyClaim(slot){ const d = dayNow(), t = T.dailyNow(d)[slot]; if (!t || !t.done || t.got) return;
  const first = d.on !== d.d, pay = T.dailyPay(d.streak + (first ? 1 : 0)); if (!roomFor(pay)){ toast('Your stashes are too full to take this. Spend some first.'); return; }
@@ -3509,7 +3777,7 @@ if (!introSeen() && !save.rescued && !save.tries) introPlay(); else introFind(li
 // test hook (used by the headless proof): read-only peeks at the fight
 window.TURF_TEST = {bld:(k, lv, n) => bldIcon(k, lv, n), tint:(k, color) => Promise.resolve(tintFace(k, color)), net:() => ({code:save.crewCode, list:crewList, msg:netMsg, busy:netBusy}), pvpTest:(p, listOnly) => { crewList = [p]; if (!listOnly) hitPlayer(p.uid); }, block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
  state:() => ({screen:['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on')), tick:sim ? sim.tick() : 0, counts:Object.assign({}, counts), sel, finished, gl3d, reports:save.reports.length}),
- camp:() => JSON.parse(JSON.stringify({camp:save.camp, night:save.night})), hit, intro:() => ({on:!$('intro').hidden, at:introAt, shots:introList.map(s => s.n), video:!$('introVid').hidden}), icon:(l, n) => miniIcon(l, n), select:k => { selectItem(k, true); openSheet('info'); },
+ camp:() => JSON.parse(JSON.stringify({camp:save.camp, night:save.night})), hit, intro:() => ({on:!$('intro').hidden, at:introAt, shots:introList.map(s => s.n), video:introVidOn}), icon:(l, n) => miniIcon(l, n), select:k => { selectItem(k, true); openSheet('info'); },
  toScreen:(x, y, z) => gl3d ? VIL.project(x, y, z || 0) : null, result:() => sim ? sim.result() : null};
 })();
 
