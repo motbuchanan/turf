@@ -4,6 +4,21 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
+**v0.7.2 · Nov 24 2026 · Portraits in your crew color.** Your five bosses are painted in lavender; the game now recolors their clothes to whatever crew color you picked, on the phone, with no extra pictures. Skin, gold and the background stay as painted. Deadeye and Wheels have new paintings.
+
+**v0.7.1 · Nov 24 2026 · Boss portraits.** The five bosses on the crew screen and the six rival bosses on the streets now show their painted faces. Eleven new pictures sit beside the page (boss-*.jpg) and are kept for offline play. If one is missing, the row shows without it.
+
+**v0.7.0 · Nov 23 2026 · The Crew Online (Phase 5, part one) and the Flag.**
+- Your crew online, from the streets: put in a name and a crew code. Everyone who types the same code is one crew. Codes are 4 to 12 letters and numbers, and capitals do not matter.
+- Your block, name, color and Rep are shared with that crew. Nothing else leaves the phone.
+- Hit a crew mate's real block, once an hour each. It is the block they built, with their Block Party upgrades, by day or night from your phone's clock. A Main House level 1 block is off limits.
+- When you are hit, your own phone re-fights it, takes a small slice of your stashes (never more than 12%), and keeps the fight to watch under Hits on your block. A block that holds earns 5 Rep.
+- The Rep board: the crew list, most Rep first.
+- Online runs on Firebase with no extra download: plain web requests, anonymous sign-in, and rules that let a player write only their own record. Offline, the rest of the game works as before.
+- Still to come in Phase 5: Crew House reinforcements from friends, and the same-color mix-up rule.
+
+**The Flag (v0.6.1, shipped inside v0.7.0).** Every fight comes with two Flags. Pick the Flag card and tap one of their buildings: every fighter of yours within nine tiles drops what they were doing and goes for it, then picks their own targets again once it falls. Planted right on a fence, it sends them at that fence. Medics and Breachers keep their own jobs. A Flag nobody is close enough to hear is not spent. Flags show in replays.
+
 **v0.6.0 · Nov 23 2026 · Gameplay pass.** Reasons to come back and keep climbing:
 - Fighters still standing at the end of a fight walk home. Only the ones who fell are spent.
 - Street blocks fill back up a little after every fight, so there is always something worth hitting.
@@ -14,7 +29,7 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 - The first crew is much easier: a new player who sends everyone in at the front wins the first block with nearly the whole crew walking home. A player with nobody and no money is sent six Brawlers.
 - A first-run coach walks a new player from hiring a crew to the first street fight and spending the loot. Tips can be turned off, and back on from Jobs.
 
-Next up, from the first outside playtest (Nov 23 2026): a rally flag to steer fighters during a fight (v0.6.1, waiting on a yes), and a cinematic replay with street-level shots (v0.6.2).
+Still to come from the first outside playtest (Nov 23 2026): a cinematic replay with street-level shots.
 
 v0.5.2 was art pass, part one. ** The painted logo is on the title screen and the app has its new icon. A new
 player sees a short intro before the title: painted shots with one line each, silent, about 6 seconds a shot, with Skip; a tap

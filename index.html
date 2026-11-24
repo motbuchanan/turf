@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.6.0">
+<meta name="build" content="0.7.2">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -235,6 +235,15 @@ body.coaching #hud .tip{display:none}
 .panel{max-height:calc(100vh - 12px);overflow-y:auto}
 #result.fresh .acts{pointer-events:none;opacity:.55}
 #result .acts{transition:opacity .2s}
+/* online */
+.fld{display:block;margin:10px 0;font-size:14px;color:var(--dim)}
+.fld input{display:block;width:100%;margin-top:4px;padding:12px;background:#14151a;border:1px solid var(--line);border-radius:4px;color:var(--ink);font:inherit;font-size:17px}
+.fld input:focus{outline:2px solid var(--sodium);outline-offset:1px}
+.row .chip{flex:none;width:14px;height:34px;border-radius:2px}
+.row.me{border-color:var(--sodium)}
+.face{flex:none;width:52px;height:52px;border-radius:4px;border:2px solid var(--line);object-fit:cover;background:#14151a}
+.row.no .face{filter:grayscale(1) brightness(.6)}
+.crewhd .face{margin-right:2px}
 
 </style>
 </head>
@@ -290,7 +299,7 @@ body.coaching #hud .tip{display:none}
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.6.0 · Nov 23 2026</button>
+<button id="badge">v0.7.2 · Nov 24 2026</button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
 
@@ -471,7 +480,14 @@ function raidStart(R, opt){
   if (!u || u.side !== 'a' || !u.wait || u.swarm){ d.skip = true; continue; }
   u.wait = false; u.x = r4(Math.max(0, Math.min(W - .01, d.x))); u.y = r4(Math.max(0, Math.min(H - .01, d.y))); } };
  // an item lands: a zone for its length, or a one-off hit (Firecracker) or switch-off (Blackout)
- function castNow(d){ const sp = spells[d.c]; if (!sp || !(kitLeft[d.c] > 0) || !(d.x >= 0 && d.y >= 0 && d.x < W && d.y < H)) return false; kitLeft[d.c]--;
+ // a flag: every fighter of yours within reach of it drops what they were after and goes for the building it marks (a fence, if it is planted right on one);
+ // once that falls they pick their own targets again. Medics and Breachers keep their own jobs. A flag nobody is close enough to hear is not spent.
+ const rallyMark = (x, y) => { const p = {x, y}; for (const b of items) if (b.role === 'wall' && b.hp > 0 && dist2rect(p, b) <= .01) return b;
+  let nb = null, nd = 1e9; for (const b of scoring){ if (!(b.hp > 0) || !b.shown) continue; const dd = dist2rect(p, b); if (dd < nd - 1e-9){ nd = dd; nb = b; } } return nb; };
+ const rallyWho = (x, y, r) => units.filter(u => u.side === 'a' && u.alive && !u.wait && !(u.delay > 0) && u.hp > 0 && !u.heal && !u.bomb && (u.x - x) * (u.x - x) + (u.y - y) * (u.y - y) <= r * r);
+ function castNow(d){ const sp = spells[d.c]; if (!sp || !(kitLeft[d.c] > 0) || !(d.x >= 0 && d.y >= 0 && d.x < W && d.y < H)) return false;
+  if (sp.kind === 'rally'){ const tg = rallyMark(d.x, d.y), who = tg ? rallyWho(d.x, d.y, sp.r) : []; if (!who.length) return false; kitLeft[d.c]--; for (const u of who){ u.tgt = tg; u.path = null; } return true; }
+  kitLeft[d.c]--;
   const r2 = sp.r * sp.r, near = (o, ox, oy) => (ox - d.x) * (ox - d.x) + (oy - d.y) * (oy - d.y) <= r2;
   if (sp.kind === 'strike'){ for (const b of items){ if (!(b.hp > 0) || b.role === 'plot' || b.role === 'trap' || !b.shown) continue; if (dist2rect({x:d.x, y:d.y}, b) <= sp.r) hurt(b, sp.dmg); }
    for (const u of units) if (u.side === 'd' && u.alive && !u.wait && near(u, u.x, u.y)) hurt(u, sp.dmg); shots.push([d.x, d.y, d.x, d.y, 2]); }
@@ -611,7 +627,7 @@ function raidStart(R, opt){
  }
  // every deploy so far, landed or still waiting for its tick, and the End tick: enough to play the fight out again later
  const outD = d => d.c ? {c:d.c, x:d.x, y:d.y, t:d.t} : d.ab ? {ab:1, i:d.i, t:d.t} : {i:d.i, x:d.x, y:d.y, t:d.t};
- return {step, deploy, cast, ability, queued:() => queue.filter(d => !d.skip).map(outD), endAt:() => endAt, kitLeft:() => Object.assign({}, kitLeft), zones:() => zones.filter(z => z.until >= t), abUsed:i => !!(units[i] && units[i].abUsed), end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
+ return {step, deploy, cast, ability, reach:(c, x, y) => { const sp = spells[c]; return sp && sp.kind === 'rally' && rallyMark(x, y) ? rallyWho(x, y, sp.r).length : 0; }, queued:() => queue.filter(d => !d.skip).map(outD), endAt:() => endAt, kitLeft:() => Object.assign({}, kitLeft), zones:() => zones.filter(z => z.until >= t), abUsed:i => !!(units[i] && units[i].abUsed), end, result, frames, done:() => !!over || t > maxT, tick:() => t, units, items,
   frame:() => frames[frames.length - 1], placed:i => !!units[i] && units[i].side === 'a' && !units[i].wait};
 }
 function simRaid(R, opt){ const s = raidStart(R, opt); while (s.step()); return {result:s.result(), frames:s.frames}; }
@@ -770,6 +786,8 @@ const ITEMS = {
  smoke:{name:'Smoke', kind:'smoke', r:2.5, len:40, cost:140, store:3, line:'Their guns and people cannot see your crew inside the cloud for 4 seconds.'}
 };
 const ITEM_ORDER = ['hype', 'firstaid', 'firecracker', 'ladder', 'blackout', 'smoke'];
+// the Flag is not made or bought: every fight you bring a crew to comes with two
+const FLAG = {name:'Flag', kind:'rally', r:9, n:2, line:'Plant it on a building. Your crew within reach drops what they were doing and goes for it.'};
 function kitCap(block){ const l = lvOf(block || [], 'store'); return l ? 1 + l : 0; }          // a Corner Store holds 2 items, 3 at level 2, 4 at level 3
 function kitSize(kit){ let n = 0; for (const k of ITEM_ORDER) n += (kit && kit[k]) | 0; return n; }
 function itemOpen(block, k){ return lvOf(block || [], 'store') >= ITEMS[k].store; }
@@ -778,7 +796,8 @@ function spellsFor(kit){ const out = {}; for (const k of ITEM_ORDER) if (kit && 
 // what you bring to a fight beyond your fighters: bosses (every fight but the rescue) and the items you made
 // bosses grow with your Main House: half strength at level 1, full at level 4
 const BOSS_LV = [.5, .7, .85, 1];
-function loadout(R, load){ if (!load) return R; R.attackers = R.attackers.concat(bossUnits((load.bosses || []).filter(id => BOSSES[id] && bossOpen(id, load.hl || 4)), load.hl)); R.kit = cleanKit(load.kit); R.spells = spellsFor(R.kit); return R; }
+function loadout(R, load){ if (!load) return R; R.attackers = R.attackers.concat(bossUnits((load.bosses || []).filter(id => BOSSES[id] && bossOpen(id, load.hl || 4)), load.hl)); R.kit = cleanKit(load.kit); R.spells = spellsFor(R.kit);
+ if (load.flags !== 0){ R.kit.flag = FLAG.n; R.spells.flag = {kind:'rally', r:FLAG.r, len:0, mult:1, heal:0, dmg:0}; } return R; }
 function bossUnits(ids, hl){ const m = BOSS_LV[Math.max(1, Math.min(4, hl || 4)) - 1], out = bossOnly(ids, m);
  ids.forEach(id => { const A = BOSSES[id] && BOSSES[id].ability; if (A && A.kind === 'swarm') for (let n = 0; n < A.n; n++) out.push({type:'swarm', swarm:true, hp:Math.round(SWARM.hp * m), atk:Math.round(SWARM.atk * m * 10) / 10, speed:SWARM.speed, range:SWARM.range, prefer:'def', wallMult:1, splash:0, fly:true}); });
  return out; }
@@ -1077,6 +1096,16 @@ function autoDeploy(R, seed){ const r = rng32(seed * 7 + 3), side = AUTO_SIDES[M
   let x = x0 + dx * off, y = y0 + dy * off; if (!B.canDrop(R, x, y)){ x = x0; y = y0; } R.deploys.push({i, x, y, t}); if (a.boss) R.deploys.push({ab:1, i, t:t + (a.boss === 'enforcer' ? 70 : a.boss === 'deadeye' ? 90 : 60)});
   t += (k === 'bruiser' || k === 'heavy' || k === 'enforcer' ? 12 : 3) + Math.floor(r() * 3); }));
  return R; }
+// ---------- online (v0.7): another player's real block ----------
+// The same block a rival would meet in Test your block, in the victim's color, by day or by night (night cuts gun reach away from streetlights, as on the streets).
+function pvpRecipe(block, seed, counts, research, load, color, bonus, night){ const R = homeRecipe(block, seed, counts, research, load, color, bonus); R.mode = 'pvp';
+ if (night){ R.night = 1; const lights = block.filter(i => i.k === 'light'), lit = it => lights.some(l => Math.abs(l.x + .5 - (it.x + 1)) <= LIGHT_R && Math.abs(l.y + .5 - (it.y + 1)) <= LIGHT_R);
+  R.items.forEach(f => { if (f.role === 'tower' && !lit(f)) f.range = Math.round(f.range * NIGHT.reach * 100) / 100; }); }
+ return R; }
+// what a raid on a real block pays: it grows with the victim's Main House, and night pays less, like the streets
+function pvpLoot(res, hl, night){ const g = Math.max(1, Math.min(4, hl | 0)), st = starsFor(res), f = night ? NIGHT.loot : 1; return {cash:Math.round((500 + 450 * g) * res.pct / 100 * f) + 60 * st, sup:Math.round((320 + 300 * g) * res.pct / 100 * f)}; }
+// what the block that was hit loses: a slice of what is in its stashes, never more than 12%
+function pvpLoss(res, cash, sup){ const f = .12 * Math.max(0, Math.min(100, res.pct | 0)) / 100; return {cash:Math.floor(Math.max(0, cash | 0) * f), sup:Math.floor(Math.max(0, sup | 0) * f)}; }
 function homeStats(block, it, bonus){ return homeRecipe(block, 1, {}, {}, null, null, bonus).items.find(f => f.key === it.key) || fightItem(it); }
 function practiceRecipe(block, seed, color, bonus){ const hl = houseLv(block), A = RIVAL_ARMY[hl] || RIVAL_ARMY[1];
  const R = homeRecipe(block, seed, A.army, A.res, {bosses:BOSS_ORDER, kit:{}, hl}, color, bonus); R.mode = 'practice'; R.attColor = color === 'red' ? 'orange' : 'red'; return autoDeploy(R, seed); }
@@ -1176,9 +1205,131 @@ function dailyNow(day){ return dailyFor(day.d).map((i, slot) => { const [k, need
 return {UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
  HOME, SHOP, UNLOCKS, SIZE, START, maxLv, trainCost, upgradeCost, lotsOpen, houseLv, count, capFor, storeCap, armyCap, armySize, gymLv, payout, lootFor,
  starterBlock, fitsAt, freeSpot, reachOk, cleanBlock, raidRecipe, RESEARCH, researchMult, researchCost, researchCap, lvOf, priceCut, price, patchShare, patchedUp, repFor,
- BOSS_LV, HOUSE_STARS, houseStars, ROUNDS, roundOf, cleanRounds, canRunBack, starsNow, starsAll, restock, RANKS, rankOf, rankBonus, JOBS, JOB_TRACKS, jobCtx, jobsNow, cleanJobs, DAILY, dayKey, dailyFor, dailyPay, dayRoll, dailyNow,
+ BOSS_LV, FLAG, pvpRecipe, pvpLoot, pvpLoss, HOUSE_STARS, houseStars, ROUNDS, roundOf, cleanRounds, canRunBack, starsNow, starsAll, restock, RANKS, rankOf, rankBonus, JOBS, JOB_TRACKS, jobCtx, jobsNow, cleanJobs, DAILY, dayKey, dailyFor, dailyPay, dayRoll, dailyNow,
  CAMP, CAMP_POWER, NIGHT, BOSS_DEF, LIGHT_R, campBlock, fenceName, FENCE_HP, HOME_CREW, HOME_POWER, homeDefenders, homeRecipe, homeStats, practiceRecipe, RIVAL_ARMY, autoDeploy, sampleHome,
  BOSSES, BOSS_ORDER, bossOpen, bossesFor, SWARM, SKILLS, SKILL_LV, hasSkill, PARTY, PARTY_ORDER, cleanParty, partyCost, partyOpen, blockBonuses, ITEMS, ITEM_ORDER, kitCap, kitSize, itemOpen, cleanKit, spellsFor, loadout, campRecipe, campPool, campLoot, campOpen, cleanCamp, campPower};
+})();
+
+
+// Turf online (v0.7). No Firebase SDK: plain web requests to Firebase's sign-in and Firestore APIs, so the game stays one small file.
+// Two collections, matching the published rules: players/{uid} (one record per player, written only by its owner) and feed/{id} (attacks, written once).
+// Nothing that arrives from another player is trusted: blocks, names and attack records are all cleaned before use.
+const NET = (() => {
+const T = typeof TURF !== 'undefined' ? TURF : require('./engine.js'), B = typeof BASE !== 'undefined' ? BASE : require('./base.js');
+// Firebase web config for project turf-31d95. This is safe to ship: the Firestore rules are what protect the data.
+const FIREBASE_CONFIG = {apiKey:'AIzaSyC6Y5Mwug0z2OgGLKdrc4RsY2w7CazTBNc', authDomain:'turf-31d95.firebaseapp.com', projectId:'turf-31d95', storageBucket:'turf-31d95.firebasestorage.app', messagingSenderId:'905348511500', appId:'1:905348511500:web:b1f8921eb3fc3f31f93b29'};
+const AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_CONFIG.apiKey, TOKEN_URL = 'https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_CONFIG.apiKey;
+const DB = 'projects/' + FIREBASE_CONFIG.projectId + '/databases/(default)/documents', FS_URL = 'https://firestore.googleapis.com/v1/' + DB;
+// players can only fight each other when their phones run the same fight rules; bump the last number when a rule changes what a replay does
+const FIGHT_VER = 's' + B.SIM_VER + 'd' + B.DEPLOY_VER + 'r2';
+
+// ---------- blocks as short text: 5 characters a building (kind, kind, x, y, level) ----------
+// PACK is append-only: a kind keeps its number for good, so an old phone can still read a new block's older buildings.
+const PACK = ['house', 'hustle', 'run', 'stash', 'supstash', 'gym', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof', 'rocket', 'jammer', 'window', 'blower', 'popup', 'light', 'nail', 'manhole', 'closet', 'kite', 'fence'];
+const b36 = n => Math.max(0, Math.min(35, n | 0)).toString(36);
+function packBlock(block){ let s = ''; for (const i of (block || [])){ const k = PACK.indexOf(i.k); if (k < 0) continue; s += (k < 36 ? '0' : '') + k.toString(36) + b36(i.x) + b36(i.y) + b36(i.lv || 1); } return s; }
+function unpackBlock(s){ if (typeof s !== 'string' || s.length % 5 || s.length > 4000 || !/^[0-9a-z]*$/.test(s)) return null; const list = [];
+ for (let p = 0; p < s.length; p += 5){ const k = PACK[parseInt(s.slice(p, p + 2), 36)]; if (!k) continue; list.push({key:'p' + (p / 5), k, x:parseInt(s[p + 2], 36), y:parseInt(s[p + 3], 36), lv:parseInt(s[p + 4], 36)}); }
+ return T.cleanBlock(list); }
+
+// ---------- cleaning what other players send ----------
+const COLORS = ['lav', 'gold', 'green', 'blue', 'red', 'orange', 'teal'];
+const str = (v, n) => typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, n) : '';
+const int = (v, lo, hi) => { const n = Math.floor(+v); return n >= lo ? Math.min(hi, n) : lo; };   // clamped; anything that is not a number becomes the low end
+function cleanName(v){ return str(v, 20) || 'Somebody'; }
+function cleanCode(v){ return typeof v === 'string' ? v.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) : ''; }
+function cleanColor(v){ return COLORS.indexOf(v) >= 0 ? v : 'lav'; }
+function cleanParty(p){ return T.cleanParty(p && typeof p === 'object' ? p : {}); }
+// a player record as it comes back from the server -> what the game uses, or null if it is no use (no block, another fight version)
+function cleanPlayer(uid, d){ if (!d || typeof d !== 'object') return null; let extra = {}; try { extra = JSON.parse(typeof d.extra === 'string' && d.extra.length <= 2000 ? d.extra : '{}') || {}; } catch (e){ extra = {}; }
+ const block = unpackBlock(d.block), hl = block ? T.houseLv(block) : int(d.hl, 1, 4);
+ return {uid:str(uid, 40), name:cleanName(d.name), color:cleanColor(d.color), crew:cleanCode(d.crew), rep:int(d.rep, 0, 10000000), hl, block, ver:str(d.ver, 12), party:cleanParty(extra.party), stars:int(extra.stars, 0, 360), at:+d.at || 0, same:str(d.ver, 12) === FIGHT_VER}; }
+
+// ---------- an attack, small enough to post (under 6,500 characters) ----------
+// The block that was fought goes with it, so the replay is the fight the attacker had even if the block has changed since.
+const r4 = v => Math.round(+v * 1e4) / 1e4;
+function makePayload(R, res, meta){
+ const counts = {}, bosses = []; R.attackers.forEach(a => { if (a.swarm) return; if (a.boss) bosses.push(a.boss); else counts[a.type] = (counts[a.type] | 0) + 1; });
+ const kit = Object.assign({}, R.kit); delete kit.flag;
+ const d = (res.deploys || []).map(x => x.c ? ['c', x.c, r4(x.x), r4(x.y), x.t | 0] : x.ab ? ['a', x.i | 0, x.t | 0] : [x.i | 0, r4(x.x), r4(x.y), x.t | 0]);
+ const p = {v:1, n:meta.name, col:meta.color, b:meta.block, pb:meta.party || {}, vc:meta.victimColor, a:counts, r:meta.research || {}, bo:bosses, k:kit, hl:meta.hl | 0, s:R.seed >>> 0, ni:R.night ? 1 : 0, d, e:res.endAt | 0, st:T.starsFor(res), pc:res.pct | 0, h:res.hash};
+ const s = JSON.stringify(p); return s.length <= 6500 ? s : null; }
+function cleanPayload(s){ if (typeof s !== 'string' || s.length > 6500) return null; let p; try { p = JSON.parse(s); } catch (e){ return null; }
+ if (!p || typeof p !== 'object' || p.v !== 1 || !Array.isArray(p.d) || p.d.length > 260) return null;
+ const block = unpackBlock(p.b); if (!block) return null;
+ const counts = {}; let size = 0; for (const k of T.ORDER){ const n = int(p.a && Object.prototype.hasOwnProperty.call(p.a, k) ? p.a[k] : 0, 0, 999); if (n > 80) return null; if (n){ counts[k] = n; size += n * T.SIZE[k]; } }
+ const research = {}; for (const k of T.ORDER){ const n = int(p.r && Object.prototype.hasOwnProperty.call(p.r, k) ? p.r[k] : 1, 1, T.RESEARCH.max); if (n > 1) research[k] = n; }
+ const hl = int(p.hl, 1, 4); if (size > T.capFor('pad', hl) * (14 + 6 * T.maxLv('pad'))) return null;   // more beds than that Main House level can ever have
+ const bosses = (Array.isArray(p.bo) ? p.bo : []).filter((id, i, a) => typeof id === 'string' && T.BOSSES[id] && T.bossOpen(id, hl) && a.indexOf(id) === i).slice(0, T.BOSS_ORDER.length);
+ const kit = T.cleanKit(p.k && typeof p.k === 'object' ? p.k : {}); let nk = 0; for (const k in kit){ if (!T.ITEMS[k] || T.ITEMS[k].store > T.capFor('store', hl) * T.maxLv('store')) return null; nk += kit[k]; } if (nk > (T.capFor('store', hl) ? 1 + T.maxLv('store') : 0)) return null;   // more items than a Corner Store at that level could hold
+ const fin = v => typeof v === 'number' && isFinite(v), deploys = [];
+ for (const x of p.d){ if (!Array.isArray(x)) return null;
+  if (x[0] === 'c'){ if (typeof x[1] !== 'string' || !(x[1] === 'flag' || T.ITEMS[x[1]]) || !fin(x[2]) || !fin(x[3]) || !fin(x[4])) return null; deploys.push({c:x[1], x:r4(x[2]), y:r4(x[3]), t:int(x[4], 1, 2000)}); }
+  else if (x[0] === 'a'){ if (!fin(x[1]) || !fin(x[2])) return null; deploys.push({ab:1, i:int(x[1], 0, 400), t:int(x[2], 1, 2000)}); }
+  else { if (!x.every(fin) || x.length !== 4) return null; deploys.push({i:int(x[0], 0, 400), x:r4(x[1]), y:r4(x[2]), t:int(x[3], 1, 2000)}); } }
+ return {name:cleanName(p.n), color:cleanColor(p.col), victimColor:cleanColor(p.vc), block, party:cleanParty(p.pb), counts, research, bosses, kit, hl, seed:(+p.s >>> 0), night:p.ni ? 1 : 0, deploys, endAt:int(p.e, 0, 2000), stars:int(p.st, 0, 3), pct:int(p.pc, 0, 100)}; }
+// the fight a cleaned attack describes, ready to run or watch
+// null when a fighter is dropped somewhere the game would not have allowed, or nobody from the crew went in at all
+function payloadRecipe(c){ const bo = {gun:1 + .06 * (c.party.watch | 0), crew:1 + .1 * (c.party.cookout | 0), bld:1 + .08 * (c.party.mural | 0), party:c.party};
+ const R = T.pvpRecipe(c.block, c.seed, c.counts, c.research, {bosses:c.bosses, kit:c.kit, hl:c.hl}, c.victimColor, bo, c.night); R.attColor = c.color; R.deploys = c.deploys; R.endAt = c.endAt;
+ let crew = 0; for (const d of c.deploys){ if (d.c || d.ab) continue; const a = R.attackers[d.i]; if (!a || !B.canDrop(R, d.x, d.y)) return null; if (!a.boss && !a.swarm) crew++; }
+ return crew ? R : null; }
+
+// ---------- the wire ----------
+let fetchFn = typeof fetch !== 'undefined' ? (u, o) => fetch(u, o) : null, store = null, sess = null;
+function setup(o){ if (o.fetch) fetchFn = o.fetch; if (o.store) store = o.store; sess = null; }
+const KEY = 'turf.net.v1';
+function loadSess(){ if (sess) return sess; try { const s = JSON.parse((store || localStorage).getItem(KEY) || 'null'); if (s && typeof s.uid === 'string' && typeof s.rt === 'string') sess = {uid:s.uid, rt:s.rt, it:'', exp:0}; } catch (e){} return sess; }
+function saveSess(){ try { (store || localStorage).setItem(KEY, JSON.stringify({uid:sess.uid, rt:sess.rt})); } catch (e){} }
+async function call(url, opt){ let r; try { r = await fetchFn(url, opt); } catch (e){ throw new Error('offline'); }
+ let j = null; try { j = await r.json(); } catch (e){}
+ if (!r.ok){ const er = j && (j.error || (Array.isArray(j) && j[0] && j[0].error)), m = er ? [er.status, er.message].filter(Boolean).join(': ') : 'http ' + r.status; const err = new Error(String(m)); err.code = r.status; throw err; }
+ return j; }
+// sign in without asking anything: the first time makes an anonymous account; after that its refresh token gets a fresh pass
+let tokenWait = null;
+function token(force){ if (!tokenWait) tokenWait = token1(force).finally(() => { tokenWait = null; }); return tokenWait; }   // one sign-in at a time, so two quick taps cannot make two accounts
+async function token1(force){ loadSess(); const now = Date.now();
+ if (sess && sess.it && sess.exp > now + 60000 && !force) return sess.it;
+ if (sess){ try { const j = await call(TOKEN_URL, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'grant_type=refresh_token&refresh_token=' + encodeURIComponent(sess.rt)});
+   sess = {uid:j.user_id || sess.uid, rt:j.refresh_token || sess.rt, it:j.id_token, exp:now + (+j.expires_in || 3600) * 1000}; saveSess(); return sess.it; }
+  catch (e){ if (!/USER_NOT_FOUND|TOKEN_EXPIRED|INVALID_REFRESH_TOKEN|USER_DISABLED/.test(e.message)) throw e; sess = null; } }   // an account the server no longer knows: start a new one
+ const j = await call(AUTH_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({returnSecureToken:true})});
+ sess = {uid:j.localId, rt:j.refreshToken, it:j.idToken, exp:now + (+j.expiresIn || 3600) * 1000}; saveSess(); return sess.it; }
+async function authed(url, method, body){ for (let n = 0; n < 2; n++){ const tk = await token(n > 0);
+  try { return await call(url, {method, headers:{'Content-Type':'application/json', Authorization:'Bearer ' + tk}, body:body ? JSON.stringify(body) : undefined}); }
+  catch (e){ if (n === 0 && e.code === 401) continue; throw e; } } }
+const enc = o => { const f = {}; for (const k in o){ const v = o[k]; f[k] = typeof v === 'number' ? {integerValue:String(Math.floor(v))} : {stringValue:String(v)}; } return f; };
+const dec = doc => { const o = {}, f = doc.fields || {}; for (const k in f){ const v = f[k]; o[k] = v.stringValue !== undefined ? v.stringValue : v.integerValue !== undefined ? +v.integerValue : v.doubleValue !== undefined ? +v.doubleValue : v.timestampValue !== undefined ? Date.parse(v.timestampValue) : null; } o.id = String(doc.name || '').split('/').pop(); return o; };
+// write a whole record; the server stamps `at` with its own clock (the rules insist on it)
+function put(path, fields, fresh){ const w = {update:{name:DB + '/' + path, fields:enc(fields)}, updateTransforms:[{fieldPath:'at', setToServerValue:'REQUEST_TIME'}]}; if (fresh) w.currentDocument = {exists:false};
+ return authed(FS_URL + ':commit', 'POST', {writes:[w]}); }
+async function where(coll, field, value, limit){ const q = {structuredQuery:{from:[{collectionId:coll}], where:{fieldFilter:{field:{fieldPath:field}, op:'EQUAL', value:{stringValue:value}}}, limit:limit || 50}};
+ const rows = await authed(FS_URL + ':runQuery', 'POST', q); return (Array.isArray(rows) ? rows : []).filter(r => r && r.document).map(r => dec(r.document)); }
+function drop(path){ return authed(FS_URL + '/' + path, 'DELETE'); }
+const rid = () => { let s = ''; const A = 'abcdefghijklmnopqrstuvwxyz0123456789'; for (let i = 0; i < 20; i++) s += A[Math.floor(Math.random() * 36)]; return s; };
+
+// ---------- what the game asks for ----------
+async function uid(){ await token(); return sess.uid; }
+// share my record: {name, color, crew, block (a real block), rep, party, stars}
+async function share(me){ const id = await uid(), block = packBlock(me.block); if (block.length > 4000) throw new Error('block too big');
+ await put('players/' + id, {name:cleanName(me.name), color:cleanColor(me.color), crew:cleanCode(me.crew), block, rep:int(me.rep, 0, 10000000), hl:int(T.houseLv(me.block), 1, 4), ver:FIGHT_VER, extra:JSON.stringify({party:cleanParty(me.party), stars:int(me.stars, 0, 360)})}); return id; }
+async function crew(code){ const id = await uid(), rows = await where('players', 'crew', cleanCode(code), 60); return rows.map(d => cleanPlayer(d.id, d)).filter(p => p && p.crew === cleanCode(code)).map(p => Object.assign(p, {me:p.uid === id})); }
+async function postRaid(to, code, payload, docId){ if (!payload) throw new Error('fight too long to send'); const id = await uid(); await put('feed/' + (/^[a-z0-9]{20}$/.test(docId || '') ? docId : rid()), {uid:id, to:str(to, 40), crew:cleanCode(code), kind:'raid', recipe:payload, ver:FIGHT_VER}, true); }
+// attacks on me, oldest first: [{id, from, at, ver, raid}] where raid is a cleaned attack or null
+async function inbox(){ const id = await uid(), rows = await where('feed', 'to', id, 30);
+ rows.filter(d => d.kind !== 'raid').forEach(d => clearRaid(d.id));   // anything else in my inbox is junk: clear it so it cannot crowd out real attacks
+ return rows.filter(d => d.kind === 'raid').sort((a, b) => (a.at || 0) - (b.at || 0)).map(d => ({id:str(d.id, 40), from:str(d.uid, 40), at:+d.at || 0, same:d.ver === FIGHT_VER, raid:d.ver === FIGHT_VER ? cleanPayload(d.recipe) : null})); }
+function clearRaid(id){ return drop('feed/' + str(id, 40)).catch(() => null); }
+async function leave(){ const id = await uid(); await drop('players/' + id); }
+// a plain sentence for whatever went wrong, so a player can read it out to whoever is helping
+function why(e){ const m = String(e && e.message || e);
+ if (m === 'offline') return 'No connection right now.';
+ if (/API key|API_KEY|referer|has not been used|is disabled|SERVICE_DISABLED|blocked/i.test(m)) return 'The server did not accept this copy of the game. Tell Mot: ' + m.slice(0, 110);
+ if (/PERMISSION_DENIED/.test(m)) return 'The server said no (PERMISSION_DENIED). Tell Mot: the database rules need a look.';
+ if (/OPERATION_NOT_ALLOWED|ADMIN_ONLY_OPERATION/.test(m)) return 'Sign-in is switched off on the server. Tell Mot: turn on Anonymous sign-in.';
+ if (/RESOURCE_EXHAUSTED|QUOTA/i.test(m)) return 'The server is over its free limit for today. Try again tomorrow.';
+ return 'Online hit a snag: ' + m.slice(0, 90); }
+return {FIREBASE_CONFIG, FIGHT_VER, PACK, packBlock, unpackBlock, cleanName, cleanCode, cleanColor, cleanPlayer, makePayload, cleanPayload, payloadRecipe, newId:rid, setup, uid, share, crew, postRaid, inbox, clearRaid, leave, why, signedIn:() => !!loadSess()};
 })();
 
 
@@ -2364,14 +2515,14 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.6.0', BUILD_DATE = 'Nov 23 2026';
+const VER = '0.7.2', BUILD_DATE = 'Nov 24 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
 'use strict';
 const B = BASE, T = TURF, $ = id => document.getElementById(id);
 const SAVE_KEY = 'turf.save.v1';
-const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0};
+const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0, name:'', crewCode:'', hitAt:{}, shared:[], outbox:[], seenRaids:[], pvpDay:null};
 const GANG_PICK = ['lav', 'teal', 'red', 'green', 'orange', 'blue'];   // gold belongs to the Boombox Kings
 
 // ---------- save (guarded: a phone that blocks storage still plays, it just forgets) ----------
@@ -2380,6 +2531,12 @@ function loadSave(){
  let raw = null; try { raw = localStorage.getItem(SAVE_KEY); } catch (e){}
  let s = {}; try { s = raw ? JSON.parse(raw) || {} : (memSave || {}); } catch (e){ s = {}; }
  const out = Object.assign(JSON.parse(JSON.stringify(DEFAULT_SAVE)), s);
+ out.name = typeof s.name === 'string' ? s.name.replace(/[\u0000-\u001f<>]/g, '').slice(0, 20) : ''; out.crewCode = typeof s.crewCode === 'string' ? s.crewCode.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) : '';
+ { const h = {}; if (s.hitAt && typeof s.hitAt === 'object') for (const k of Object.keys(s.hitAt).slice(0, 80)) if (+s.hitAt[k] > 0) h[String(k).slice(0, 40)] = +s.hitAt[k]; out.hitAt = h; }
+ out.shared = (Array.isArray(s.shared) ? s.shared : []).filter(x => typeof x === 'string' && x.length <= 4000).slice(0, 3);
+ out.outbox = (Array.isArray(s.outbox) ? s.outbox : []).filter(o => o && typeof o.to === 'string' && typeof o.pay === 'string' && o.pay.length <= 6500).map(o => ({to:o.to.slice(0, 40), pay:o.pay, id:typeof o.id === 'string' ? o.id.slice(0, 20) : ''})).slice(-5);
+ { const pd = s.pvpDay; out.pvpDay = pd && typeof pd === 'object' && typeof pd.d === 'string' ? {d:pd.d.slice(0, 10), paid:Math.max(0, pd.paid | 0), hits:Math.max(0, pd.hits | 0), held:Math.max(0, pd.held | 0)} : null; }
+ out.seenRaids = (Array.isArray(s.seenRaids) ? s.seenRaids : []).filter(x => typeof x === 'string').slice(0, 60);
  out.rankPaid = Math.max(0, Math.min(T.RANKS.length - 1, out.rankPaid | 0));
  out.guide = typeof s.guide === 'number' && (s.guide === 99 || (s.guide >= 0 && s.guide <= 5)) ? s.guide | 0 : (s.block ? 99 : 0);
  const okRep = r => r && r.recipe && ['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r.recipe[k])) && (r.recipe.mode !== 'camp' || (Array.isArray(r.recipe.camp) && T.CREWS[r.recipe.camp[0]] && r.recipe.camp[1] >= 0 && r.recipe.camp[1] < T.CAMP.blocks));
@@ -2593,8 +2750,8 @@ function meta(Rx){ const u = {}, base = (Rx.seed % 99991) * 37, AC = Rx.attColor
  const it = Rx.items.map(b => { const p = PARTS.find(q => q.key === b.key); return {key:b.key, x:b.x, y:b.y, fw:b.fw, fh:b.fh, top:p ? p.top : 1, max:b.role === 'wall' ? 0 : b.hp}; }); return {u, it}; }
 // the bar: your fighters, then bosses, then items. A boss on the block turns its card into its ability button.
 // keys: a fighter kind ('brawler'), a boss ('b:enforcer') or an item ('i:hype')
-const BAR_ORDER = () => T.ORDER.concat(T.BOSS_ORDER.map(k => 'b:' + k), T.ITEM_ORDER.map(k => 'i:' + k));
-function barName(k){ return k[1] === ':' ? (k[0] === 'b' ? T.BOSSES[k.slice(2)].name.replace(/^The /, '') : T.ITEMS[k.slice(2)].name) : T.UNITS[k].name; }
+const BAR_ORDER = () => T.ORDER.concat(T.BOSS_ORDER.map(k => 'b:' + k), ['i:flag'], T.ITEM_ORDER.map(k => 'i:' + k));
+function barName(k){ return k[1] === ':' ? (k[0] === 'b' ? T.BOSSES[k.slice(2)].name.replace(/^The /, '') : k === 'i:flag' ? T.FLAG.name : T.ITEMS[k.slice(2)].name) : T.UNITS[k].name; }
 function bossIndex(id){ return R ? R.attackers.findIndex(a => a.boss === id) : -1; }
 function buildBar(){
  const bar = $('bar'); bar.innerHTML = '';
@@ -2611,7 +2768,7 @@ function barTap(k){
    else if (R.attackers[i].ability.kind === 'bounce' && sim.units[i] && sim.units[i].alive) toast('No guns in reach yet');
    else { abUsed[i] = 1; refreshBar(); }
    return; } }
- if (!counts[k]) return; sel = k; refreshBar(); }
+ if (!counts[k]) return; sel = k; refreshBar(); if (k === 'i:flag') toast('Flag: tap one of their buildings. Your crew within reach goes for it.', 2600); }
 function refreshBar(){ $('bar').querySelectorAll('.troop').forEach(b => { const k = b.dataset.k, boss = k[0] === 'b' && k[1] === ':', i = boss ? bossIndex(k.slice(2)) : -1, onField = boss && i >= 0 && (queued[i] || sim.placed(i));
   b.classList.toggle('sel', k === sel); b.classList.toggle('out', onField ? !!abUsed[i] || (sim.units[i] && !sim.units[i].alive) : !counts[k]); b.classList.toggle('ready', onField && !abUsed[i] && !(sim.units[i] && !sim.units[i].alive));
   b.querySelector('.n').textContent = onField ? '' : 'x' + counts[k]; b.querySelector('.nm').textContent = onField ? T.BOSSES[k.slice(2)].abName : barName(k); });
@@ -2620,20 +2777,21 @@ let barShown = null;
 // after a drop: the next fighter, then a boss still waiting; never an item (those are only picked by hand)
 function nextSel(){ return T.ORDER.find(k => counts[k]) || T.BOSS_ORDER.map(k => 'b:' + k).find(k => counts[k]) || null; }
 // item cards get a flat badge: a ring in the item's color with a one-letter mark (no emoji, no stock icons)
-const ITEM_LOOK = {hype:['#f0c64a', 'H'], firstaid:['#5fc27a', '+'], firecracker:['#e2603a', 'F'], ladder:['#c99b5a', 'L'], blackout:['#7d8fb8', 'B'], smoke:['#b8bcc4', 'S']};
+const ITEM_LOOK = {flag:['#f2a23a', 'F'], hype:['#f0c64a', 'H'], firstaid:['#5fc27a', '+'], firecracker:['#e2603a', 'F'], ladder:['#c99b5a', 'L'], blackout:['#7d8fb8', 'B'], smoke:['#b8bcc4', 'S']};
 function itemIcon(k){ const cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1), px = Math.round(74 * d); cv.width = cv.height = px; cv.style.width = cv.style.height = '74px';
- const c = cv.getContext('2d'), L = ITEM_LOOK[k]; c.scale(d, d); c.strokeStyle = L[0]; c.lineWidth = 5; c.setLineDash([7, 4]); c.beginPath(); c.arc(37, 40, 24, 0, 7); c.stroke();
+ const c = cv.getContext('2d'), L = ITEM_LOOK[k]; c.scale(d, d);
+ if (k === 'flag'){ c.fillStyle = '#d9d4c8'; c.fillRect(24, 14, 4, 50); c.fillStyle = '#f2a23a'; c.beginPath(); c.moveTo(28, 15); c.lineTo(58, 25); c.lineTo(28, 36); c.closePath(); c.fill(); c.fillStyle = '#3a3d44'; c.beginPath(); c.ellipse(26, 64, 12, 4, 0, 0, 7); c.fill(); return cv; } c.strokeStyle = L[0]; c.lineWidth = 5; c.setLineDash([7, 4]); c.beginPath(); c.arc(37, 40, 24, 0, 7); c.stroke();
  c.setLineDash([]); c.fillStyle = L[0]; c.font = '800 26px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(L[1], 37, 41); return cv; }
 // rings on the ground while an item or ability is working (live and in replays): [{x, y, r, t0, t1, m, follow}]
 let rings = [], abUsed = {};
 function pushRing(r){ rings.push(r); if (gl3d) VIL.rings(rings); }
-const RING_M = {rage:9, heal:33, strike:9, jump:9, off:13, smoke:13};
-function ringsOf(Rx){ const out = []; (Rx.deploys || []).forEach(d => { if (d.c && Rx.spells && Rx.spells[d.c]){ const sp = Rx.spells[d.c]; out.push({x:d.x, y:d.y, r:sp.r, t0:d.t, t1:d.t + (sp.len || 8), m:RING_M[sp.kind] || 9}); }
+const RING_M = {rage:9, heal:33, strike:9, jump:9, off:13, smoke:13, rally:33};
+function ringsOf(Rx){ const out = []; (Rx.deploys || []).forEach(d => { if (d.c && Rx.spells && Rx.spells[d.c]){ const sp = Rx.spells[d.c]; out.push({x:d.x, y:d.y, r:sp.r, t0:d.t, t1:d.t + (sp.len || 8), m:RING_M[sp.kind] || 9}); if (sp.kind === 'rally') out.push({x:d.x, y:d.y, r:.9, t0:d.t, t1:d.t + 60, m:33}); }
   if (d.ab){ const A = Rx.attackers[d.i] && Rx.attackers[d.i].ability; if (A && (A.kind === 'slam' || A.kind === 'hold')) out.push({x:0, y:0, r:A.r, t0:d.t, t1:d.t + (A.kind === 'slam' ? 10 : A.len), m:A.kind === 'slam' ? 9 : 12, follow:d.i}); } }); return out; }
 // the block a fight is on, rebuilt from its recipe (so Watch shows the block exactly as it was fought)
 function blockOf(Rx){ return Rx.items.map(b => ({key:b.key, k:b.k, x:b.x, y:b.y, lv:b.lv || 1})); }
 // street fights are day or night by your pick; everything else follows the phone's clock
-function lightFor(Rx){ if (gl3d) VIL.setHour(Rx && Rx.mode === 'camp' ? (Rx.night ? 22.5 : 13) : null); }
+function lightFor(Rx){ if (gl3d) VIL.setHour(Rx && (Rx.mode === 'camp' || Rx.mode === 'pvp') ? (Rx.night ? 22.5 : 13) : null); }
 function startAttack(recipe){
  R = recipe; setBlock(blockOf(R), R.mode === 'practice' ? 'own' : 'enemy', R.crewColor); vicOn = R.mode === 'rescue'; lightFor(R); if (gl3d) VIL.edit(null);
  sim = B.raidStart(R, {record:true}); finished = false; coreAt = 0; queued = {}; acc = 0; lastT = 0; viceroyFree = false; lastDown = 'x';
@@ -2675,9 +2833,11 @@ function onGround(x, y){
  if (!sel || !counts[sel]){ $('bar').classList.remove('nudge'); void $('bar').offsetWidth; $('bar').classList.add('nudge'); toast('Pick a troop first'); return; }
  if (sel[0] === 'i' && sel[1] === ':'){ const c = sel.slice(2), sp = R.spells[c];   // items land anywhere on the block
   if (!(x >= 0 && y >= 0 && x < B.W && y < B.H)){ toast('Tap on the block itself'); return; }
+  if (sp.kind === 'rally' && !sim.reach(c, x, y)){ toast('Nobody is close enough to hear that. Plant it nearer your crew.'); return; }
   if (!sim.cast(c, x, y)) return; pushRing({x, y, r:sp.r, t0:sim.tick(), t1:sim.tick() + (sp.len || 8), m:RING_M[sp.kind] || 9});
+  if (sp.kind === 'rally'){ pushRing({x, y, r:.9, t0:sim.tick(), t1:sim.tick() + 60, m:33}); toast('Flag planted. Your crew in the ring is going for it.'); }
   counts[sel]--; if (!counts[sel]) sel = nextSel(); refreshBar(); $('tip').style.opacity = 0; savePending(true); return; }
- if (!B.canDrop(R, x, y)){ if (gl3d) VIL.flashZone(zone); else FB.flash(zone); toast('Too close to their block. Drop on the street.'); return; }
+ if (!B.canDrop(R, x, y)){ if (gl3d) VIL.flashZone(zone); else FB.flash(zone); toast(counts['i:flag'] && R.attackers.some((a, j) => sim.placed(j)) ? 'New fighters go in from the street. To steer the ones already in, use the Flag card.' : 'Too close to their block. Drop on the street.', 2600); return; }
  const boss = sel[0] === 'b' && sel[1] === ':' ? sel.slice(2) : null;
  const i = R.attackers.findIndex((a, j) => (boss ? a.boss === boss : a.type === sel && !a.boss) && !queued[j] && !sim.placed(j));
  if (i < 0 || !sim.deploy(i, x, y)) return;
@@ -2697,15 +2857,16 @@ function settle(Rx, res){
  const stars = noCrew ? 0 : T.starsFor(res), won = Rx.mode === 'rescue' ? res.coreDown : stars > 0;
  lastReport = T.reportFrom(Rx, res); lastReport.at = Date.now(); if (noCrew){ lastReport.stars = 0; lastReport.noCrew = true; }
  save.tries++; save.best = Math.max(save.best, stars); if (won && Rx.mode === 'rescue') save.rescued = true;
- if ((Rx.mode === 'raid' || Rx.mode === 'camp') && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
+ if ((Rx.mode === 'raid' || Rx.mode === 'camp' || Rx.mode === 'pvp') && save.block){   // the people you sent in are spent, the rest come home; loot and the corners pay out
   const sent = new Set((res.deploys || []).filter(d => !d.c && !d.ab).map(d => d.i)), spent = {};
   let walked = 0;   // whoever is still standing at the end walks home; only the ones who fell are gone
-  Rx.attackers.forEach((a, j) => { if (a.boss || a.swarm || !sent.has(j)) return; if (Rx.mode === 'camp' && res.attHp && res.attHp[j] > 0){ walked++; return; } save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
+  Rx.attackers.forEach((a, j) => { if (a.boss || a.swarm || !sent.has(j)) return; if (Rx.mode !== 'raid' && res.attHp && res.attHp[j] > 0){ walked++; return; } save.army[a.type] = Math.max(0, (save.army[a.type] | 0) - 1); spent[a.type] = (spent[a.type] || 0) + 1; });
   (res.deploys || []).forEach(d => { if (d.c && save.kit[d.c] > 0){ save.kit[d.c]--; if (!save.kit[d.c]) delete save.kit[d.c]; } });   // items used are gone
   const back = T.patchedUp(save.block, spent); let nb = 0;   // the pharmacy patches some of them up: they come home, beds allowing
   for (const k of T.ORDER) for (let n = 0; n < back[k]; n++) if (T.armySize(save.army) + T.SIZE[k] <= T.armyCap(save.block)){ save.army[k]++; nb++; }
   const landed = (res.deploys || []).some(d => !d.c && !d.ab && Rx.attackers[d.i] && !Rx.attackers[d.i].boss);   // no fighter went in (End pressed at once, or bosses alone): nothing is paid
-  let loot = landed ? T.lootFor(res, save.block) : {cash:0, sup:0};
+  const pvpPaid = Rx.mode !== 'pvp' || pvpDay().paid < PVP_DAY.paid; if (Rx.mode === 'pvp' && landed && pvpPaid) pvpDay().paid++; if (Rx.mode === 'pvp' && !pvpPaid) lastReport.unpaid = true;   // online hits pay 8 times a day
+  let loot = !landed || !pvpPaid ? {cash:0, sup:0} : Rx.mode === 'pvp' ? T.pvpLoot(res, Rx.pvp.hl, Rx.night) : T.lootFor(res, save.block);
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};   // you take your share of what is left on that block
    loot = landed ? T.campLoot(res, Rx.camp[0], Rx.camp[1], was.t, Rx.night, Rx.round) : {cash:0, sup:0}; }
   const got = addRes(loot.cash, loot.sup);   // what fit in your stashes; a block only loses what you actually carried home
@@ -2713,13 +2874,14 @@ function settle(Rx, res){
    save.camp[key] = {s:Math.max(was.s, landed ? stars : 0), t:[was.t[0] + got.cash, was.t[1] + got.sup]}; lastReport.firstTake = !was.s && stars > 0; }
   const real = landed && (stars > 0 || res.pct >= 25);   // a fight counts toward payouts, restocking and jobs only if it did real damage
   const p = real ? T.payout(save.block) : {cash:0, sup:0}, pg = addRes(p.cash, p.sup); lastReport.gain = {cash:got.cash + pg.cash, sup:got.sup + pg.sup};
-  const rank0 = T.rankOf(save.rep), rp = landed ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; lastReport.gain.walked = walked;
+  const rank0 = T.rankOf(save.rep), rp = landed && pvpPaid ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; lastReport.gain.walked = walked;
   if (real){ const key = Rx.mode === 'camp' ? Rx.camp[0] + '-' + Rx.camp[1] : ''; T.restock(save.camp, key);   // the other blocks fill back up a little
    const st = save.stats, d = dayNow(), moves = (res.deploys || []).filter(x => x.ab).length; st.fights++; st.moves += moves; if (Rx.night && stars > 0) st.nights++;
    const n = d.n, add = (k, v) => n[k] = (n[k] | 0) + v; add('fights', 1); add('stars', stars); add('pct', res.pct); add('moves', moves); add('home', walked); if (stars === 3) add('three', 1);
    if (Rx.mode === 'raid') add('corner', 1); if (Rx.mode === 'camp' && stars > 0){ add('wins', 1); if (Rx.night) add('night', 1); } }
   const rank1 = T.rankOf(save.rep); if (rank1 > rank0) lastReport.rankUp = {name:T.RANKS[rank1][1]}; }   // the bonus is collected in Jobs, so a full stash never eats it
  save.reports.unshift(lastReport); save.reports = save.reports.slice(0, 30); saveGame(); clearPending();
+ if (Rx.mode === 'pvp' && Rx.pvp && !noCrew) postPvp(Rx, res);
  return {stars, won};
 }
 // a fight in progress is saved every 2 seconds; if the app closes, the next start plays it out from there and counts it once
@@ -2733,24 +2895,24 @@ let memPend = null;
 function loadPending(){ let raw = null; try { raw = localStorage.getItem(PEND_KEY); } catch (e){} let p = null; try { p = raw ? JSON.parse(raw) : memPend; } catch (e){ p = null; } return p; }
 function clearPending(){ memPend = null; try { localStorage.removeItem(PEND_KEY); } catch (e){} }
 function cleanPending(p){ if (!p || typeof p !== 'object' || !p.recipe) return null; const r = p.recipe; if (p.simVer !== B.SIM_VER || p.deployVer !== B.DEPLOY_VER) return null;
- if (!['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r[k])) || (r.mode !== 'raid' && r.mode !== 'camp')) return null;
+ if (!['items', 'attackers', 'defenders', 'deploys'].every(k => Array.isArray(r[k])) || (r.mode !== 'raid' && r.mode !== 'camp' && !(r.mode === 'pvp' && r.pvp && typeof r.pvp.uid === 'string' && typeof r.pvp.packed === 'string'))) return null;
  if (r.mode === 'camp' && !(Array.isArray(r.camp) && r.camp[0] >= 0 && r.camp[0] < T.CAMP.crews && r.camp[1] >= 0 && r.camp[1] < T.CAMP.blocks)) return null;
  return {at:+p.at || 0, recipe:r}; }
 function settlePending(){ const p = cleanPending(loadPending()); clearPending(); if (!p) return null;
  try { const res = B.simRaid(JSON.parse(JSON.stringify(p.recipe))).result; return settle(p.recipe, res); } catch (e){ return null; } }
 function showResult(res, stars, won){
- const mode = lastReport && lastReport.recipe.mode, camp = mode === 'camp', raid = mode === 'raid' || camp, g = lastReport && lastReport.gain;
+ const mode = lastReport && lastReport.recipe.mode, camp = mode === 'camp', pvp = mode === 'pvp', raid = mode === 'raid' || camp || pvp, g = lastReport && lastReport.gain;
  const crew = camp ? T.CREWS[lastReport.recipe.camp[0]] : T.CREWS[0];
- $('resTitle').textContent = raid ? (won ? 'You hit ' + crew.name : crew.name + ' held the block') : (won ? 'The Viceroy is out' : 'They held the house');
- setStars($('resStars'), stars); $('resPct').textContent = lastReport && lastReport.noCrew ? 'Nobody from your crew went in, so this one does not count. Bosses back the crew up; they do not take a block alone.' : res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.walked ? ' ' + g.walked + ' of your crew walked home.' : '') + (g.back ? ' The pharmacy patched up ' + g.back + ' more.' : '') + (lastReport.rankUp ? ' New rank: ' + lastReport.rankUp.name + '. Your bonus is waiting in Jobs.' : rankLine()) : '');
+ $('resTitle').textContent = pvp ? (won ? 'You hit ' + lastReport.recipe.pvp.name : lastReport.recipe.pvp.name + ' held the block') : raid ? (won ? 'You hit ' + crew.name : crew.name + ' held the block') : (won ? 'The Viceroy is out' : 'They held the house');
+ setStars($('resStars'), stars); $('resPct').textContent = lastReport && lastReport.noCrew ? 'Nobody from your crew went in, so this one does not count. Bosses back the crew up; they do not take a block alone.' : res.pct + '% of the block knocked down' + (g ? '. You came home with ' + g.cash + ' Cash, ' + g.sup + ' Supplies and ' + (g.rep || 0) + ' Rep.' + (g.walked ? ' ' + g.walked + ' of your crew walked home.' : '') + (g.back ? ' The pharmacy patched up ' + g.back + ' more.' : '') + (lastReport.unpaid ? ' Online hits pay ' + PVP_DAY.paid + ' times a day. This one was for the record.' : '') + (lastReport.rankUp ? ' New rank: ' + lastReport.rankUp.name + '. Your bonus is waiting in Jobs.' : rankLine()) : '');
  { const due = jobsDue(); if (raid && due) setTimeout(() => toast(due === 1 ? 'A job is done. Collect it on your block.' : due + ' jobs are done. Collect them on your block.', 2600), 1200); }
  const Rl = lastReport && lastReport.recipe;
  const again = () => camp && !T.campOpen(save.camp, save.block, Rl.camp[0], Rl.camp[1], save.rounds) ? toast('That block is not open right now. Pick one from the streets.') : camp ? startAttack(T.campRecipe(Rl.camp[0], Rl.camp[1], seed(), save.army, save.research, !!Rl.night, myLoad(false, Rl.camp[0]))) : raid ? startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))) : startAttack(T.rescueRecipe(seed()));
- $('resNext').textContent = camp ? 'Back to the streets' : raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
- $('resNext').onclick = () => camp ? (toHome(), openSheet('streets')) : raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
+ $('resNext').textContent = pvp ? 'Back to your crew' : camp ? 'Back to the streets' : raid ? 'Back to your block' : won ? 'Talk to the Viceroy' : 'Try again';
+ $('resNext').onclick = () => pvp ? (toHome(), openSheet('online')) : camp ? (toHome(), openSheet('streets')) : raid ? toHome() : won ? story([WIN, NEXT], toHome, 'keys') : again();
  if (camp && lastReport.firstTake && lastReport.recipe.camp[1] === T.CAMP.blocks - 1) setTimeout(() => toast('That was the last of ' + crew.name + ' turf', 2600), 600);
  $('resAgain').textContent = raid ? 'Hit them again' : 'Run it again'; $('resAgain').onclick = again;
- $('resAgain').style.display = (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
+ $('resAgain').style.display = pvp ? 'none' : (raid ? T.armySize(save.army) > 0 : won && !save.block) ? '' : 'none';
  practiceRep = null; $('resWatch').onclick = resWatchReal; show('result');
 }
 $('resWatch').onclick = () => watch(lastReport);
@@ -2760,7 +2922,7 @@ function seed(){ return (Date.now() ^ (Math.random() * 4294967296)) >>> 0; }
 // ---------- Watch: the saved recipe fought again, frame by frame ----------
 let wSpeed = 1, wPaused = false, wFrames = null, wI = 0, wRaf = 0;
 function watch(rep){
- if (!rep) return; const Rw = JSON.parse(JSON.stringify(rep.recipe)); setBlock(blockOf(Rw), Rw.mode === 'practice' ? 'own' : 'enemy', Rw.crewColor); vicOn = Rw.mode === 'rescue'; lightFor(Rw); if (gl3d) VIL.edit(null);
+ if (!rep) return; const Rw = JSON.parse(JSON.stringify(rep.recipe)); setBlock(blockOf(Rw), Rw.mode === 'practice' || rep.def ? 'own' : 'enemy', Rw.crewColor); vicOn = Rw.mode === 'rescue'; lightFor(Rw); if (gl3d) VIL.edit(null);
  const out = B.simRaid(Rw, {record:true}), m = meta(Rw); { const pt = partyText(Rw.party); if (pt) setTimeout(() => toast(pt, 2600), 500); }
  wFrames = out.frames; units = m.u; items = m.it; viceroyFree = false; lastDown = 'x'; paint(null); wSpeed = 1; wPaused = false;
  $('wPlay').textContent = 'Pause'; $('wSpeed').textContent = '2x'; $('watchLbl').textContent = 'Replay · ' + rep.stars + (rep.stars === 1 ? ' star' : ' stars');
@@ -2783,7 +2945,7 @@ function showPractice(){ const r = practiceRep, held = !r.coreDown;
  $('resNext').textContent = 'Back to your block'; $('resNext').onclick = () => { practiceRep = null; toHome(); };
  $('resAgain').textContent = 'Test again'; $('resAgain').style.display = ''; $('resAgain').onclick = practice;
  $('resWatch').onclick = () => watch(practiceRep); show('result'); }
-function endWatch(){ if (!$('watch').classList.contains('on')) return; if (watchFromList){ watchFromList = false; toHome(); openSheet('fights'); return; } if (practiceRep){ showPractice(); return; } if (lastReport) showResult({pct:lastReport.pct}, lastReport.stars, lastReport.recipe.mode === 'rescue' ? lastReport.stars >= 2 : lastReport.stars > 0); else toTitle(); }
+function endWatch(){ if (!$('watch').classList.contains('on')) return; if (watchFromList){ const back = watchFromList === 'online' ? 'online' : 'fights'; watchFromList = false; toHome(); openSheet(back); return; } if (practiceRep){ showPractice(); return; } if (lastReport) showResult({pct:lastReport.pct}, lastReport.stars, lastReport.recipe.mode === 'rescue' ? lastReport.stars >= 2 : lastReport.stars > 0); else toTitle(); }
 $('wPlay').onclick = () => { wPaused = !wPaused; $('wPlay').textContent = wPaused ? 'Play' : 'Pause'; if (gl3d) VIL.battleSpeed(wPaused ? 0 : wSpeed); };
 $('wSpeed').onclick = () => { wSpeed = wSpeed === 1 ? 2 : 1; $('wSpeed').textContent = wSpeed === 1 ? '2x' : '1x'; if (gl3d && !wPaused) VIL.battleSpeed(wSpeed); };
 $('wSkip').onclick = () => { if (gl3d) VIL.battleSkip(); else { cancelAnimationFrame(wRaf); endWatch(); } };
@@ -3017,12 +3179,13 @@ function openSheet(kind){
   h += '<p class="stat">' + (save.night ? 'Night: their guns reach a little less. 75% of the loot.' : 'Day: full loot, full reach.') + '</p><div class="rows">';
   h += '<button class="row" data-hit="-1"><span class="mid"><span class="nm">The Boombox corner</span><br><span class="sub">Loot for your crew, any time. Bosses sit this one out.</span></span></button>';
   T.CREWS.forEach((c, ci) => { const hl = T.houseLv(save.block || []) >= c.hl;
-   h += '<div class="crewhd"><i style="background:' + gangHex(c.color) + '"></i><span class="mid"><span class="nm">' + esc(c.name) + (T.roundOf(save.rounds, ci) > 1 ? ', Round ' + T.roundOf(save.rounds, ci) : '') + '</span><br><span class="sub">' + esc(hl ? c.turf : 'Opens at Main House level ' + c.hl + '.') + '</span></span></div><div class="blocks">';
+   h += '<div class="crewhd"><i style="background:' + gangHex(c.color) + '"></i>' + face(RIVAL_FACE[c.id], gangHex(c.color)) + '<span class="mid"><span class="nm">' + esc(c.name) + (T.roundOf(save.rounds, ci) > 1 ? ', Round ' + T.roundOf(save.rounds, ci) : '') + '</span><br><span class="sub">' + esc(hl ? c.turf : 'Opens at Main House level ' + c.hl + '.') + '</span></span></div><div class="blocks">';
    for (let bi = 0; bi < T.CAMP.blocks; bi++){ const v = save.camp[ci + '-' + bi], open = T.campOpen(save.camp, save.block, ci, bi, save.rounds), st = v ? v.s : 0;
     const p = T.campPool(ci, bi, T.roundOf(save.rounds, ci)), t = v ? v.t : [0, 0], left = Math.max(0, p.cash - t[0]) + Math.max(0, p.sup - t[1]);
     h += '<button class="blk' + (open ? '' : ' no') + '" data-hit="' + ci + '" data-b="' + bi + '"' + (open ? '' : ' aria-disabled="true"') + '><span class="nm">' + (bi === T.CAMP.blocks - 1 ? esc(c.boss) : 'Block ' + (bi + 1)) + '</span><span class="st">' + [0, 1, 2].map(n => '<i class="' + (n < st ? 'on' : '') + '"></i>').join('') + '</span><span class="sub">' + (open ? (left ? left + ' loot left' : 'Picked clean') : 'Locked') + '</span></button>'; }
    h += '</div>';
    if (T.canRunBack(save.camp, save.rounds, ci)){ const r = T.roundOf(save.rounds, ci) + 1; h += '<button class="btn main runback" data-runback="' + ci + '">Run it back: Round ' + r + '. Tougher, ' + Math.round(T.ROUNDS.loot * 100 * (r - 1)) + '% more loot</button>'; } });
+  h += '<button class="row" data-act="online"><span class="mid"><span class="nm">Your crew online</span><br><span class="sub">' + (save.crewCode ? 'Crew ' + esc(save.crewCode) + '. Hit real blocks, see who hit yours, check the Rep board.' : 'Join with a code to hit each other\'s real blocks.') + '</span></span></button>';
   h += '<button class="row" data-act="practice"><span class="mid"><span class="nm">Test your block</span><br><span class="sub">A rival crew your size hits your own block while you watch. Nothing is lost.</span></span></button>';
   h += '<button class="row" data-act="fights"><span class="mid"><span class="nm">Your fights</span><br><span class="sub">' + (save.reports.length ? 'The last ' + Math.min(30, save.reports.length) + ' you started. Watch any of them again.' : 'None yet. Every fight you start is kept here.') + '</span></span></button>';
   h += '</div><p>Each block opens once the one before it has a star. A block keeps what you take: hit it again and there is less to carry home.</p>'; }
@@ -3034,7 +3197,7 @@ function openSheet(kind){
    h += '<div class="row' + (open ? '' : ' no') + '" data-unit="' + k + '"><span class="mid"><span class="nm">' + esc(u.name) + (save.research[k] > 1 ? ' Lv ' + save.research[k] : '') + ' x' + (a[k] || 0) + '</span><br><span class="sub">' + (open ? esc(u.line) + ' ' + T.SIZE[k] + (T.SIZE[k] === 1 ? ' bed.' : ' beds.') : 'Comes in at Gym level ' + T.UNLOCKS[k] + '.') + '</span></span>'
     + (open ? '<button class="mini" data-train="' + k + '" data-n="-1" aria-label="Let one ' + esc(u.name) + ' go">-</button><button class="mini" data-train="' + k + '" data-n="1">+ ' + T.trainCost(k) + '</button>' : '') + '</div>'; });
   h += '</div><h4>Bosses</h4><p>They come on every street fight. No beds, no training. Drop one, then tap its card again for its move.</p><div class="rows">';
-  T.BOSS_ORDER.forEach(k => { const b = T.BOSSES[k], open = T.bossOpen(k, T.houseLv(save.block)); h += '<div class="row' + (open ? '' : ' no') + '" data-boss="' + k + '"><span class="mid"><span class="nm">' + esc(b.name) + '</span><br><span class="sub">' + esc(open ? b.line : 'Joins at Main House level ' + b.open + '.') + '</span></span></div>'; });
+  T.BOSS_ORDER.forEach(k => { const b = T.BOSSES[k], open = T.bossOpen(k, T.houseLv(save.block)); h += '<div class="row' + (open ? '' : ' no') + '" data-boss="' + k + '">' + face(k) + '<span class="mid"><span class="nm">' + esc(b.name) + '</span><br><span class="sub">' + esc(open ? b.line : 'Joins at Main House level ' + b.open + '.') + '</span></span></div>'; });
   const cap = T.kitCap(save.block), have = T.kitSize(save.kit);
   h += '</div><h4>Items<span>' + have + ' of ' + cap + '</span></h4>';
   if (!cap) h += '<p>Items are made at a Corner Store on your lot. Build one to make them.</p>';
@@ -3043,13 +3206,14 @@ function openSheet(kind){
     h += '<div class="row' + (open ? '' : ' no') + '" data-item="' + k + '"><span class="mid"><span class="nm">' + esc(it.name) + ' x' + (save.kit[k] | 0) + '</span><br><span class="sub">' + (open ? esc(it.line) : 'Comes in at Corner Store level ' + it.store + '.') + '</span></span>'
      + (open ? '<button class="mini" data-make="' + k + '">+ ' + it.cost + '</button>' : '') + '</div>'; });
    h += '</div>'; } }
+ else if (kind === 'online'){ h = onlineSheet(); if (save.crewCode) setTimeout(() => netSync(false), 50); }
  else if (kind === 'fights'){
   h = '<h3>Your fights<span>' + save.reports.length + '</span></h3>';
   if (!save.reports.length) h += '<p>Nothing yet. Every fight you start is kept here so you can watch it again.</p>';
-  else { h += '<div class="rows">'; save.reports.forEach((r, i) => { const R2 = r.recipe, who = R2.mode === 'camp' ? T.CREWS[R2.camp[0]].name + ', ' + (R2.camp[1] === T.CAMP.blocks - 1 ? T.CREWS[R2.camp[0]].boss : 'block ' + (R2.camp[1] + 1)) + (R2.night ? ', night' : ', day') : R2.mode === 'raid' ? 'The Boombox corner' : 'The rescue';
+  else { h += '<div class="rows">'; save.reports.forEach((r, i) => { const R2 = r.recipe, who = r.def ? (r.by || 'Somebody') + ' hit your block' : R2.mode === 'pvp' ? 'You hit ' + ((R2.pvp && R2.pvp.name) || 'a crew mate') + (R2.night ? ', night' : ', day') : R2.mode === 'camp' ? T.CREWS[R2.camp[0]].name + ', ' + (R2.camp[1] === T.CAMP.blocks - 1 ? T.CREWS[R2.camp[0]].boss : 'block ' + (R2.camp[1] + 1)) + (R2.night ? ', night' : ', day') : R2.mode === 'raid' ? 'The Boombox corner' : 'The rescue';
    h += '<div class="row"><span class="mid"><span class="nm">' + esc(who) + '</span><br><span class="sub">' + r.stars + (r.stars === 1 ? ' star, ' : ' stars, ') + r.pct + '%' + (r.gain ? ', ' + r.gain.cash + ' Cash, ' + r.gain.sup + ' Supplies' : '') + (r.at ? ', ' + ago(r.at) : '') + '</span></span><button class="mini" data-watch="' + i + '">Watch</button></div>'; });
    h += '</div>'; } }
- body.innerHTML = h;
+ body.innerHTML = h; tintFaces();
  if (kind === 'crew' || kind === 'lab') body.querySelectorAll('[data-unit]').forEach(r => r.insertBefore(miniIcon(iconLook(r.dataset.unit), 64), r.firstChild));
  body.querySelectorAll('[data-boss]').forEach(r => r.insertBefore(miniIcon('hero|' + r.dataset.boss + '|' + MY_CREW, 64), r.firstChild));
  body.querySelectorAll('[data-item]').forEach(r => { const c = itemIcon(r.dataset.item); c.style.width = c.style.height = '64px'; r.insertBefore(c, r.firstChild); });
@@ -3058,7 +3222,7 @@ function openSheet(kind){
 function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); }
 $('sheetX').onclick = () => { const was = sheetKind; closeSheet(); if (was === 'info'){ homeSel = null; if (gl3d) VIL.select(null); else FB.scene(null); } };
 $('sheetBody').addEventListener('click', e => {
- const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch],[data-party],[data-runback],[data-job],[data-daily],[data-rank]'); if (!t) return;
+ const t = e.target.closest('[data-buy],[data-act],[data-train],[data-col],[data-lab],[data-hit],[data-tod],[data-make],[data-watch],[data-party],[data-runback],[data-job],[data-daily],[data-rank],[data-pvp]'); if (!t) return;
  if (t.dataset.rank){ rankClaim(); return; }
  if (t.dataset.runback){ const ci = +t.dataset.runback; if (runArmed !== ci){ runArmed = ci; t.textContent = 'Sure? They come back tougher. Your stars are kept. Tap again.'; return; } runArmed = -1; runBack(ci); return; }
  if (t.dataset.job){ jobClaim(t.dataset.job); return; }
@@ -3066,9 +3230,11 @@ $('sheetBody').addEventListener('click', e => {
  if (t.dataset.party){ partyUp(t.dataset.party); return; }
  if (t.dataset.act === 'party'){ openSheet('party'); return; }
  if (t.dataset.make){ make(t.dataset.make); return; }
- if (t.dataset.watch){ const r = save.reports[+t.dataset.watch]; if (!r) return; closeSheet(); watchFromList = true; try { watch(r); } catch (e){ watchFromList = false; toast("That replay can't be played"); toHome(); } return; }
+ if (t.dataset.watch){ const r = save.reports[+t.dataset.watch]; if (!r) return; const from = sheetKind; closeSheet(); watchFromList = from === 'online' ? 'online' : true; try { watch(r); } catch (e){ watchFromList = false; toast("That replay can't be played"); toHome(); } return; }
  if (t.dataset.act === 'fights'){ openSheet('fights'); return; }
  if (t.dataset.act === 'practice'){ practice(); return; }
+ if (t.dataset.act === 'online'){ openSheet('online'); return; } if (t.dataset.act === 'join'){ onlineJoin(); return; } if (t.dataset.act === 'leave'){ onlineLeave(); return; } if (t.dataset.act === 'netsync'){ netSync(true); return; }
+ if (t.dataset.pvp){ hitPlayer(t.dataset.pvp); return; }
  if (t.dataset.tod){ save.night = t.dataset.tod === 'night'; saveGame(); openSheet('streets'); return; }
  if (t.dataset.hit){ hit(+t.dataset.hit, +(t.dataset.b || 0)); return; }
  if (t.dataset.lab){ research(t.dataset.lab); return; }
@@ -3088,6 +3254,96 @@ $('hBuild').onclick = () => openSheet('shop');
 $('hTrain').onclick = $('hCrew').onclick = () => openSheet('crew');
 $('hAttack').onclick = () => openSheet('streets');
 $('hJobs').onclick = () => openSheet('jobs');
+// ---------- online (v0.7): your crew's real blocks ----------
+// save.name and save.crewCode say who you are and which crew you are in. Everyone who types the same code is one crew.
+let crewList = null, netMsg = '', netBusy = false, netAt = 0;
+const nightNow = () => { const h = new Date().getHours(); return h >= 20 || h < 6; };
+const partyBonus = p => ({gun:1 + .06 * (p.watch | 0), crew:1 + .1 * (p.cookout | 0), bld:1 + .08 * (p.mural | 0), party:p});
+function onlineJoin(){ const name = NET.cleanName(($('onName') || {}).value || ''), code = NET.cleanCode(($('onCode') || {}).value || '');
+ if (!($('onName') || {}).value.trim()){ toast('Put a name in first'); return; } if (code.length < 4){ toast('A crew code is 4 to 12 letters and numbers'); return; }
+ save.name = name; save.crewCode = code; saveGame(); crewList = null; netAt = 0; openSheet('online'); netSync(true); }
+function onlineLeave(){ if (!save.crewCode) return; const was = save.crewCode; save.crewCode = ''; save.shared = []; save.outbox = []; saveGame(); crewList = null; netMsg = ''; netShared = ''; openSheet('online'); if (!netBusy) NET.leave().catch(() => null); toast('You left ' + was); }   // a check-in already on its way removes the record itself when it lands
+// everything online in one pass: share my block, send any attack still waiting, read the crew, and count attacks on my block
+// Limits that keep it fair when someone plays dirty: only crew mates' attacks count, 3 per check-in, one per raider an hour, 6 a day, and a held block earns Rep 3 times a day.
+const PVP_DAY = {paid:8, hits:6, held:3};
+function pvpDay(){ const k = T.dayKey(new Date()); if (!save.pvpDay || save.pvpDay.d !== k) save.pvpDay = {d:k, paid:0, hits:0, held:0}; return save.pvpDay; }
+async function netSync(force){ if (!save.crewCode || !save.block || netBusy || (!force && Date.now() - netAt < 20000)) return; netBusy = true; netAt = Date.now(); const code = save.crewCode, refresh = () => { if (sheetKind === 'online') openSheet('online'); };
+ netMsg = 'Checking in...'; refresh();
+ try {
+  const packed = NET.packBlock(save.block); if (save.shared[0] !== packed) save.shared = [packed].concat(save.shared.filter(x => x !== packed)).slice(0, 3);
+  const mine = [save.name, MY_CREW, code, packed, save.rep, JSON.stringify(T.cleanParty(save.party)), T.starsAll(save)].join('|');
+  if (mine !== netShared || Date.now() - netSharedAt > 600000){ await NET.share({name:save.name, color:MY_CREW, crew:code, block:save.block, rep:save.rep, party:save.party, stars:T.starsAll(save)}); netShared = mine; netSharedAt = Date.now(); }
+  if (save.crewCode !== code){ netShared = ''; if (!save.crewCode) await NET.leave().catch(() => null); netBusy = false; netMsg = ''; refresh(); return; }   // left or switched crews while this was on its way
+  while (save.outbox.length){ const o = save.outbox[0];
+   try { await NET.postRaid(o.to, code, o.pay, o.id); } catch (e){ if (e.message === 'offline') throw e; }   // sent, already there, or refused for good: either way it leaves the queue
+   save.outbox.shift(); saveGame(); }
+  const list = await NET.crew(code); crewList = list.sort((a, b) => b.rep - a.rep || (a.name < b.name ? -1 : 1));
+  const mates = new Set(list.filter(p => !p.me).map(p => p.uid)), box = await NET.inbox(), day = pvpDay(); let done = 0, news = null;
+  for (const m of box){
+   try {
+    const dupe = save.seenRaids.indexOf(m.id) >= 0, recent = save.reports.some(r => r.def && r.from === m.from && Math.abs((r.at || 0) - (m.at || Date.now())) < 3600000);
+    // it counts only if a crew mate sent it, against a block I really shared, with drops the game would have allowed
+    if (!dupe && !recent && done < 3 && day.hits < PVP_DAY.hits && m.raid && mates.has(m.from) && save.shared.indexOf(NET.packBlock(m.raid.block)) >= 0){
+     m.raid.party = T.cleanParty(save.party); m.raid.victimColor = MY_CREW; const Rd = NET.payloadRecipe(m.raid);
+     if (Rd){ done++; day.hits++; const res = B.simRaid(Rd).result, stars = T.starsFor(res), loss = T.pvpLoss(res, save.cash, save.sup);
+      save.cash -= loss.cash; save.sup -= loss.sup; if (!stars && day.held < PVP_DAY.held){ day.held++; save.rep += 5; }
+      const rep = T.reportFrom(Rd, res); rep.at = m.at || Date.now(); rep.def = true; rep.by = m.raid.name; rep.from = m.from; rep.loss = loss; save.reports.unshift(rep); save.reports = save.reports.slice(0, 30); news = rep; } }
+   } catch (e){}   // one bad attack must never stop the rest from being read
+   save.seenRaids = [m.id].concat(save.seenRaids).slice(0, 60); saveGame(); NET.clearRaid(m.id); }
+  netMsg = ''; saveGame(); if ($('home').classList.contains('on')) homeHud();
+  if (news) toast(news.by + ' hit your block: ' + news.stars + (news.stars === 1 ? ' star' : ' stars') + (news.loss.cash + news.loss.sup ? ', lost ' + news.loss.cash + ' Cash and ' + news.loss.sup + ' Supplies' : '') + '. Watch it in Your crew online.', 4200);
+ } catch (e){ netMsg = NET.why(e); }
+ netBusy = false; refresh(); }
+let netShared = '', netSharedAt = 0;
+function hitWait(uid){ const at = +save.hitAt[uid] || 0, left = 3600000 - (Date.now() - at); return left > 0 ? Math.ceil(left / 60000) : 0; }
+function hitPlayer(uid){ const p = (crewList || []).find(x => x.uid === uid); if (!p || p.me || !p.block) return;
+ if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; }
+ if (p.hl < 2){ toast('A Main House level 1 block is off limits'); return; } if (p.at && Date.now() - p.at > 30 * 864e5) return; if (!p.same){ toast('You two are on different versions of the game. Update first.'); return; }
+ if (hitWait(uid)){ toast('You hit ' + p.name + ' already. Again in ' + hitWait(uid) + ' min.'); return; }
+ closeSheet(); const Rp = T.pvpRecipe(p.block, seed(), save.army, save.research, myLoad(false), p.color, partyBonus(p.party), nightNow());
+ Rp.pvp = {uid:p.uid, name:p.name, hl:p.hl, packed:NET.packBlock(p.block), party:p.party}; Rp.attColor = MY_CREW; startAttack(Rp); }
+// after an online fight: remember the hit, and post it so the other phone can count it and watch it
+function postPvp(Rx, res){ const v = Rx.pvp; save.hitAt[v.uid] = Date.now(); for (const k in save.hitAt) if (Date.now() - save.hitAt[k] > 3600000) delete save.hitAt[k];
+ const pay = NET.makePayload(Rx, res, {name:save.name, color:MY_CREW, block:v.packed, party:v.party, victimColor:Rx.crewColor, research:save.research, hl:T.houseLv(save.block)});
+ if (pay && save.crewCode){ save.outbox = save.outbox.concat([{to:v.uid, pay, id:NET.newId()}]).slice(-5); } saveGame(); setTimeout(() => netSync(true), 800); }
+function onlineSheet(){ let h = '';
+ if (!save.crewCode){ h = '<h3>Your crew online</h3><p>Join a crew with a code and you can hit each other\'s real blocks, watch who hit yours, and see who has the most Rep. Anyone who types the same code is in the same crew, so make one up or use the one you were given.</p>'
+   + '<label class="fld">Your name<input id="onName" maxlength="20" autocomplete="off" value="' + esc(save.name || '') + '"></label><label class="fld">Crew code<input id="onCode" maxlength="12" autocomplete="off" autocapitalize="none" spellcheck="false"></label>'
+   + '<button class="btn main" data-act="join">Join</button><p>Joining puts your name, block, color, Rep and progress online, along with the fights you start against crew mates. Anyone playing Turf who knows or guesses the code can see them. Nothing else leaves your phone, and Leave this crew takes your record down.</p>'; return h; }
+ h = '<h3>Crew ' + esc(save.crewCode) + '<span>' + (crewList ? crewList.length + (crewList.length === 1 ? ' player' : ' players') : '') + '</span></h3>';
+ h += '<p class="stat" id="netMsg">' + esc(netMsg || (crewList ? 'Most Rep first. You can hit each player once an hour.' : 'Not checked in yet.')) + '</p>';
+ if (crewList){ h += '<div class="rows">'; crewList.forEach((p, i) => { const w = hitWait(p.uid), away = p.at && Date.now() - p.at > 30 * 864e5, can = !p.me && p.block && p.hl >= 2 && p.same && !w && !away;
+   const sub = p.rep + ' Rep, Main House ' + p.hl + ', ' + p.stars + ' stars' + (p.me ? '' : !p.block ? '. Has not shared a block yet.' : !p.same ? '. On another version: update to fight.' : away ? '. Has not played in a month.' : p.hl < 2 ? '. Level 1 is off limits.' : w ? '. Hit ' + (60 - w) + ' min ago.' : '');
+   h += '<div class="row' + (p.me ? ' me' : '') + '"><i class="chip" style="background:' + gangHex(p.color) + '"></i><span class="mid"><span class="nm">' + (i + 1) + '. ' + esc(p.name) + (p.me ? ' (you)' : '') + '</span><br><span class="sub">' + esc(sub) + '</span></span>' + (can ? '<button class="mini go2" data-pvp="' + esc(p.uid) + '">Hit</button>' : '') + '</div>'; });
+  h += '</div>'; }
+ const defs = save.reports.map((r, i) => [r, i]).filter(x => x[0].def);
+ h += '<h4>Hits on your block<span>' + defs.length + '</span></h4>';
+ if (!defs.length) h += '<p>Nobody has hit you yet. When they do, the fight is kept here to watch.</p>';
+ else { h += '<div class="rows">'; defs.forEach(([r, i]) => { const L = {cash:(r.loss && r.loss.cash) | 0, sup:(r.loss && r.loss.sup) | 0}; h += '<div class="row"><span class="mid"><span class="nm">' + esc(r.by || 'Somebody') + ': ' + r.stars + (r.stars === 1 ? ' star' : ' stars') + ', ' + r.pct + '%</span><br><span class="sub">' + (r.stars ? 'Lost ' + L.cash + ' Cash and ' + L.sup + ' Supplies' : 'Your block held' + (L.cash + L.sup ? '. Lost ' + L.cash + ' Cash and ' + L.sup + ' Supplies' : '')) + (r.at ? ', ' + ago(r.at) : '') + '</span></span><button class="mini" data-watch="' + i + '">Watch</button></div>'; }); h += '</div>'; }
+ h += '<button class="btn" data-act="netsync">Check in now</button><button class="btn" data-act="leave">Leave this crew</button>'; return h; }
+// painted boss portraits (boss-<name>.jpg beside the page). If one is missing the row simply shows without it.
+const RIVAL_FACE = {boombox:'pops', goldnote:'bigledger', basement:'lowend', afterhours:'neon', yard:'deacon', chrometide:'wheels'};
+// Your own five bosses are painted in lavender. For any other crew color the picture is recolored on the phone:
+// only pixels that are lavender (by hue and strength) are moved to the crew color, so skin, gold, black and the amber light stay as painted.
+const TINTS = {}, MY_BOSS = {enforcer:1, deadeye:1, shotcaller:1, hustler:1, pilot:1};
+function rgb2hsl(r, g, b){ r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; if (!d) return [0, 0, l];
+ const s = d / (1 - Math.abs(2 * l - 1)); let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; if (h < 0) h += 360; return [h, s, l]; }
+function hsl2rgb(h, s, l){ const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2; const t = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x]; return [(t[0] + m) * 255, (t[1] + m) * 255, (t[2] + m) * 255]; }
+function tintPixels(px, target){ const T0 = rgb2hsl(target[0], target[1], target[2]), LAV = [275, .28, .58], sm = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+ for (let i = 0; i < px.length; i += 4){ const q = rgb2hsl(px[i], px[i + 1], px[i + 2]), h = q[0], s = q[1], l = q[2];
+  const w = sm(238, 250, h) * (1 - sm(322, 345, h)) * sm(.11, .17, s) * sm(.16, .24, l); if (w <= 0) continue;   // measured: painted lavender is hue 260 to 300, strength over .18; the dark background is under .10
+  // keep the painted light and shade: move the hue, and scale strength and brightness by how the crew color compares with lavender
+  const s2 = Math.min(1, T0[1] + .14, s * Math.min(2.6, T0[1] / LAV[1])), l2 = Math.max(0, Math.min(1, l * Math.pow(T0[2] / LAV[2], .8)));
+  const c = hsl2rgb(T0[0], s2, l2); px[i] += (c[0] - px[i]) * w; px[i + 1] += (c[1] - px[i + 1]) * w; px[i + 2] += (c[2] - px[i + 2]) * w; } }
+function tintFace(k, color){ const id = k + '|' + color; if (TINTS[id]) return TINTS[id];
+ return TINTS[id] = new Promise(done => { const im = new Image(); im.onerror = () => done(null);
+  im.onload = () => { try { const cv = document.createElement('canvas'); cv.width = im.naturalWidth; cv.height = im.naturalHeight; const c = cv.getContext('2d', {willReadFrequently:true}); c.drawImage(im, 0, 0);
+    const d = c.getImageData(0, 0, cv.width, cv.height), m = /(\d+)\D+(\d+)\D+(\d+)/.exec(gangHex(color)); tintPixels(d.data, [+m[1], +m[2], +m[3]]); c.putImageData(d, 0, 0); const url = cv.toDataURL('image/jpeg', .88); TINTS[id] = url; done(url); } catch (e){ done(null); } };
+  im.src = 'boss-' + k + '.jpg'; }); }
+// swap any lavender portrait on screen for the crew-color one, and get the five ready ahead of time
+function tintFaces(){ if (MY_CREW === 'lav') return; document.querySelectorAll('img.face[data-tint]').forEach(im => { const k = im.dataset.tint, t = tintFace(k, MY_CREW); if (typeof t === 'string'){ if (im.src !== t) im.src = t; } else t.then(url => { if (url && im.isConnected) im.src = url; }); }); }
+function face(k, edge){ if (!k) return ''; const mine = MY_BOSS[k] && MY_CREW !== 'lav', ready = mine && typeof TINTS[k + '|' + MY_CREW] === 'string' ? TINTS[k + '|' + MY_CREW] : '';
+ return '<img class="face" src="' + (ready || 'boss-' + k + '.jpg') + '" alt=""' + (ready ? '' : ' loading="lazy"') + ' width="52" height="52"' + (mine ? ' data-tint="' + k + '"' : '') + (edge ? ' style="border-color:' + edge + '"' : '') + ' onerror="this.remove()">'; }
 // The coach: a first-run guide. It reads what the player is looking at and moves on only when they have done the thing. save.guide: 0 to 5 are the steps, 99 is off.
 const COACH = {
  crew0:['Start with your crew. Tap Crew.', 'hCrew'],
@@ -3149,7 +3405,7 @@ function toHome(){
  if (gl3d) VIL.battle(null); lightFor(null); homeSel = null; fenceMode = null; closeSheet(); show('home'); homePaint(); setEdit(); cam('home');
  // never stuck: with nobody left and no money to train anyone, the Viceroy sends a few Brawlers over
  if (!T.armySize(save.army) && save.cash < T.trainCost('brawler') * 4){ save.army.brawler = Math.min(6, T.armyCap(save.block)); saveGame(); setTimeout(() => toast('The Viceroy sent ' + save.army.brawler + ' Brawlers over. On the house.', 3000), 600); }
- homeHud();
+ homeHud(); netSync(false); if (MY_CREW !== 'lav') setTimeout(() => Object.keys(MY_BOSS).forEach(k => tintFace(k, MY_CREW)), 1500);
  if (firstHome){ firstHome = false; openSheet('crew'); }
 }
 
@@ -3174,7 +3430,7 @@ mountMap();
 if (!introSeen() && !save.rescued && !save.tries) introPlay(); else introFind(list => { $('introBtn').hidden = !list.length; });
 { const done = settlePending(); toTitle(); if (done) setTimeout(() => toast('Your last fight played out while you were away: ' + done.stars + (done.stars === 1 ? ' star' : ' stars'), 3200), 900); }
 // test hook (used by the headless proof): read-only peeks at the fight
-window.TURF_TEST = {block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
+window.TURF_TEST = {tint:(k, color) => Promise.resolve(tintFace(k, color)), net:() => ({code:save.crewCode, list:crewList, msg:netMsg, busy:netBusy}), pvpTest:(p, listOnly) => { crewList = [p]; if (!listOnly) hitPlayer(p.uid); }, block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
  state:() => ({screen:['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on')), tick:sim ? sim.tick() : 0, counts:Object.assign({}, counts), sel, finished, gl3d, reports:save.reports.length}),
  camp:() => JSON.parse(JSON.stringify({camp:save.camp, night:save.night})), hit, intro:() => ({on:!$('intro').hidden, at:introAt, shots:introList.map(s => s.n), video:!$('introVid').hidden}), icon:(l, n) => miniIcon(l, n), select:k => { selectItem(k, true); openSheet('info'); },
  toScreen:(x, y, z) => gl3d ? VIL.project(x, y, z || 0) : null, result:() => sim ? sim.result() : null};
