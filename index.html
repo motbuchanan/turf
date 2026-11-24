@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.7.2">
+<meta name="build" content="0.7.3">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -244,6 +244,20 @@ body.coaching #hud .tip{display:none}
 .face{flex:none;width:52px;height:52px;border-radius:4px;border:2px solid var(--line);object-fit:cover;background:#14151a}
 .row.no .face{filter:grayscale(1) brightness(.6)}
 .crewhd .face{margin-right:2px}
+/* menus (v0.7.3): pictures, money marks, progress */
+.row .tile{flex:none;width:64px;height:64px;border-radius:6px;background:radial-gradient(circle at 50% 60%,#3a3d45,#1d1f24 72%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.row .tile .face{width:56px;height:56px;border:0}
+.row .nm em{font-style:normal;font-weight:700;font-size:12px;color:var(--dim);margin-left:8px;padding:2px 6px;border:1px solid var(--line);border-radius:10px;vertical-align:2px}
+.row .costs{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:5px;font-size:13px;font-weight:800;color:var(--ink)}
+.cost{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.cost .ic{flex:none}
+.row .tag{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--sodium);margin-bottom:1px}
+.prog{display:block;height:6px;margin-top:6px;border-radius:3px;background:#1a1b1f;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--sodium);border-radius:3px}
+.bigico{display:flex;justify-content:center;margin:2px auto 4px;width:132px;height:120px;border-radius:8px;background:radial-gradient(circle at 50% 62%,#3a3d45,#1d1f24 70%);align-items:center}
+.bigico .tile{background:none;width:auto;height:auto}
+button.row:active{transform:translateY(1px);background:#2c2f35}
+.row .btnrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 
 </style>
 </head>
@@ -299,7 +313,7 @@ body.coaching #hud .tip{display:none}
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.7.2 · Nov 24 2026</button>
+<button id="badge">v0.7.3 · Nov 24 2026</button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
 
@@ -1200,7 +1214,7 @@ function dayRoll(day, key, yesterdayKey){ const d = day && typeof day === 'objec
  // the same day, or a clock set back to an earlier day: nothing resets, so a day's jobs cannot be collected twice
  if (typeof d.d === 'string' && d.d >= key) return {d:d.d, n:Object.assign({}, d.n), got:Object.assign({}, d.got), streak:sk, on:d.on || ''};
  return {d:key, n:{}, got:{}, streak:d.on === yesterdayKey ? sk : 0, on:d.on || ''}; }
-function dailyNow(day){ return dailyFor(day.d).map((i, slot) => { const [k, need, text] = DAILY[i]; const have = Math.min(need, (day.n && day.n[k]) | 0); return {slot, text, have, need, done:have >= need, got:!!(day.got && day.got[slot])}; }); }
+function dailyNow(day){ return dailyFor(day.d).map((i, slot) => { const [k, need, text] = DAILY[i]; const have = Math.min(need, (day.n && day.n[k]) | 0); return {slot, k, text, have, need, done:have >= need, got:!!(day.got && day.got[slot])}; }); }
 
 return {UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
  HOME, SHOP, UNLOCKS, SIZE, START, maxLv, trainCost, upgradeCost, lotsOpen, houseLv, count, capFor, storeCap, armyCap, armySize, gymLv, payout, lootFor,
@@ -2515,7 +2529,7 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.7.2', BUILD_DATE = 'Nov 24 2026';
+const VER = '0.7.3', BUILD_DATE = 'Nov 24 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
@@ -2561,7 +2575,21 @@ let save = loadSave();
 let toastT = 0;
 function toast(msg, ms, onTap){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); t.classList.toggle('act', !!onTap); t.onclick = onTap || null;
  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on', 'act'), ms || 1800); }
-$('badge').onclick = () => toast('Turf v' + VER + ' · ' + BUILD_DATE);
+// tap the version badge: look for a newer build on the server and, if there is one, install it and reload
+let badgeBusy = false;
+$('badge').onclick = () => { if (badgeBusy) return; badgeBusy = true; toast('Turf v' + VER + ' · ' + BUILD_DATE + '. Checking for an update...', 4000);
+ const done = () => { badgeBusy = false; };
+ fetch('sw.js?check=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.text() : Promise.reject(new Error('http'))).then(t => {
+  const m = t.match(/turf-v([\d.]+)/), next = m && m[1];
+  if (!next || next === VER){ toast('You have the newest version, v' + VER + '.', 3000); done(); return; }
+  toast('Updating to v' + next + '...', 8000); try { savePending(true); saveGame(); } catch (e){}
+  const reload = () => { try { sessionStorage.setItem('turf.bust', next); } catch (e){} location.replace(location.pathname + '?v=' + next); };
+  if (!('serviceWorker' in navigator)){ reload(); return; }
+  navigator.serviceWorker.getRegistration().then(reg => { if (!reg){ reload(); return; }
+   let gone = false; const go = () => { if (!gone){ gone = true; reload(); } };
+   navigator.serviceWorker.addEventListener('controllerchange', go); setTimeout(go, 6000);   // a new worker takes over, or we reload anyway
+   reg.update().catch(go); }).catch(reload);
+ }).catch(() => { toast('Could not check for an update right now. You have v' + VER + '.', 3500); done(); }); };
 
 // ---------- layers ----------
 function show(id){ ['title', 'story', 'hud', 'result', 'watch', 'home'].forEach(k => $(k).classList.toggle('on', k === id)); 
@@ -3124,7 +3152,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>
 function openSheet(kind){
  const body = $('sheetBody'); let h = ''; sheetKind = kind;
  if (kind === 'info'){ const it = item(homeSel); if (!it){ closeSheet(); return; } const d = T.BDEFS[it.k], c0 = T.upgradeCost(it.k, it.lv), c = c0 && T.price(save.block, c0);
-  h = '<h3>' + esc(it.k === 'fence' ? T.fenceName(it.lv) : d.name) + (it.k === 'fence' ? '' : '<span>Level ' + it.lv + '</span>') + '</h3><p>' + esc(T.HOME[it.k].line) + '</p><p class="stat">' + esc(statLine(it)) + '</p>';
+  h = '<div class="bigico" data-ico="b:' + it.k + ':' + (it.lv || 1) + '" data-size="112"></div><h3>' + esc(it.k === 'fence' ? T.fenceName(it.lv) : d.name) + (it.k === 'fence' ? '' : '<span>Level ' + it.lv + '</span>') + '</h3><p>' + esc(T.HOME[it.k].line) + '</p><p class="stat">' + esc(statLine(it)) + '</p>';
   if (it.k === 'house') h += '<button class="btn" data-act="party">Block Party board</button>';
   if (it.k === 'fence'){ const hl = T.houseLv(save.block), fc = it.lv < hl && T.upgradeCost('fence', it.lv), same = save.block.filter(f => f.k === 'fence' && (f.lv || 1) === (it.lv || 1)).length;
    if (fc){ const one = T.price(save.block, fc), all = [0, one[1] * same];
@@ -3140,32 +3168,32 @@ function openSheet(kind){
  else if (kind === 'shop'){ const b = save.block, lv = T.houseLv(b);
   h = '<h3>Build</h3><div>';
   const fn = T.count(b, 'fence'), fc = T.capFor('fence', lv);
-  h += '</div><h4>Fences</h4><div class="rows"><div class="row"><span class="mid"><span class="nm">Fence</span><br><span class="sub">' + fn + ' of ' + fc + ' up. ' + T.HOME.fence.cost[1] + ' Supplies a piece.</span></span><button class="mini" data-act="lay">Lay</button><button class="mini" data-act="pull">Take down</button></div>';
+  h += '</div><h4>Fences<span>' + fn + ' of ' + fc + ' up</span></h4><div class="rows"><div class="row" data-ico="b:fence:1"><span class="mid"><span class="nm">Fence</span><br><span class="sub">' + esc(T.fenceName(1)) + ' to start. Tap a piece on your block to make it stronger.</span><span class="costs">' + costChips([0, T.HOME.fence.cost[1]]) + ' a piece</span><span class="btnrow"><button class="mini" data-act="lay">Lay</button><button class="mini" data-act="pull">Take down</button></span></span></div>';
 
   const GROUPS = ['Money and crew', 'Defenses', 'Traps and lights'], GROUP = k => T.BDEFS[k].role === 'tower' ? GROUPS[1] : T.BDEFS[k].role === 'trap' || k === 'light' ? GROUPS[2] : GROUPS[0];
   let lastG = '';
   T.SHOP.slice().sort((a, b2) => GROUPS.indexOf(GROUP(a)) - GROUPS.indexOf(GROUP(b2))).forEach(k => { const n = T.count(b, k), cap = T.capFor(k, lv), c = T.price(b, T.HOME[k].cost), off = n >= cap || !has(c);
    if (GROUP(k) !== lastG){ lastG = GROUP(k); h += '</div><h4>' + lastG + '</h4><div class="rows">'; }
-   h += '<button class="row' + (off ? ' no' : '') + '" data-buy="' + k + '"><span class="mid"><span class="nm">' + esc(T.BDEFS[k].name) + '</span><br><span class="sub">' + esc(T.HOME[k].line) + '</span></span><span class="pr">' + (cap ? n + ' of ' + cap + '<br>' + costText(c) : 'House level ' + (T.HOME[k].cap.indexOf(1) + 1)) + '</span></button>'; });
+   h += '<button class="row' + (off ? ' no' : '') + '" data-buy="' + k + '" data-ico="b:' + k + ':1"><span class="mid"><span class="nm">' + esc(T.BDEFS[k].name) + (cap ? '<em>' + n + ' of ' + cap + '</em>' : '') + '</span><br><span class="sub">' + esc(T.HOME[k].line) + '</span><span class="costs">' + (cap ? (n >= cap ? 'All built' : costChips(c)) : 'Opens at Main House level ' + (T.HOME[k].cap.findIndex(v => v > 0) + 1)) + '</span></span></button>'; });
   h += '</div>'; }
  else if (kind === 'jobs'){ const d = dayNow(), rk = T.rankOf(save.rep), nx = T.RANKS[rk + 1], pay = T.dailyPay(d.streak + (d.on === d.d ? 0 : 1));
   h = '<h3>Jobs<span>' + esc(T.RANKS[rk][1]) + '</span></h3>';
   h += '<p class="stat">' + (nx ? save.rep + ' of ' + nx[0] + ' Rep to ' + esc(nx[1]) + ', worth ' + costText(T.rankBonus(rk + 1)) + '.' : save.rep + ' Rep. Top rank.') + '</p>';
-  { const ow = rankOwed(); if (ow) h += '<div class="rows"><div class="row"><span class="mid"><span class="nm">Rank bonus: ' + esc(T.RANKS[ow][1]) + '</span><br><span class="sub">Pays ' + costText(T.rankBonus(ow)) + '.</span></span><button class="mini go2" data-rank="1">Collect</button></div></div>'; }
+  { const ow = rankOwed(); if (ow) h += '<div class="rows"><div class="row" data-ico="star"><span class="mid"><span class="nm">Rank bonus: ' + esc(T.RANKS[ow][1]) + '</span><br><span class="costs">' + costChips(T.rankBonus(ow)) + '</span></span><button class="mini go2" data-rank="1">Collect</button></div></div>'; }
   if (nx) h += '<div class="bar2"><i style="width:' + Math.round(100 * (save.rep - T.RANKS[rk][0]) / (nx[0] - T.RANKS[rk][0])) + '%"></i></div>';
   h += '<h4>Today<span>' + (d.streak ? d.streak + (d.streak === 1 ? ' day' : ' days') + ' in a row' : 'pays ' + costText(pay) + ' each') + '</span></h4><div class="rows">';
-  T.dailyNow(d).forEach(t => { h += '<div class="row' + (t.got ? ' no' : '') + '"><span class="mid"><span class="nm">' + esc(t.text) + '</span><br><span class="sub">' + (t.got ? 'Collected.' : t.have + ' of ' + t.need + '. Pays ' + costText(pay) + '.') + '</span></span>'
+  T.dailyNow(d).forEach(t => { h += '<div class="row' + (t.got ? ' no' : '') + '" data-ico="' + (DAILY_ICO[t.k] || 'star') + '"><span class="mid"><span class="nm">' + esc(t.text) + '</span>' + (t.got ? '<br><span class="sub">Collected.</span>' : '<span class="prog"><i style="width:' + Math.round(100 * t.have / t.need) + '%"></i></span><span class="costs">' + t.have + ' of ' + t.need + ' · ' + costChips(pay) + '</span>') + '</span>'
    + (t.done && !t.got ? '<button class="mini go2" data-daily="' + t.slot + '">Collect</button>' : '') + '</div>'; });
   h += '</div><p>New jobs every day. Do at least one a day and the pay climbs for a week.</p><h4>The Viceroy\'s list</h4><div class="rows">';
   T.jobsNow(save).forEach((j, i) => { const nm = ['On the streets', 'On your block', 'With your crew'][i];
-   if (!j){ h += '<div class="row no"><span class="mid"><span class="nm">' + nm + '</span><br><span class="sub">All done.</span></span></div>'; return; }
-   h += '<div class="row"><span class="mid"><span class="nm">' + esc(j.text) + '</span><br><span class="sub">' + nm + ', ' + j.n + ' of ' + j.of + '. Pays ' + costText(j.reward) + '.</span></span>' + (j.done ? '<button class="mini go2" data-job="' + j.id + '">Collect</button>' : '') + '</div>'; });
+   if (!j){ h += '<div class="row no" data-ico="star3"><span class="mid"><span class="nm">' + nm + '</span><br><span class="sub">All done.</span></span></div>'; return; }
+   h += '<div class="row" data-ico="' + (JOB_ICO[j.id] || 'star') + '"><span class="mid"><span class="tag">' + nm + ' · job ' + j.n + ' of ' + j.of + '</span><span class="nm">' + esc(j.text) + '</span><span class="costs">' + (j.done ? 'Done. ' : '') + costChips(j.reward) + '</span></span>' + (j.done ? '<button class="mini go2" data-job="' + j.id + '">Collect</button>' : '') + '</div>'; });
   h += '</div>' + (save.guide === 99 ? '<button class="btn" data-act="tips">Show the how-to-play tips again</button>' : ''); }
  else if (kind === 'party'){ const bo = T.blockBonuses(save);
   h = '<h3>Block Party</h3><p>Things the whole neighborhood chips in on. They make your whole block harder to hit.</p><div class="rows">';
   T.PARTY_ORDER.forEach(k => { const p = T.PARTY[k], lv = bo.party[k] | 0, c = T.partyCost(k, lv), open = c && T.partyOpen(save.block, lv), can = open && has(c);
-   h += '<div class="row' + (can ? '' : ' no') + '"><span class="mid"><span class="nm">' + esc(p.name) + ' ' + lv + ' of 3</span><br><span class="sub">' + esc(p.line) + ' ' + (!c ? 'Top level.' : !open ? 'Level ' + (lv + 1) + ' needs Main House level ' + (lv + 2) + '.' : 'Next for ' + costText(c) + '.') + '</span></span>'
-    + (open ? '<button class="mini" data-party="' + k + '">+ ' + c[0] + '</button>' : '') + '</div>'; });
+   h += '<div class="row' + (can ? '' : ' no') + '" data-ico="' + PARTY_ICO[k] + '"><span class="mid"><span class="nm">' + esc(p.name) + '<em>' + lv + ' of 3</em></span><br><span class="sub">' + esc(p.line) + ' ' + (!c ? 'Top level.' : !open ? 'Level ' + (lv + 1) + ' needs Main House level ' + (lv + 2) + '.' : 'Next for ' + costText(c) + '.') + '</span></span>'
+    + (open ? '<button class="mini cost" data-party="' + k + '" aria-label="Buy for ' + c[0] + ' Cash"><i class="ic cash"></i>' + c[0] + '</button>' : '') + '</div>'; });
   h += '</div><p class="stat">' + esc(partyText(bo.party) || 'Nothing yet.') + '</p>'; }
  else if (kind === 'lab'){ const cap = T.researchCap(save.block), g = T.gymLv(save.block);
   h = '<h3>Research<span>up to level ' + cap + '</span></h3><p>Every fighter of a kind gets it, now and from then on. Each level adds 10% health and damage. Level 3 adds a skill.</p><div class="rows">';
@@ -3217,6 +3245,7 @@ function openSheet(kind){
  if (kind === 'crew' || kind === 'lab') body.querySelectorAll('[data-unit]').forEach(r => r.insertBefore(miniIcon(iconLook(r.dataset.unit), 64), r.firstChild));
  body.querySelectorAll('[data-boss]').forEach(r => r.insertBefore(miniIcon('hero|' + r.dataset.boss + '|' + MY_CREW, 64), r.firstChild));
  body.querySelectorAll('[data-item]').forEach(r => { const c = itemIcon(r.dataset.item); c.style.width = c.style.height = '64px'; r.insertBefore(c, r.firstChild); });
+ body.querySelectorAll('[data-ico]').forEach(r => { const n = anyIcon(r.dataset.ico, +r.dataset.size || 56); if (!n) return; const w = document.createElement('span'); w.className = 'tile'; w.appendChild(n); r.insertBefore(w, r.firstChild); });
  $('sheet').hidden = false; $('home').classList.add('sheeton');
 }
 function closeSheet(){ sheetKind = null; $('sheet').hidden = true; $('home').classList.remove('sheeton'); }
@@ -3344,6 +3373,54 @@ function tintFace(k, color){ const id = k + '|' + color; if (TINTS[id]) return T
 function tintFaces(){ if (MY_CREW === 'lav') return; document.querySelectorAll('img.face[data-tint]').forEach(im => { const k = im.dataset.tint, t = tintFace(k, MY_CREW); if (typeof t === 'string'){ if (im.src !== t) im.src = t; } else t.then(url => { if (url && im.isConnected) im.src = url; }); }); }
 function face(k, edge){ if (!k) return ''; const mine = MY_BOSS[k] && MY_CREW !== 'lav', ready = mine && typeof TINTS[k + '|' + MY_CREW] === 'string' ? TINTS[k + '|' + MY_CREW] : '';
  return '<img class="face" src="' + (ready || 'boss-' + k + '.jpg') + '" alt=""' + (ready ? '' : ' loading="lazy"') + ' width="52" height="52"' + (mine ? ' data-tint="' + k + '"' : '') + (edge ? ' style="border-color:' + edge + '"' : '') + ' onerror="this.remove()">'; }
+// ---------- menu pictures (v0.7.3): the game's own building models drawn small, plus a few flat marks ----------
+// A building is a list of lit boxes [x, y, z, w, d, h, material]; here they are drawn in the same three-quarter view as the block,
+// top, front (+y) and right (+x) faces, back to front. Results are kept so a menu never draws the same picture twice.
+const ICON_CACHE = {};
+function bldIcon(k, lv, size){ const id = k + '|' + lv + '|' + size; if (ICON_CACHE[id]) return ICON_CACHE[id].cloneNode ? cloneCanvas(ICON_CACHE[id]) : null;
+ const cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1), px = Math.round(size * d); cv.width = cv.height = px; cv.style.width = cv.style.height = size + 'px'; cv.setAttribute('aria-hidden', 'true');
+ let a; try { a = ART.blocks(k, k === 'fence' ? lv || 1 : 0, k === 'fence' ? 10 : 0); } catch (e){ a = null; }
+ if (!a || !a.boxes || !a.boxes.length){ ICON_CACHE[id] = cv; return cloneCanvas(cv); }
+ if (k === 'fence') a = {boxes:[-1, 0, 1].flatMap(dx => a.boxes.map(b => [b[0] + dx, b[1], b[2], b[3], b[4], b[5], b[6]]))};   // a run of three pieces reads as a fence; one piece alone looks like a sign
+ const C = .866, S = .5, P = (x, y, z) => [(x - y) * C, (x + y) * S - z];
+ let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const b of a.boxes) for (const [x, y, z] of [[b[0], b[1], b[2]], [b[0] + b[3], b[1], b[2]], [b[0], b[1] + b[4], b[2]], [b[0] + b[3], b[1] + b[4], b[2]], [b[0], b[1], b[2] + b[5]], [b[0] + b[3], b[1] + b[4], b[2] + b[5]], [b[0] + b[3], b[1], b[2] + b[5]], [b[0], b[1] + b[4], b[2] + b[5]]]){ const q = P(x, y, z); x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); }
+ const sc = px * .88 / Math.max(x1 - x0, y1 - y0), ox = px / 2 - (x0 + x1) / 2 * sc, oy = px / 2 - (y0 + y1) / 2 * sc + px * .02, c = cv.getContext('2d');
+ const col = (m, f) => { const q = ART.MATS[m] || [128, 128, 128], g = q[3] > 0 ? 1 : f; return 'rgb(' + Math.min(255, Math.round(q[0] * g)) + ',' + Math.min(255, Math.round(q[1] * g)) + ',' + Math.min(255, Math.round(q[2] * g)) + ')'; };
+ let mesh = null; { const t = document.createElement('canvas'); t.width = t.height = Math.max(4, Math.round(px / 22)); const g = t.getContext('2d'); g.strokeStyle = 'rgba(190,198,204,.95)'; g.lineWidth = Math.max(1, t.width / 6); g.beginPath(); g.moveTo(0, 0); g.lineTo(t.width, t.height); g.moveTo(t.width, 0); g.lineTo(0, t.height); g.stroke(); mesh = c.createPattern(t, 'repeat'); }
+ const poly = (pts, fill, m) => { c.beginPath(); pts.forEach((p, i) => { const q = P(p[0], p[1], p[2]); c[i ? 'lineTo' : 'moveTo'](ox + q[0] * sc, oy + q[1] * sc); }); c.closePath();
+  if (m === 34){ c.fillStyle = 'rgba(120,128,134,.18)'; c.fill(); c.fillStyle = mesh; c.fill(); return; }   // chain-link: see-through wire diamonds
+  c.fillStyle = fill; c.fill(); c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = Math.max(.5, px / 160); c.stroke(); };
+ // a soft shadow on the ground under it
+ c.fillStyle = 'rgba(0,0,0,.28)'; { let gx0 = 1e9, gx1 = -1e9, gy0 = 1e9, gy1 = -1e9; for (const b of a.boxes){ if (b[2] > .05) continue; gx0 = Math.min(gx0, b[0]); gx1 = Math.max(gx1, b[0] + b[3]); gy0 = Math.min(gy0, b[1]); gy1 = Math.max(gy1, b[1] + b[4]); }
+  if (gx0 < 1e8){ c.beginPath(); [[gx0, gy0], [gx1 + .15, gy0], [gx1 + .15, gy1 + .15], [gx0, gy1 + .15]].forEach((p, i) => { const q = P(p[0], p[1], 0); c[i ? 'lineTo' : 'moveTo'](ox + q[0] * sc, oy + q[1] * sc); }); c.fill(); } }
+ const list = a.boxes.slice().sort((p, q) => (p[0] + p[3] / 2 + p[1] + p[4] / 2 + p[2] * .9) - (q[0] + q[3] / 2 + q[1] + q[4] / 2 + q[2] * .9));
+ for (const [x, y, z, w, dd, h, m] of list){
+  if (h > .001){ poly([[x, y + dd, z], [x + w, y + dd, z], [x + w, y + dd, z + h], [x, y + dd, z + h]], col(m, .66), m); poly([[x + w, y, z], [x + w, y + dd, z], [x + w, y + dd, z + h], [x + w, y, z + h]], col(m, .84), m); }
+  poly([[x, y, z + h], [x + w, y, z + h], [x + w, y + dd, z + h], [x, y + dd, z + h]], col(m, 1.06), m); }
+ // the gunner who stands on a porch or a roof is a person, not part of the building: put one there
+ const post = ART.POSTS && ART.POSTS[k]; if (post){ try { const fs = Math.round(sc * .95), fig = miniIcon(iconLook('shooter'), Math.max(8, Math.round(fs / d))), q = P(post[0], post[1], post[2]); c.drawImage(fig, ox + q[0] * sc - fig.width * .56, oy + q[1] * sc - fig.height * .985, fig.width, fig.height); } catch (e){} }
+ ICON_CACHE[id] = cv; return cloneCanvas(cv); }
+function cloneCanvas(src){ const cv = document.createElement('canvas'); cv.width = src.width; cv.height = src.height; cv.style.width = src.style.width; cv.style.height = src.style.height; cv.setAttribute('aria-hidden', 'true'); if (src.width) cv.getContext('2d').drawImage(src, 0, 0); return cv; }
+// flat marks for things that are not buildings: a star, three stars, a moon
+function markIcon(kind, size){ const cv = document.createElement('canvas'), d = Math.min(2, window.devicePixelRatio || 1), px = Math.round(size * d); cv.width = cv.height = px; cv.style.width = cv.style.height = size + 'px'; cv.setAttribute('aria-hidden', 'true');
+ const c = cv.getContext('2d'), star = (x, y, r, fill) => { c.beginPath(); for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; c[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fillStyle = fill; c.fill(); c.lineWidth = px / 40; c.strokeStyle = '#7a5410'; c.stroke(); };
+ if (kind === 'star') star(px / 2, px * .53, px * .4, '#f2b53a');
+ else if (kind === 'star3'){ star(px * .25, px * .6, px * .2, '#f2b53a'); star(px * .75, px * .6, px * .2, '#f2b53a'); star(px * .5, px * .42, px * .26, '#f2b53a'); }
+ else if (kind === 'moon'){ c.fillStyle = '#e8e2c8'; c.beginPath(); c.arc(px * .5, px * .5, px * .32, 0, 7); c.fill(); c.globalCompositeOperation = 'destination-out'; c.beginPath(); c.arc(px * .66, px * .4, px * .28, 0, 7); c.fill(); c.globalCompositeOperation = 'source-over'; c.fillStyle = '#f2b53a'; [[.24, .2, .03], [.8, .74, .025], [.7, .16, .02]].forEach(([x, y, r]) => { c.beginPath(); c.arc(px * x, px * y, px * r, 0, 7); c.fill(); }); }
+ return cv; }
+// which picture goes with each job and daily job: 'b:<building>:<level>', 'f:<fighter>', 'h:<boss>', or a mark
+const JOB_ICO = {s1:'star', s2:'star3', s3:'h:pops', s4:'star', s5:'moon', s6:'star', s7:'h:bigledger', s8:'star', s9:'star3', s10:'star', s11:'star', s12:'star',
+ b1:'b:fence:1', b2:'b:house:2', b3:'b:store:1', b4:'b:porch:1', b5:'b:house:1', b6:'b:nail:1', b7:'b:house:3', b8:'b:light:1', b9:'b:fence:2', b10:'b:roof:1', b11:'b:house:4', b12:'b:rocket:1',
+ c1:'f:brawler', c2:'b:gym:2', c3:'b:pad:1', c4:'b:workshop:1', c5:'h:enforcer', c6:'b:store:1', c7:'b:workshop:2', c8:'b:gym:4', c9:'star', c10:'b:workshop:3', c11:'b:gym:5', c12:'star'};
+const DAILY_ICO = {fights:'f:brawler', stars:'star', three:'star3', night:'moon', pct:'b:house:1', moves:'h:enforcer', corner:'h:pops', home:'f:shooter', wins:'star'};
+const PARTY_ICO = {watch:'b:light:1', cookout:'b:pad:1', mural:'b:studio:1'};
+function anyIcon(spec, size){ const p = String(spec || 'star').split(':');
+ if (p[0] === 'b') return bldIcon(p[1], +p[2] || 1, size);
+ if (p[0] === 'f') return miniIcon(iconLook(p[1]), size);
+ if (p[0] === 'h'){ const tmp = document.createElement('div'); tmp.innerHTML = face(p[1]); const im = tmp.firstChild; if (im){ im.style.width = im.style.height = size + 'px'; } return im || markIcon('star', size); }
+ return markIcon(p[0], size); }
+// cost as money marks instead of words, for the menus
+const costChips = c => !c ? '' : (c[0] ? '<span class="cost"><i class="ic cash"></i>' + c[0] + '</span>' : '') + (c[1] ? '<span class="cost"><i class="ic sup"></i>' + c[1] + '</span>' : '') || 'Free';
 // The coach: a first-run guide. It reads what the player is looking at and moves on only when they have done the thing. save.guide: 0 to 5 are the steps, 99 is off.
 const COACH = {
  crew0:['Start with your crew. Tap Crew.', 'hCrew'],
@@ -3430,7 +3507,7 @@ mountMap();
 if (!introSeen() && !save.rescued && !save.tries) introPlay(); else introFind(list => { $('introBtn').hidden = !list.length; });
 { const done = settlePending(); toTitle(); if (done) setTimeout(() => toast('Your last fight played out while you were away: ' + done.stars + (done.stars === 1 ? ' star' : ' stars'), 3200), 900); }
 // test hook (used by the headless proof): read-only peeks at the fight
-window.TURF_TEST = {tint:(k, color) => Promise.resolve(tintFace(k, color)), net:() => ({code:save.crewCode, list:crewList, msg:netMsg, busy:netBusy}), pvpTest:(p, listOnly) => { crewList = [p]; if (!listOnly) hitPlayer(p.uid); }, block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
+window.TURF_TEST = {bld:(k, lv, n) => bldIcon(k, lv, n), tint:(k, color) => Promise.resolve(tintFace(k, color)), net:() => ({code:save.crewCode, list:crewList, msg:netMsg, busy:netBusy}), pvpTest:(p, listOnly) => { crewList = [p]; if (!listOnly) hitPlayer(p.uid); }, block:() => JSON.parse(JSON.stringify(save.block)), home:() => ({cash:save.cash, sup:save.sup, army:Object.assign({}, save.army), sel:homeSel, sheet:sheetKind, fence:fenceMode, color:MY_CREW, lv:save.block ? T.houseLv(save.block) : 0, n:save.block ? save.block.length : 0}),
  state:() => ({screen:['title', 'story', 'hud', 'result', 'watch', 'home'].find(k => $(k).classList.contains('on')), tick:sim ? sim.tick() : 0, counts:Object.assign({}, counts), sel, finished, gl3d, reports:save.reports.length}),
  camp:() => JSON.parse(JSON.stringify({camp:save.camp, night:save.night})), hit, intro:() => ({on:!$('intro').hidden, at:introAt, shots:introList.map(s => s.n), video:!$('introVid').hidden}), icon:(l, n) => miniIcon(l, n), select:k => { selectItem(k, true); openSheet('info'); },
  toScreen:(x, y, z) => gl3d ? VIL.project(x, y, z || 0) : null, result:() => sim ? sim.result() : null};

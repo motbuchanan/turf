@@ -4,6 +4,13 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
+**v0.7.3 · Nov 24 2026 · Menus with pictures, and an update badge.**
+- Tap the version badge to check for an update. If there is a newer build it installs it and reloads; if not, it says you have the newest version.
+- Build: every row shows a small picture of what it builds, drawn from the game's own models (chain-link as see-through wire, gunners standing on the porch and roof). Counts sit next to the name; costs show as Cash and Supplies marks.
+- Tapping a building on your block shows a big picture of it at the top.
+- Jobs and today's jobs each have a picture (a star, a moon, a fighter, a boss, or the building the job is about), today's jobs have progress bars, and rewards show as money marks.
+- Block Party rows have pictures too.
+
 **v0.7.2 · Nov 24 2026 · Portraits in your crew color.** Your five bosses are painted in lavender; the game now recolors their clothes to whatever crew color you picked, on the phone, with no extra pictures. Skin, gold and the background stay as painted. Deadeye and Wheels have new paintings.
 
 **v0.7.1 · Nov 24 2026 · Boss portraits.** The five bosses on the crew screen and the six rival bosses on the streets now show their painted faces. Eleven new pictures sit beside the page (boss-*.jpg) and are kept for offline play. If one is missing, the row shows without it.
