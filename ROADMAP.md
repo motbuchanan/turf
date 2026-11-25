@@ -4,6 +4,11 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
+**v0.8.1 · Nov 25 2026 · Odds, and the corner in its place.**
+- The Boombox corner was the first thing on the streets screen but is harder than the Kings' first three blocks (a crew of 5 and 5 can't win it; 10 and 10 wins only if they go in bunches). It now sits after the Boombox Kings' blocks and opens once you have a star on their third block.
+- Every open block and the corner show your odds: a bar and a word (Easy, Good odds, Even, Tough, Long shot) with a percent. It's how often a crew like yours takes at least one star, dropped in two bunches near their Main House, worked out on your phone from a few quick practice fights with your actual crew, research, bosses and items, day or night. Dripping fighters in one at a time does worse, and the screen says so.
+- The Viceroy explains both.
+
 **v0.8.0 · Nov 25 2026 · Replays like a film, things that come down hard, and something to spend Cash on.**
 - Cinematic replays (Caleb's idea): every replay now plays like a film. It opens on a crane shot around the block, then cuts between a chase behind your crew, a low side angle and a high angle. When a big building falls, it cuts to it in slow motion, and the last one gets the longest, slowest look. Letterbox bars; the buttons sit in the bottom bar. Overview switches back to the view from above (remembered), and touching the screen takes the camera for that replay.
 - Things come down: a building that falls now shudders and breaks into pieces that fly out, tumble and settle in a cloud of dust, with sparks. The Supply Run van and the Lowrider go up in fire and black smoke. Fallen fighters drop where they stood. This happens in every fight, not only replays.

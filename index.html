@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.8.0">
+<meta name="build" content="0.8.1">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -318,6 +318,13 @@ body.vicon #toast{top:auto;bottom:calc(84px + var(--safe-b))}
 #watch.cine .lbl{top:calc(7px + var(--safe-t));background:none}
 /* Watch: the badge moves to the top right so it never sits on the replay buttons */
 #watch.on ~ #badge{bottom:auto;top:calc(8px + var(--safe-t));right:calc(8px + var(--safe-r));left:auto}
+/* odds: how often a crew like yours takes a star */
+.odds{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;margin-top:2px}
+.row .odds{align-items:flex-start;margin-top:6px}
+.obar{display:block;width:84%;max-width:160px;height:6px;border-radius:3px;background:#3a3c42;overflow:hidden}
+.obar i{display:block;height:100%;border-radius:3px;background:#8a8f99}
+.obar i.g{background:#5fbf6a}.obar i.m{background:#e2b440}.obar i.b{background:#d9574a}
+.otx{font-size:11px;font-weight:700;color:var(--ink)}
 
 </style>
 </head>
@@ -374,7 +381,7 @@ body.vicon #toast{top:auto;bottom:calc(84px + var(--safe-b))}
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.8.0 · Nov 25 2026</button>
+<button id="badge">v0.8.1 · Nov 25 2026</button>
 <button id="sndBtn" aria-label="Sound"><svg viewBox="0 0 20 18" width="20" height="18" aria-hidden="true"><path class="spk" d="M2 6h4l5-4v14l-5-4H2z"/><path class="w1" d="M13.5 6.2a4 4 0 0 1 0 5.6"/><path class="w2" d="M15.8 3.6a7.5 7.5 0 0 1 0 10.8"/><path class="x" d="M13.5 6.5l5 5M18.5 6.5l-5 5"/></svg><span>Sound on</span></button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
@@ -2973,7 +2980,7 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.8.0', BUILD_DATE = 'Nov 25 2026';
+const VER = '0.8.1', BUILD_DATE = 'Nov 25 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
@@ -3716,18 +3723,19 @@ function openSheet(kind){
   h = '<h3>The streets<span>' + T.starsAll(save) + ' stars</span></h3>';
   h += '<div class="tod"><button data-tod="day" class="' + (save.night ? '' : 'on') + '">Day</button><button data-tod="night" class="' + (save.night ? 'on' : '') + '">Night</button></div>';
   h += '<p class="stat">' + (save.night ? 'Night: their guns reach a little less. 75% of the loot.' : 'Day: full loot, full reach.') + '</p><div class="rows">';
-  h += '<button class="row" data-hit="-1"><span class="mid"><span class="nm">The Boombox corner</span><br><span class="sub">Loot for your crew, any time. Bosses sit this one out.</span></span></button>';
   T.CREWS.forEach((c, ci) => { const hl = T.houseLv(save.block || []) >= c.hl;
    h += '<div class="crewhd"><i style="background:' + gangHex(c.color) + '"></i>' + face(RIVAL_FACE[c.id], gangHex(c.color)) + '<span class="mid"><span class="nm">' + esc(c.name) + (T.roundOf(save.rounds, ci) > 1 ? ', Round ' + T.roundOf(save.rounds, ci) : '') + '</span><br><span class="sub">' + esc(hl ? c.turf : 'Opens at Main House level ' + c.hl + '.') + '</span></span></div><div class="blocks">';
    for (let bi = 0; bi < T.CAMP.blocks; bi++){ const v = save.camp[ci + '-' + bi], open = T.campOpen(save.camp, save.block, ci, bi, save.rounds), st = v ? v.s : 0;
     const p = T.campPool(ci, bi, T.roundOf(save.rounds, ci)), t = v ? v.t : [0, 0], left = Math.max(0, p.cash - t[0]) + Math.max(0, p.sup - t[1]);
-    h += '<button class="blk' + (open ? '' : ' no') + '" data-hit="' + ci + '" data-b="' + bi + '"' + (open ? '' : ' aria-disabled="true"') + '><span class="nm">' + (bi === T.CAMP.blocks - 1 ? esc(c.boss) : 'Block ' + (bi + 1)) + '</span><span class="st">' + [0, 1, 2].map(n => '<i class="' + (n < st ? 'on' : '') + '"></i>').join('') + '</span><span class="sub">' + (open ? (left ? left + ' loot left' : 'Picked clean') : 'Locked') + '</span></button>'; }
+    h += '<button class="blk' + (open ? '' : ' no') + '" data-hit="' + ci + '" data-b="' + bi + '"' + (open ? '' : ' aria-disabled="true"') + '><span class="nm">' + (bi === T.CAMP.blocks - 1 ? esc(c.boss) : 'Block ' + (bi + 1)) + '</span><span class="st">' + [0, 1, 2].map(n => '<i class="' + (n < st ? 'on' : '') + '"></i>').join('') + '</span><span class="sub">' + (open ? (left ? left + ' loot left' : 'Picked clean') : 'Locked') + '</span>' + (open ? oddsHtml(ci + '-' + bi) : '') + '</button>'; }
    h += '</div>';
-   if (T.canRunBack(save.camp, save.rounds, ci)){ const r = T.roundOf(save.rounds, ci) + 1; h += '<button class="btn main runback" data-runback="' + ci + '">Run it back: Round ' + r + '. Tougher, ' + Math.round(T.ROUNDS.loot * 100 * (r - 1)) + '% more loot</button>'; } });
+   if (T.canRunBack(save.camp, save.rounds, ci)){ const r = T.roundOf(save.rounds, ci) + 1; h += '<button class="btn main runback" data-runback="' + ci + '">Run it back: Round ' + r + '. Tougher, ' + Math.round(T.ROUNDS.loot * 100 * (r - 1)) + '% more loot</button>'; }
+   if (ci === 0){ const co = cornerOpen();   // the corner is tougher than the Kings' first blocks: it sits after them and opens with a star on their third
+    h += '<button class="row corner' + (co ? '' : ' no') + '" data-hit="-1"><span class="mid"><span class="nm">The Boombox corner</span><br><span class="sub">' + (co ? 'Their loot run, any time. Tougher than their first blocks, and bosses sit this one out.' : 'Opens when you have a star on the Kings\' third block. It is tougher than their first ones.') + '</span>' + (co ? oddsHtml('c') : '') + '</span></button>'; } });
   h += '<button class="row" data-act="online"><span class="mid"><span class="nm">Your crew online</span><br><span class="sub">' + (save.crewCode ? 'Crew ' + esc(save.crewCode) + '. Hit real blocks, see who hit yours, check the Rep board.' : 'Join with a code to hit each other\'s real blocks.') + '</span></span></button>';
   h += '<button class="row" data-act="practice"><span class="mid"><span class="nm">Test your block</span><br><span class="sub">A rival crew your size hits your own block while you watch. Nothing is lost.</span></span></button>';
   h += '<button class="row" data-act="fights"><span class="mid"><span class="nm">Your fights</span><br><span class="sub">' + (save.reports.length ? 'The last ' + Math.min(30, save.reports.length) + ' you started. Watch any of them again.' : 'None yet. Every fight you start is kept here.') + '</span></span></button>';
-  h += '</div><p>Each block opens once the one before it has a star. A block keeps what you take: hit it again and there is less to carry home.</p>'; }
+  h += '</div><p>Each block opens once the one before it has a star. A block keeps what you take: hit it again and there is less to carry home.</p><p>Odds: how often a crew like yours takes at least one star, dropped in two bunches. Drip them in one at a time and the odds drop.</p>'; }
  else if (kind === 'crew'){ const a = save.army, g = T.gymLv(save.block);
   h = '<h3>Your crew<span>' + T.armySize(a) + ' of ' + T.armyCap(save.block) + ' beds</span></h3><p>Colors are the only thing that marks your people.</p><div class="sw">';
   GANG_PICK.forEach(c => { h += '<button data-col="' + c + '" class="' + (c === MY_CREW ? 'on' : '') + '" style="background:' + gangHex(c) + '" aria-label="' + c + '"></button>'; });
@@ -3999,7 +4007,8 @@ const VIC = {
   "Your people pick their own targets. Want them somewhere else? Plant a Flag on a building and everyone close by goes for it.",
   "Drop a boss, then tap the boss card again for the move. Items land wherever you tap on the block.",
   "End calls it early. Whoever is still standing walks back to your block. The Boombox corner pays loot and Rep 6 times a day; after that it's practice."]},
- streets:{t:'The streets', ico:'h:pops', show:'streets', say:() => ["Six crews hold these streets, four blocks each. The Boombox Kings come first. They owe us.",
+ streets:{t:'The streets', ico:'h:pops', show:'streets', say:() => ["Six crews hold these streets, four blocks each. The Boombox Kings come first. They owe us. Their corner opens once you have a star on their third block: tougher than their first blocks, and it never runs dry.",
+  "Every open block shows your odds: how often a crew like yours takes at least a star, dropped in two bunches. Drip them in one at a time and you'll do worse.",
   "Stars open the next block. Knock down half a block for one star, take their Main House for two, flatten everything for three.",
   "Pick day or night before you go. At night their guns reach a little less, unless a light is close, and you carry home a quarter less. Night has its own jobs.",
   "The later crews also want a bigger Main House before they let you in. A block fills back up a little after every fight. Three-star all four of a crew's blocks and you can Run it back: tougher, richer, up to Round 5."]},
@@ -4088,12 +4097,35 @@ $('hHelp').onclick = () => openSheet('help');
 setInterval(coach, 350);
 function hit(ci, bi){
  if (!T.armySize(save.army)){ toast('Train a crew first'); openSheet('crew'); return; }
+ if (ci < 0 && !cornerOpen()){ toast('The corner opens when you have a star on the Kings\' third block.', 2600); return; }
  if (ci >= 0 && !T.campOpen(save.camp, save.block, ci, bi, save.rounds)){ toast(T.houseLv(save.block || []) < T.CREWS[ci].hl ? 'Opens at Main House level ' + T.CREWS[ci].hl : 'Get a star on the block before it first'); return; }
  closeSheet();
  if (ci < 0){ startAttack(T.raidRecipe(seed(), save.army, save.research, myLoad(true))); return; }
  startAttack(T.campRecipe(ci, bi, seed(), save.army, save.research, save.night, myLoad(false, ci))); }
 // what you bring besides fighters: your bosses and every item you have made
 // the Boombox corner is your crew's loot run: bosses sit that one out (it never runs dry, so they would farm it for free)
+function cornerOpen(){ const v = save.camp['0-2']; return !!(v && v.s > 0); }
+const oddsCache = new Map(); let oddsQ = [], oddsBusy = false;
+function oddsKey(id){ return id + '|' + JSON.stringify(save.army) + JSON.stringify(save.research) + JSON.stringify(save.kit || {}) + (save.night ? 'n' : 'd') + '|' + (id === 'c' ? 1 : T.roundOf(save.rounds, +id.split('-')[0])) + '|' + T.houseLv(save.block || []); }
+function oddsRecipe(id, sd){ if (id === 'c') return T.raidRecipe(sd, save.army, save.research, myLoad(true)); const [ci, bi] = id.split('-').map(Number); return T.campRecipe(ci, bi, sd, save.army, save.research, save.night, myLoad(false, ci)); }
+function oddsRun(id){ const N = 4; let won = 0, pct = 0;
+ for (let n = 0; n < N; n++){ const R = oddsRecipe(id, 9173 * (n + 1)), core = R.items.find(b => b.role === 'core') || R.items[0], cx = core ? core.x + (core.fw || 2) / 2 : 14, cy = core ? core.y + (core.fh || 2) / 2 : 14;
+  const dz = []; for (let y = 0; y < 28; y++) for (let x = 0; x < 28; x++) if (B.canDrop(R, x + .5, y + .5)) dz.push([x + .5, y + .5]);
+  if (!dz.length || !R.attackers.length){ continue; }
+  dz.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy));
+  const p1 = dz[0], p2 = dz.find(q => Math.hypot(q[0] - p1[0], q[1] - p1[1]) > 7) || p1;
+  R.deploys = R.attackers.map((a, j) => { const q = j % 2 ? p2 : p1; return {i:j, x:q[0], y:q[1], t:1 + j}; });
+  const r = B.simRaid(R, {}).result; if (r.pct >= 50) won++; pct += r.pct; }
+ return {win:Math.round(won / N * 100), pct:Math.round(pct / N)}; }
+function oddsWord(w){ return w >= 90 ? 'Easy' : w >= 65 ? 'Good odds' : w >= 40 ? 'Even' : w >= 15 ? 'Tough' : 'Long shot'; }
+function oddsInner(o){ return '<span class="obar"><i style="width:' + Math.max(4, o.win) + '%" class="' + (o.win >= 65 ? 'g' : o.win >= 40 ? 'm' : 'b') + '"></i></span><span class="otx">' + oddsWord(o.win) + ' ' + o.win + '%</span>'; }
+function oddsHtml(id){ if (!T.armySize(save.army)) return ''; const k = oddsKey(id), o = oddsCache.get(k);
+ if (!o){ if (!oddsQ.some(q => q.k === k)) oddsQ.push({id, k}); setTimeout(oddsPump, 60); }
+ return '<span class="odds" data-odds="' + id + '">' + (o ? oddsInner(o) : '<span class="obar"></span><span class="otx">Odds...</span>') + '</span>'; }
+function oddsPump(){ if (oddsBusy) return; const q = oddsQ.shift(); if (!q) return; oddsBusy = true;
+ try { const o = oddsCache.get(q.k) || oddsRun(q.id); oddsCache.set(q.k, o); if (oddsCache.size > 200) oddsCache.delete(oddsCache.keys().next().value);
+  if (sheetKind === 'streets'){ const el = document.querySelector('#sheetBody [data-odds="' + q.id + '"]'); if (el && oddsKey(q.id) === q.k) el.innerHTML = oddsInner(o); } } catch (e){}
+ oddsBusy = false; if (oddsQ.length) setTimeout(oddsPump, 30); }
 function myLoad(corner, ci){ return {bosses:corner ? [] : T.BOSS_ORDER, kit:Object.assign({}, save.kit), hl:T.houseLv(save.block || []), round:ci >= 0 ? T.roundOf(save.rounds, ci) : 1}; }
 // the flat map has no dragging: tap a building to pick it, then tap an open spot to move it there
 function homeGround(gx, gy){
