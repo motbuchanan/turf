@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="build" content="0.7.6">
+<meta name="build" content="0.8.0">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#16171b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -302,6 +302,22 @@ body.vicon #toast{top:auto;bottom:calc(84px + var(--safe-b))}
 @media (orientation:landscape) and (max-height:500px){body.sheetup #vic{width:calc(100vw - min(48vw,430px) - 36px - var(--safe-l) - var(--safe-r))}}
 /* landscape: start below the version badge so it stays tappable */
 @media (orientation:landscape) and (max-height:500px){#vic{top:calc(90px + var(--safe-t));max-height:calc(100vh - 98px - var(--safe-t) - var(--safe-b))}}
+/* cinematic replay: letterbox bars; the label and buttons sit on top of them */
+#watch.cine::before,#watch.cine::after{content:"";position:absolute;left:0;right:0;height:9vh;background:#000;pointer-events:none;z-index:0;animation:barsIn .6s ease-out both}
+#watch.cine::before{top:0}
+#watch.cine::after{bottom:0}
+#watch .ctl,#watch .lbl{z-index:1}
+@keyframes barsIn{from{height:0}}
+@media (prefers-reduced-motion:reduce){#watch.cine::before,#watch.cine::after{animation:none}}
+#watch .ctl{flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 16px)}
+/* filmed: the buttons sit in the bottom letterbox bar on one line, out of the picture */
+#watch.cine::after{height:calc(58px + var(--safe-b))}
+#watch.cine::before{height:calc(44px + var(--safe-t))}
+#watch.cine .ctl{flex-wrap:nowrap;background:none;padding:0;bottom:calc(7px + var(--safe-b));gap:6px}
+#watch.cine .ctl button{min-width:0;min-height:44px;padding:8px 12px;font-size:14px;background:#1b1c20}
+#watch.cine .lbl{top:calc(7px + var(--safe-t));background:none}
+/* Watch: the badge moves to the top right so it never sits on the replay buttons */
+#watch.on ~ #badge{bottom:auto;top:calc(8px + var(--safe-t));right:calc(8px + var(--safe-r));left:auto}
 
 </style>
 </head>
@@ -347,7 +363,7 @@ body.vicon #toast{top:auto;bottom:calc(84px + var(--safe-b))}
 
 <div id="watch" class="layer">
  <div class="lbl" id="watchLbl">Replay</div>
- <div class="ctl"><button id="wPlay">Pause</button><button id="wSpeed">2x</button><button id="wSkip">Skip</button></div>
+ <div class="ctl"><button id="wCine">Overview</button><button id="wPlay">Pause</button><button id="wSpeed">2x</button><button id="wSkip">Skip</button></div>
 </div>
 
 <div id="home" class="layer">
@@ -358,7 +374,7 @@ body.vicon #toast{top:auto;bottom:calc(84px + var(--safe-b))}
 </div>
 
 <div id="nogl"><span id="noglMsg">This phone can't draw the 3D block, so you're seeing the flat map. Everything still works.</span></div>
-<button id="badge">v0.7.6 · Nov 24 2026</button>
+<button id="badge">v0.8.0 · Nov 25 2026</button>
 <button id="sndBtn" aria-label="Sound"><svg viewBox="0 0 20 18" width="20" height="18" aria-hidden="true"><path class="spk" d="M2 6h4l5-4v14l-5-4H2z"/><path class="w1" d="M13.5 6.2a4 4 0 0 1 0 5.6"/><path class="w2" d="M15.8 3.6a7.5 7.5 0 0 1 0 10.8"/><path class="x" d="M13.5 6.5l5 5M18.5 6.5l-5 5"/></svg><span>Sound on</span></button>
 <button id="fsBtn" hidden aria-label="Full screen"><i></i><span>Full screen</span></button>
 <div id="toast"></div>
@@ -757,6 +773,11 @@ const BDEFS = {
  manhole:{name:'Open Manhole', fp:[1, 1], role:'trap', tk:'manhole', cap:4},
  closet:{name:'Ambush Closet', fp:[1, 1], role:'trap', tk:'closet', n:3},
  kite:{name:'Kite Line', fp:[1, 1], role:'trap', tk:'kite', dmg:520},
+ // v0.8 flex: bought with Cash only; each one pays off (more loot, or a tougher block)
+ ride:{name:'Lowrider', fp:[2, 1], role:'bld', hp:260},
+ grill:{name:'Cookout Grill', fp:[1, 1], role:'bld', hp:200},
+ neon:{name:'Neon Sign', fp:[1, 1], role:'bld', hp:220},
+ hoop:{name:'Hoop Court', fp:[2, 2], role:'bld', hp:300},
  hustle:{name:'Corner Hustle', fp:[2, 2], role:'bld', hp:300},
  run:{name:'Supply Run', fp:[2, 2], role:'bld', hp:300},
  supstash:{name:'Supply Stash', fp:[2, 2], role:'bld', hp:380},
@@ -940,9 +961,13 @@ const HOME = {
  manhole:{cap:[0, 1, 2, 2], cost:[120, 80], line:'Hidden. Drops small fighters out of the fight (4 beds worth). Once a fight.'},
  closet:{cap:[0, 0, 1, 2], cost:[200, 150], line:'Hidden. Three of your crew jump out when someone gets close. Once a fight.'},
  kite:{cap:[0, 1, 2, 3], cost:[100, 120], line:'Hidden. Snags one drone and brings it down. Once a fight.'},
- fence:{cap:[24, 44, 64, 90], cost:[0, 10], line:'Slows anyone on foot. Levels: chain-link, wood, brick, steel.'}
+ fence:{cap:[24, 44, 64, 90], cost:[0, 10], line:'Slows anyone on foot. Levels: chain-link, wood, brick, steel.'},
+ ride:{cap:[0, 1, 1, 1], cost:[2000, 0], line:'Candy paint, chrome, hydraulics. 5% more Cash from every fight you start, per level.'},
+ grill:{cap:[0, 1, 1, 1], cost:[2000, 0], line:'The whole street shows up hungry and leaves owing you. 5% more Supplies from every fight you start, per level.'},
+ neon:{cap:[0, 0, 1, 1], cost:[1500, 0], line:'Lights up the block. Your guns hit 10% harder when someone hits you, per level. Stacks with the Block Party.'},
+ hoop:{cap:[0, 0, 1, 1], cost:[2000, 0], line:'Everybody on the block plays here, and everybody looks out for it. Your buildings take 10% more to knock down, per level. Stacks with the Block Party.'}
 };
-const SHOP = ['hustle', 'run', 'stash', 'supstash', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof', 'rocket', 'jammer', 'window', 'blower', 'popup', 'light', 'nail', 'manhole', 'closet', 'kite'];
+const SHOP = ['hustle', 'run', 'stash', 'supstash', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof', 'rocket', 'jammer', 'window', 'blower', 'popup', 'light', 'nail', 'manhole', 'closet', 'kite', 'ride', 'grill', 'neon', 'hoop'];
 const MAXLV = {house:4, fence:4, gym:5, workshop:4, crewhouse:1, light:1, nail:2, manhole:1, closet:1, kite:2}, HOUSE_UP = [null, [1500, 1000], [5000, 4000], [9000, 8000]];
 // the Main House also needs a name on the streets: stars earned (every round counts) before it will go to levels 2, 3 and 4
 const HOUSE_STARS = [0, 0, 8, 45, 150];
@@ -958,8 +983,20 @@ function upgradeCost(k, lv){
  if (lv >= maxLv(k)) return null;
  if (k === 'house') return HOUSE_UP[lv];
  if (k === 'fence') return [0, [0, 30, 80, 180][lv]];   // per tile; wood, brick, then steel
+ if (FLEX_UP[k]) return [FLEX_UP[k][lv - 1], 0];   // flex levels up with Cash, not Supplies
  const c = HOME[k].cost; return [0, Math.round((c[0] + c[1] + 100) * lv * 1.2 / 10) * 10];
 }
+// ---------- v0.8: things to spend Cash on once the block is built ----------
+const FLEX = ['ride', 'grill', 'neon', 'hoop'], FLEX_UP = {ride:[4500, 8000], grill:[4500, 8000], neon:[3000, 5000], hoop:[3500, 6000]}, FLEX_PCT = {ride:5, grill:5, neon:10, hoop:10};
+function flexLv(block, k){ const i = (block || []).find(b => b.k === k); return i ? i.lv || 1 : 0; }
+// loot bonus from the Lowrider and the Grill, as multipliers
+function flexLoot(block){ return {cash:1 + .05 * flexLv(block, 'ride'), sup:1 + .05 * flexLv(block, 'grill')}; }
+// Own the block: 24 houses around your lot, bought in order; each pays rent in Supplies after every fight that does real damage
+const PROPS = 24;
+function propPrice(n){ return n >= PROPS ? null : 800 + 400 * n; }
+function propRent1(n){ return Math.round((800 + 400 * n) * .025 / 5) * 5; }
+function propRent(owned){ let r = 0; for (let n = 0; n < Math.min(PROPS, owned | 0); n++) r += propRent1(n); return r; }
+function propOpen(block){ return houseLv(block || []) >= 2; }
 // the open part of the lot grows a ring with every Main House level
 function lotsOpen(houseLv){ const n = Math.max(1, Math.min(4, houseLv | 0)) - 1; return {x0:10 - n, y0:9 - n, x1:18 + n, y1:17 + n}; }
 function houseLv(block){ const h = block.find(i => i.k === 'house'); return h ? h.lv || 1 : 1; }
@@ -1137,7 +1174,7 @@ function homeDefenders(block){ const hl = houseLv(block), m = 1 + HOME_CREW.step
 // takes the Main House about 45% of the time (the plan's 40 to 50% mirror match), from Main House level 2 on. A level 1 block is a
 // starter block: it falls to almost anyone, so it will not be raided by other players until level 2 (Phase 5).
 const HOME_POWER = [6, 4.01, 3.43, 3.6];
-function homeRecipe(block, seed, counts, research, load, color, bonus){ const m = HOME_POWER[houseLv(block) - 1] || 1, bo = bonus || {gun:1, crew:1, bld:1, party:{}};
+function homeRecipe(block, seed, counts, research, load, color, bonus){ const m = HOME_POWER[houseLv(block) - 1] || 1, b0 = bonus || {gun:1, crew:1, bld:1, party:{}}, bo = Object.assign({}, b0, {gun:b0.gun * (1 + .1 * flexLv(block, 'neon')), bld:b0.bld * (1 + .1 * flexLv(block, 'hoop'))});
  const items = block.map(it => { const f = fightItem(it); if (f.role === 'tower'){ f.hp = Math.round(f.hp * m * bo.bld); f.dmg = Math.round(f.dmg * m * bo.gun * 10) / 10; } else if (f.role === 'trap') f.dmg = Math.round(f.dmg * m); else if (f.role === 'core' || f.role === 'bld') f.hp = Math.round(f.hp * bo.bld); return f; });
  const defenders = homeDefenders(block).map(d => Object.assign(d, {hp:Math.round(d.hp * m * bo.crew), atk:Math.round(d.atk * m * 10) / 10}));
  return loadout({deployVer:B.DEPLOY_VER, rules:2, seed:seed >>> 0, maxT:1800, guard:0, mode:'home', crewColor:color || 'lav', party:bo.party, items, attackers:army(counts, research), defenders, deploys:[]}, load); }
@@ -1262,7 +1299,7 @@ function dayRoll(day, key, yesterdayKey){ const d = day && typeof day === 'objec
  return {d:key, n:{}, got:{}, streak:d.on === yesterdayKey ? sk : 0, on:d.on || ''}; }
 function dailyNow(day){ return dailyFor(day.d).map((i, slot) => { const [k, need, text] = DAILY[i]; const have = Math.min(need, (day.n && day.n[k]) | 0); return {slot, k, text, have, need, done:have >= need, got:!!(day.got && day.got[slot])}; }); }
 
-return {UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
+return {FLEX, FLEX_UP, FLEX_PCT, flexLv, flexLoot, PROPS, propPrice, propRent, propRent1, propOpen, UNITS, ORDER, BDEFS, CREWS, RESCUE_BLOCK, RESCUE_ARMY, fightItem, army, rescueRecipe, starsFor, reportFrom,
  HOME, SHOP, UNLOCKS, SIZE, START, maxLv, trainCost, upgradeCost, lotsOpen, houseLv, count, capFor, storeCap, armyCap, armySize, gymLv, payout, lootFor,
  starterBlock, fitsAt, freeSpot, reachOk, cleanBlock, raidRecipe, RESEARCH, researchMult, researchCost, researchCap, lvOf, priceCut, price, patchShare, patchedUp, repFor,
  BOSS_LV, FLAG, pvpRecipe, pvpLoot, pvpLoss, HOUSE_STARS, houseStars, ROUNDS, roundOf, cleanRounds, canRunBack, starsNow, starsAll, restock, RANKS, rankOf, rankBonus, JOBS, JOB_TRACKS, jobCtx, jobsNow, cleanJobs, DAILY, dayKey, dailyFor, dailyPay, dayRoll, dailyNow,
@@ -1281,11 +1318,11 @@ const FIREBASE_CONFIG = {apiKey:'AIzaSyC6Y5Mwug0z2OgGLKdrc4RsY2w7CazTBNc', authD
 const AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FIREBASE_CONFIG.apiKey, TOKEN_URL = 'https://securetoken.googleapis.com/v1/token?key=' + FIREBASE_CONFIG.apiKey;
 const DB = 'projects/' + FIREBASE_CONFIG.projectId + '/databases/(default)/documents', FS_URL = 'https://firestore.googleapis.com/v1/' + DB;
 // players can only fight each other when their phones run the same fight rules; bump the last number when a rule changes what a replay does
-const FIGHT_VER = 's' + B.SIM_VER + 'd' + B.DEPLOY_VER + 'r2';
+const FIGHT_VER = 's' + B.SIM_VER + 'd' + B.DEPLOY_VER + 'r3';   // r3 (v0.8): a block's Neon Sign and Hoop Court make it tougher
 
 // ---------- blocks as short text: 5 characters a building (kind, kind, x, y, level) ----------
 // PACK is append-only: a kind keeps its number for good, so an old phone can still read a new block's older buildings.
-const PACK = ['house', 'hustle', 'run', 'stash', 'supstash', 'gym', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof', 'rocket', 'jammer', 'window', 'blower', 'popup', 'light', 'nail', 'manhole', 'closet', 'kite', 'fence'];
+const PACK = ['house', 'hustle', 'run', 'stash', 'supstash', 'gym', 'pad', 'store', 'pharmacy', 'hardware', 'studio', 'workshop', 'crewhouse', 'porch', 'roof', 'rocket', 'jammer', 'window', 'blower', 'popup', 'light', 'nail', 'manhole', 'closet', 'kite', 'fence', 'ride', 'grill', 'neon', 'hoop'];   // append only: the position is the code
 const b36 = n => Math.max(0, Math.min(35, n | 0)).toString(36);
 function packBlock(block){ let s = ''; for (const i of (block || [])){ const k = PACK.indexOf(i.k); if (k < 0) continue; s += (k < 36 ? '0' : '') + k.toString(36) + b36(i.x) + b36(i.y) + b36(i.lv || 1); } return s; }
 function unpackBlock(s){ if (typeof s !== 'string' || s.length % 5 || s.length > 4000 || !/^[0-9a-z]*$/.test(s)) return null; const list = [];
@@ -2161,6 +2198,36 @@ function blocks(k, lv, shape){
   else if (k === 'closet'){ box(.15, .2, 0, .7, .55, .9, 35); box(.2, .74, .05, .6, .02, .8, 23); box(.66, .76, .4, .06, .03, .06, 13); }
   else { box(.48, .48, 0, .04, .04, 1.1, 23); box(.3, .4, .95, .4, .02, .3, 39); box(.5, .5, 1.05, .02, .02, .4, 16); }
   top = .2;
+ } else if (k === 'ride'){ // the Lowrider (2x1): candy paint, a low roof, whitewall tires; level 2 chrome, level 3 gold and a hood ornament
+  const paint = lv >= 3 ? 39 : lv >= 2 ? 21 : 37, trim = lv >= 3 ? 30 : lv >= 2 ? 16 : 13;
+  box(.15, .12, .14, 1.7, .76, .28, paint); box(.6, .18, .42, .8, .64, .24, paint); box(.63, .2, .44, .74, .6, .2, 17);      // body, cabin, glass
+  box(.12, .1, .14, 1.76, .8, .04, trim); box(.12, .1, .38, .06, .8, .06, trim); box(1.82, .1, .38, .06, .8, .06, trim);       // chrome strip, bumpers
+  [[.32, .06], [.32, .82], [1.42, .06], [1.42, .82]].forEach(([x, y]) => { box(x, y, 0, .3, .12, .28, 18); box(x + .07, y - .005, .07, .16, .13, .14, lv >= 2 ? trim : 16); });   // whitewalls, rims
+  box(1.86, .3, .2, .04, .12, .06, 19); box(1.86, .58, .2, .04, .12, .06, 19); box(.1, .3, .22, .04, .12, .05, 22); box(.1, .58, .22, .04, .12, .05, 22);   // headlights, taillights
+  if (lv >= 3){ box(1.78, .44, .42, .06, .08, .08, 30); L.push([1.0, .5, .1, .8]); }   // hood ornament, a glow under the car
+  top = .7;
+ } else if (k === 'grill'){ // the Cookout Grill: a barrel smoker on legs; level 2 a folding table, level 3 a cooler and a speaker
+  box(.18, .3, .3, .64, .4, .32, 18); box(.2, .32, .62, .6, .36, .04, 13); box(.24, .3, .5, .52, .02, .04, 22);              // barrel, lid, glowing seam
+  box(.22, .34, 0, .05, .05, .3, 13); box(.73, .34, 0, .05, .05, .3, 13); box(.22, .62, 0, .05, .05, .3, 13); box(.73, .62, 0, .05, .05, .3, 13);   // legs
+  box(.78, .45, .66, .06, .06, .35, 13); S.push([.81, .48, 1.02]);                                                          // chimney, smoke
+  if (lv >= 2){ box(.05, .78, .38, .9, .2, .03, 16); box(.08, .8, 0, .03, .03, .38, 13); box(.89, .8, 0, .03, .03, .38, 13); box(.2, .82, .41, .14, .1, .05, 30); }
+  if (lv >= 3){ box(.04, .05, 0, .3, .22, .22, 31); box(.04, .05, .22, .3, .22, .03, 16); box(.66, .04, 0, .22, .16, .3, 18); box(.7, .2, .1, .14, .01, .14, 13); }
+  top = 1.0;
+ } else if (k === 'neon'){ // the Neon Sign: a pole sign that glows at night; bigger and brighter each level
+  const h = 1.5 + lv * .25, w = .5 + lv * .12;
+  box(.46, .46, 0, .08, .08, h, 13); box(.5 - w / 2, .42, h, w, .16, .5 + lv * .08, 18);
+  box(.5 - w / 2 + .04, .58, h + .05, w - .08, .02, .4 + lv * .08, 39); box(.5 - w / 2 + .04, .4, h + .05, w - .08, .02, .4 + lv * .08, lv >= 2 ? 11 : 39);
+  if (lv >= 3) box(.5 - w / 2 - .03, .41, h - .04, w + .06, .18, .03, 32);
+  L.push([.5, .7, h + .2, 1.6 + lv * .5]);
+  top = h + .6 + lv * .08;
+ } else if (k === 'hoop'){ // the Hoop Court (2x2): a painted pad and a hoop; level 2 a bench, level 3 lights over the court
+  box(.05, .05, 0, 1.9, 1.9, .03, 7); box(.25, .25, .03, 1.5, .03, .005, 16); box(.25, 1.72, .03, 1.5, .03, .005, 16); box(.25, .25, .03, .03, 1.5, .005, 16); box(1.72, .25, .03, .03, 1.5, .005, 16);
+  box(.75, .35, .03, .5, .6, .005, 9);                                                                                      // the paint under the hoop
+  box(.96, .12, 0, .08, .08, 1.5, 13); box(.96, .15, 1.45, .08, .3, .05, 13); box(.7, .42, 1.3, .6, .04, .4, 16); box(.85, .44, 1.38, .3, .03, .16, 9);   // pole, arm, backboard, square
+  box(.85, .46, 1.3, .3, .3, .02, 9);                                                                                      // the rim
+  if (lv >= 2){ box(.2, 1.55, .25, .9, .25, .05, 35); box(.22, 1.6, 0, .05, .05, .25, 13); box(1.03, 1.6, 0, .05, .05, .25, 13); }
+  if (lv >= 3){ box(1.8, 1.8, 0, .07, .07, 2.0, 13); box(1.68, 1.8, 1.95, .3, .1, .08, 11); L.push([1.4, 1.4, 1.8, 2.8]); }
+  top = 1.8;
  }
  return {boxes:B, lights:L, smoke:S, top};
 }
@@ -2184,8 +2251,9 @@ function tile(x, y){
  if (walk) return 3;
  const r = ((x * 2654435761) ^ (y * 40503)) >>> 0; return r % 9 === 0 ? 2 : (r % 4 === 0 ? 1 : 0);
 }
-function edge(){
- const B = [], L = [], box = (x, y, z, w, d, h, m) => B.push([x, y, z, w, d, h, m]);
+// owned: how many of the 24 houses facing the lot are yours (v0.8); flag: your crew's colour (a material number)
+function edge(owned, flag){
+ const B = [], L = [], box = (x, y, z, w, d, h, m) => B.push([x, y, z, w, d, h, m]); let nOwn = 0;
  // curb lines around the sidewalk, lane dashes on the street
  box(4.95, 3.95, 0, 19.1, .1, .1, 8); box(4.95, 22.95, 0, 19.1, .1, .1, 8); box(4.95, 3.95, 0, .1, 19.1, .1, 8); box(23.95, 3.95, 0, .1, 19.1, .1, 8);
  for (let i = 0; i < 28; i += 2){ box(i + .2, 1.95, .02, .9, .1, .01, 16); box(i + .2, 25.95, .02, .9, .1, .01, 16); box(1.95, i + .2, .02, .1, .9, .01, 16); box(25.95, i + .2, .02, .1, .9, .01, 16); }
@@ -2200,12 +2268,23 @@ function edge(){
    [[x + .2, y - .03], [x + .2, y + .73], [x + 1.25, y - .03], [x + 1.25, y + .73]].forEach(([a, b]) => box(a, b, 0, .28, .1, .26, 18)); } };
  car(9, 2.7, 0, 37); car(17.5, 2.7, 0, 13); car(3, 9, 1, 29); car(25.2, 16, 1, 37); car(20, 24.5, 0, 6);
  // the rest of the neighborhood: row houses facing the street on every side, past the map edge
- const row = (x, y, w, d, face, n) => { for (let i = 0; i < n; i++){ const hgt = 1.6 + ((i * 7 + x * 3) % 5) * .25, m = (i + x) % 3 === 0 ? 5 : (i % 2 ? 4 : 6);
-   const ox = face === 'x' ? x : x + i * w, oy = face === 'x' ? y + i * d : y; box(ox, oy, 0, face === 'x' ? 2.4 : w - .1, face === 'x' ? d - .1 : 2.4, hgt, m); box(ox - .05, oy - .05, hgt, (face === 'x' ? 2.4 : w - .1) + .1, (face === 'x' ? d - .1 : 2.4) + .1, .1, 16);
+ // the houses you own fly your colors: an awning over the door, a banner down the front, a flag on the roof
+ const own = (ox, oy, W, D, hgt, side) => { const f = flag, aw = .32;
+  if (side === 'n'){ box(ox + .2, oy + D, hgt * .42, W - .4, aw, .08, f); box(ox + W / 2 - .2, oy + D, hgt * .5, .4, .02, hgt * .4, f); }
+  else if (side === 's'){ box(ox + .2, oy - aw, hgt * .42, W - .4, aw, .08, f); box(ox + W / 2 - .2, oy - .02, hgt * .5, .4, .02, hgt * .4, f); }
+  else if (side === 'w'){ box(ox + W, oy + .2, hgt * .42, aw, D - .4, .08, f); box(ox + W, oy + D / 2 - .2, hgt * .5, .02, .4, hgt * .4, f); }
+  else { box(ox - aw, oy + .2, hgt * .42, aw, D - .4, .08, f); box(ox - .02, oy + D / 2 - .2, hgt * .5, .02, .4, hgt * .4, f); }
+  box(ox + W / 2 - .04, oy + D / 2 - .04, hgt + .1, .08, .08, 1.3, 13); box(ox + W / 2 + .04, oy + D / 2 - .03, hgt + .85, .8, .06, .5, f); L.push([ox + W / 2, oy + D / 2, hgt + .3, 1.4]); };   // a tall pole and a big flag, lit, so it reads from the lot
+ const row = (x, y, w, d, face, n, side) => { for (let i = 0; i < n; i++){ const hgt = 1.6 + ((i * 7 + x * 3) % 5) * .25, m = (i + x) % 3 === 0 ? 5 : (i % 2 ? 4 : 6);
+   const ox = face === 'x' ? x : x + i * w, oy = face === 'x' ? y + i * d : y, W = face === 'x' ? 2.4 : w - .1, D = face === 'x' ? d - .1 : 2.4; box(ox, oy, 0, W, D, hgt, m); box(ox - .05, oy - .05, hgt, W + .1, D + .1, .1, 16);
+   if (owned && flag != null && i >= 4 && i <= 9 && OWN_ORDER.indexOf(side) * 6 + (i - 4) < owned){ own(ox, oy, W, D, hgt, side); nOwn++; }
    if (i % 2 === 0) L.push([ox + (face === 'x' ? 1.2 : w / 2), oy + (face === 'x' ? d / 2 : 1.2), hgt * .5, 1]); } };
- row(-2, -3.2, 2.2, 0, 'y', 15); row(-2, 28.8, 2.2, 0, 'y', 15); row(-3.2, -1, 0, 2.2, 'x', 14); row(28.8, -1, 0, 2.2, 'x', 14);
+ row(-2, -3.2, 2.2, 0, 'y', 15, 'n'); row(-2, 28.8, 2.2, 0, 'y', 15, 's'); row(-3.2, -1, 0, 2.2, 'x', 14, 'w'); row(28.8, -1, 0, 2.2, 'x', 14, 'e');
  return {boxes:B, lights:L};
 }
+
+// the order the streets are bought in: the two facing the camera first
+const OWN_ORDER = ['s', 'e', 'n', 'w'];
 
 // ---------- people ----------
 // People are built in figs.js (MINI). detail: 0 far, 1 mid, 2 near.
@@ -2213,7 +2292,9 @@ function figure(look, frame, mode, detail){ return PEOPLE.fig(look, frame, mode,
 
 // where a defender stands on a building: [x, y, z] inside its footprint
 const POSTS = {porch:[1.0, .9, .08], roof:[1.25, 1.3, 3.03]};
-return {MATS:MATS.concat(PEOPLE.EXTRA), blocks, rubble, tile, edge, figure, POSTS};
+// what a falling building throws up: dust, sparks, fire, black smoke (after the people colours, so their numbers do not move)
+const FX_MATS = [[146, 132, 112, 0], [255, 214, 120, 1], [255, 120, 40, 1], [26, 24, 26, 0]], FXI = 40 + PEOPLE.EXTRA.length;
+return {MATS:MATS.concat(PEOPLE.EXTRA, FX_MATS), FX:{dust:FXI, spark:FXI + 1, fire:FXI + 2, smoke:FXI + 3}, blocks, rubble, tile, edge, figure, POSTS};
 })();
 
 
@@ -2453,6 +2534,7 @@ function sky(){
 // ---------- camera ----------
 function camMats(){
  const asp = canvas.width / canvas.height, hh = cam.zoom, hw = hh * asp;
+ if (cam.cine){ const C = cam.cine, d = norm([C.eye[0] - C.at[0], C.eye[1] - C.at[1], C.eye[2] - C.at[2]]); return {VP:mul(persp(C.fov || .95, asp, .08, 160), lookAt(C.eye, C.at, [0, 0, 1])), dir:d, eye:C.eye}; }
  const dir = [Math.cos(PITCH) * Math.sin(YAW), Math.cos(PITCH) * Math.cos(YAW), Math.sin(PITCH)], c = [cam.tx, cam.ty, 0];
  const eye = [c[0] + dir[0] * 60, c[1] + dir[1] * 60, dir[2] * 60];
  const V = lookAt(eye, c, [0, 0, 1]), Pm = ortho(-hw, hw, -hh, hh, 1, 140);
@@ -2460,7 +2542,7 @@ function camMats(){
 }
 function lightMat(dir){
  // Turf: zoomed in close, the shadow map covers only the area around the view, so shadows on people stay sharp
- const near = cam.zoom < 5, half = near ? Math.max(6, cam.zoom * 2.6) : 24;
+ const near = cam.zoom < 5 || !!cam.cine, half = cam.cine ? 11 : near ? Math.max(6, cam.zoom * 2.6) : 24;
  const c = near ? [Math.round(cam.tx * 2) / 2, Math.round(cam.ty * 2) / 2, 0] : [14, 14, 0], e = [c[0] + dir[0] * 50, c[1] + dir[1] * 50, c[2] + dir[2] * 50];
  return mul(ortho(-half, half, -half, half, 1, 120), lookAt(e, c, Math.abs(dir[2]) > .98 ? [0, 1, 0] : [0, 0, 1]));
 }
@@ -2507,8 +2589,8 @@ function pickRay(px, py){
 function stepSmoke(dt){
  if (st.reduce) { st.puffs.length = 0; return; }
  st.smokeSrc.forEach((s, i) => { s.acc = (s.acc || hash(i, 3)) + dt; if (s.acc > .7){ s.acc = 0; if (st.puffs.length < 70) st.puffs.push({x:s[0], y:s[1], z:s[2], age:0, sz:.1 + Math.random() * .05}); } });
- st.puffs.forEach(p => { p.age += dt; p.z += dt * .35; p.x -= dt * .12; p.y += dt * .05; });
- st.puffs = st.puffs.filter(p => p.age < 3.2);
+ st.puffs.forEach(p => { p.age += dt; if (p.vx != null){ const drag = Math.exp(-dt * 1.8); p.x += p.vx * dt; p.y += p.vy * dt; p.z = Math.max(0, p.z + p.vz * dt); p.vx *= drag; p.vy *= drag; if (p.grav) p.vz -= 9.8 * dt; else p.vz *= Math.exp(-dt * .6); } else { p.z += dt * .35; p.x -= dt * .12; p.y += dt * .05; } });
+ st.puffs = st.puffs.filter(p => p.age < (p.life || 3.2));
 }
 // ---------- actors: block people walking routes, working, standing guard ----------
 // an actor: {route:[[x,y,z],...], fig(frame, mode, torch)->boxes, speed, waitEnd:[s,s], workEnd:[bool,bool], torch, loop}
@@ -2556,30 +2638,131 @@ function stepAnim(dt){
 // ---------- battle replay: a recorded raid played back on the map ----------
 // opts: {frames, tick, units:{id:{look, max}}, items:[{key,x,y,fw,fh,top,max}], speed, onTick(i), onEnd()}
 function battleStep(dt){
- const Bt = st.battle; if (!Bt || Bt.done) return;
+ const Bt = st.battle; if (!Bt) return;
+ if (Bt.done){ const C = Bt.cine && Bt.cine.on ? Bt.cine : null; fallStep(dt * Bt.speed * (C ? C.slow : 1)); cineStep(dt, Bt.frames.length - 1);
+  if (Bt.holdT != null && Bt.speed){ Bt.holdT -= dt; if (Bt.holdT <= 0){ Bt.holdT = null; if (st.battle === Bt){ if (Bt.cine && Bt.cine.on){ cam.cine = null; Object.assign(cam, Bt.cine.keep); clampCam(); } st.battle = null; Bt.onEnd && Bt.onEnd(); } } } return; }   // the last building keeps falling after the fight ends
  if (st.canAnim && !st.canAnim()) return;
- const prev = Math.floor(Bt.t / Bt.tick); Bt.t += dt * Bt.speed;
+ const prev = Math.floor(Bt.t / Bt.tick), slow = Bt.cine && Bt.cine.on ? Bt.cine.slow : 1; Bt.t += dt * Bt.speed * slow;
  let i = Math.floor(Bt.t / Bt.tick);
  if (i >= Bt.frames.length - 1){ i = Bt.frames.length - 1; Bt.t = i * Bt.tick; }
  if (Bt.live && i < Bt.frames.length - 4){ i = Bt.frames.length - 2; Bt.t = i * Bt.tick; }   // a slow phone: show the fight as it is now, not seconds behind
- for (let k = prev + 1; k <= i; k++){ const f = Bt.frames[k]; if (f && f.s) f.s.forEach(s => Bt.shots.push({s, age:0})); }
+ for (let k = prev + 1; k <= i; k++){ const f = Bt.frames[k], f0 = Bt.frames[k - 1]; if (f && f.s) f.s.forEach(s => Bt.shots.push({s, age:0}));
+  if (f && f0 && Bt.falls){ const was = {}; f0.u.forEach(u => { if (u[6]) was[u[0]] = u; }); f.u.forEach(u => { const w = was[u[0]]; if (w && !u[6]){ Bt.deaths = Bt.deaths || []; Bt.deaths.push({id:u[0], x:w[1], y:w[2], face:w[5], t:0}); if (st.puffs.length < 190) for (let q = 0; q < 3; q++) st.puffs.push({x:w[1] + (Math.random() - .5) * .3, y:w[2] + (Math.random() - .5) * .3, z:0, age:0, sz:.08, vx:(Math.random() - .5) * .8, vy:(Math.random() - .5) * .8, vz:.2, m:st.fx.dust, life:1}); } }); } if (f && f0 && Bt.falls) Bt.items.forEach((it, j) => { if (f0.b[j] > 0 && f.b[j] <= 0) fallStart(Bt, j); }); }
+ fallStep(dt * Bt.speed * slow); cineStep(dt, i);
  Bt.shots.forEach(x => x.age += dt * Bt.speed); Bt.shots = Bt.shots.filter(x => x.age < .35);
  // fire and smoke on badly hurt buildings
  const f = Bt.frames[i]; Bt.items.forEach((it, j) => { const hp = f.b[j]; if (it.max && hp > 0 && hp < it.max * .5 && Math.random() < dt * Bt.speed * 3 && st.puffs.length < 90) st.puffs.push({x:it.x + it.fw * (.3 + Math.random() * .4), y:it.y + it.fh * (.3 + Math.random() * .4), z:it.top * .7, age:0, sz:.12 + Math.random() * .06}); });
  // the camera drifts after the fighting until you take over with a finger
- if (Bt.follow){ let sx = 0, sy = 0, n = 0; f.u.forEach(u => { if (u[6] && u[0] < 100){ sx += u[1]; sy += u[2]; n++; } });
+ if (Bt.follow && !(Bt.cine && Bt.cine.on)){ let sx = 0, sy = 0, n = 0; f.u.forEach(u => { if (u[6] && u[0] < 100){ sx += u[1]; sy += u[2]; n++; } });
   if (n){ const tx = (sx / n) * .7 + 14 * .3, ty = (sy / n) * .7 + 14 * .3, k = Math.min(1, dt * 1.2); cam.tx += (tx - cam.tx) * k; cam.ty += (ty - cam.ty) * k; cam.zoom += (Bt.zoom - cam.zoom) * k; clampCam(); st.dirty = true; } }
  if (i !== Bt.last){ Bt.last = i; Bt.onTick && Bt.onTick(i); }
  if (Bt.zoneT > 0){ Bt.zoneT -= dt; st.dirty = true; }
  if (Bt.live) return;
- if (i >= Bt.frames.length - 1 && !Bt.done){ Bt.done = true; Bt.endT = setTimeout(() => { if (st.battle === Bt){ st.battle = null; Bt.onEnd && Bt.onEnd(); } }, 900); }
+ if (i >= Bt.frames.length - 1 && !Bt.done){ Bt.done = true; const C = Bt.cine && Bt.cine.on ? Bt.cine : null, hold = C && C.shot === 'fall' ? Math.max(900, C.slowT * 1000 + 800) : 900;   // hold on the last building until its slow fall is over
+  Bt.holdT = hold / 1000; }   // counted down in battleStep, so a paused replay waits
 }
+// ---------- Turf v0.8: cinematic replays and buildings that come down ----------
+// A replay can be shot like a film: a perspective camera at street level that cuts between a chase, a side angle and a high angle,
+// and cuts in slow motion to big buildings as they fall, slowest of all on the last one. Any building that falls, in any fight,
+// sinks into a cloud of dust instead of popping into rubble.
+function persp(fovy, asp, n, f){ const t = 1 / Math.tan(fovy / 2); return new Float32Array([t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]); }
+const CUT_EVERY = 3.4;   // seconds of real time per angle while nothing is falling
+function cinePrep(Bt){
+ // what is standing now, so a falling building can be drawn coming down
+ Bt.standing = {}; (lastScene && lastScene.parts || []).forEach(p => { if (p.key != null && p.boxes) Bt.standing[p.key] = p; });
+ Bt.falls = [];
+ if (!Bt.cine) return;
+ const F = Bt.frames, ev = [];
+ for (let k = 1; k < F.length; k++) Bt.items.forEach((it, j) => { if (F[k - 1].b[j] > 0 && F[k].b[j] <= 0 && it.role !== 'trap' && it.role !== 'plot' && it.role !== 'wall'){ const core = it.role === 'core'; ev.push({k, j, core, big:core || it.fw * it.fh >= 4}); } });
+ const bigs = ev.filter(e => e.big); if (bigs.length) bigs[bigs.length - 1].last = true;
+ Bt.cine = {on:true, ev, ei:0, shot:'open', sT:0, slow:1, slowT:0, cool:0, ang:0, n:0, eye:[0, 0, 0], at:[14, 14, .5], keep:{tx:cam.tx, ty:cam.ty, zoom:cam.zoom}};
+}
+function cineOff(){ const Bt = st.battle; if (!Bt || !Bt.cine || !Bt.cine.on) return; const C = Bt.cine; C.on = false; C.slow = 1; cam.cine = null; Object.assign(cam, C.keep); clampCam(); st.dirty = true; Bt.onCine && Bt.onCine(false); }
+function centerOf(it){ return [it.x + it.fw / 2, it.y + it.fh / 2]; }
+// keep the camera out of walls: the first spot with a clear view of the action, else lift over whatever is in the way
+function blocker(Bt, f, eye, at){ let hi = -1;
+ for (let s = 0; s <= 8; s++){ const t = s / 8 * .88, x = eye[0] + (at[0] - eye[0]) * t, y = eye[1] + (at[1] - eye[1]) * t, z = eye[2] + (at[2] - eye[2]) * t;
+  Bt.items.forEach((it, j) => { if (f.b[j] <= 0 || it.role === 'trap' || it.role === 'plot') return; const top = it.role === 'wall' ? .55 : (it.top || 1);
+   if (x > it.x - .15 && x < it.x + it.fw + .15 && y > it.y - .15 && y < it.y + it.fh + .15 && z < top + .1) hi = Math.max(hi, top); }); }
+ return hi; }
+function clearEye(Bt, f, cands, at){ for (const e of cands) if (blocker(Bt, f, e, at) < 0) return e; const e = cands[0].slice(), hi = blocker(Bt, f, e, at); if (hi >= 0) e[2] = Math.max(e[2], hi + .9); return e; }
+function cineStep(dt, i){
+ const Bt = st.battle, C = Bt && Bt.cine; if (!C || !C.on) return; if (!Bt.speed) return;   // paused: the camera holds too
+ dt *= Math.min(2, Bt.speed);
+ const f = Bt.frames[i]; C.sT += dt; C.cool -= dt;
+ // a big building falls: cut to it, low, in slow motion; the last one gets the longest, slowest look
+ while (C.ei < C.ev.length && C.ev[C.ei].k <= i){ const e = C.ev[C.ei++]; if (!e.big || (C.cool > 0 && !e.last && !e.core)) continue;
+  const it = Bt.items[e.j], c = centerOf(it), side = (C.n++ % 2 ? 1 : -1), a = Math.atan2(c[1] - 14, c[0] - 14) + side * .7, d = Math.max(it.fw, it.fh) * 1.1 + 3.2;
+  C.shot = 'fall'; C.sT = 0; C.ang = a; C.fc = c; C.fd = d; C.ft = it.top || 1; C.slow = e.last ? .22 : .4; C.slowT = e.last ? 3.2 : 1.5; C.cool = 3.5; C.last = !!e.last; }
+ if (C.shot === 'fall'){
+  C.slowT -= dt; if (C.last) C.ang += dt * .22;
+  C.at = [C.fc[0], C.fc[1], C.ft * .4]; const fe = a => [C.fc[0] + Math.cos(a) * C.fd, C.fc[1] + Math.sin(a) * C.fd, Math.max(1.15, .5 + C.ft * .4)];
+  if (C.last || !C.feye || C.sT < dt * 1.5) C.feye = clearEye(Bt, f, [fe(C.ang), fe(C.ang + 1.4), fe(C.ang - 1.4), fe(C.ang + 3.1)], C.at); C.eye = C.feye;
+  if (C.slowT <= 0){ C.slow = 1; C.shot = 'chase'; C.sT = CUT_EVERY; } else { st.dirty = true; cam.cine = {eye:C.eye, at:C.at, fov:.95}; cam.tx = C.at[0]; cam.ty = C.at[1]; return; } }
+ // where the fight is: the middle of your crew, and the nearest building still standing
+ let sx = 0, sy = 0, n = 0; f.u.forEach(u => { if (u[6] && u[0] < 100){ sx += u[1]; sy += u[2]; n++; } });
+ let A = n ? [sx / n, sy / n] : null, T = null, best = 1e9;
+ if (A) Bt.items.forEach((it, j) => { if (!it.max || f.b[j] <= 0) return; const c = centerOf(it), dd = Math.hypot(c[0] - A[0], c[1] - A[1]); if (dd < best){ best = dd; T = c; } });
+ if (!A || C.shot === 'open'){   // before anyone lands, and for the first moments: a slow crane around the block
+  if (C.shot !== 'open'){ C.shot = 'open'; C.sT = 0; }
+  const k = Math.min(1, C.sT / 4), a = -2.2 + C.sT * .12, r = 15 - 4 * k;
+  const eye = [14 + Math.cos(a) * r, 14 + Math.sin(a) * r, 7 - 3.2 * k], at = [14, 14, .4];
+  C.eye = eye; C.at = at; cam.cine = {eye, at, fov:.9}; cam.tx = 14; cam.ty = 14; st.dirty = true;
+  if (A && C.sT > 3){ C.shot = 'chase'; C.sT = 0; C.cut = true; } return; }
+ if (!T) T = [14, 14];
+ if (C.sT >= CUT_EVERY){ C.shot = C.shot === 'chase' ? 'side' : C.shot === 'side' ? 'high' : 'chase'; C.sT = 0; C.cut = true; }
+ const dx = T[0] - A[0], dy = T[1] - A[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+ let eye, at;
+ if (C.shot === 'chase'){ at = [A[0] + ux * 2.2, A[1] + uy * 2.2, .7]; eye = clearEye(Bt, f, [[A[0] - ux * 3.4 + px * 1.1, A[1] - uy * 3.4 + py * 1.1, 1.45], [A[0] - ux * 3.4 - px * 1.1, A[1] - uy * 3.4 - py * 1.1, 1.45], [A[0] - ux * 2 + px * .4, A[1] - uy * 2 + py * .4, 1.9]], at); }
+ else if (C.shot === 'side'){ at = [A[0] + ux * .8, A[1] + uy * .8, .6]; eye = clearEye(Bt, f, [[A[0] + px * 4.2 - ux * .6, A[1] + py * 4.2 - uy * .6, .75], [A[0] - px * 4.2 - ux * .6, A[1] - py * 4.2 - uy * .6, .75], [A[0] + px * 2.6, A[1] + py * 2.6, 1.1], [A[0] - px * 2.6, A[1] - py * 2.6, 1.1]], at); }
+ else { at = [A[0] * .6 + T[0] * .4, A[1] * .6 + T[1] * .4, 0]; eye = clearEye(Bt, f, [[T[0] - ux * 2.4 + px * 2.6, T[1] - uy * 2.4 + py * 2.6, 5.8], [T[0] - ux * 2.4 - px * 2.6, T[1] - uy * 2.4 - py * 2.6, 5.8]], at); }
+ if (C.cut){ C.eye = eye; C.at = at; C.cut = false; }   // a hard cut to the new angle, then glide with the action
+ else { const q = Math.min(1, dt * 2.2); for (let z = 0; z < 3; z++){ C.eye[z] += (eye[z] - C.eye[z]) * q; C.at[z] += (at[z] - C.at[z]) * q; } }
+ cam.cine = {eye:C.eye.slice(), at:C.at.slice(), fov:.95}; cam.tx = C.at[0]; cam.ty = C.at[1]; st.dirty = true;
+}
+// a building that falls breaks apart: it shudders, its pieces fly out and tumble, dust rolls out low, and the van goes up in fire and black smoke
+const CHUNK = .42, MAX_CHUNKS = 110;
+function fallStart(Bt, j){ const it = Bt.items[j], p = Bt.standing && Bt.standing[it.key]; if (!p || it.role === 'trap' || it.role === 'plot' || st.reduce) return;
+ const wall = it.role === 'wall', car = p.k === 'run' || p.k === 'ride', top = p.top || 1, cx = p.x + p.fw / 2, cy = p.y + p.fh / 2;
+ let ch = [];
+ p.boxes.forEach(b => { if (b[5] < .015 || b[6] === 19 || b[6] === 11) return;   // lit windows and glows go dark
+  const nx = Math.min(4, Math.ceil(b[3] / CHUNK)), ny = Math.min(4, Math.ceil(b[4] / CHUNK)), nz = Math.min(5, Math.ceil(b[5] / CHUNK)), w = b[3] / nx, d = b[4] / ny, h = b[5] / nz;
+  for (let a = 0; a < nx; a++) for (let c = 0; c < ny; c++) for (let e = 0; e < nz; e++) ch.push([p.x + b[0] + a * w, p.y + b[1] + c * d, b[2] + e * h, w, d, h, b[6]]); });
+ if (ch.length > MAX_CHUNKS){ ch.sort(() => Math.random() - .5); const keep = ch.slice(0, MAX_CHUNKS), grow = Math.cbrt(ch.length / MAX_CHUNKS); ch = keep.map(q => [q[0], q[1], q[2], q[3] * grow, q[4] * grow, q[5] * grow, q[6]]); }
+ const kick = wall ? .7 : car ? 3.2 : 1.6;
+ const pieces = ch.map(q => { const mx = q[0] + q[3] / 2 - cx, my = q[1] + q[4] / 2 - cy, L = Math.hypot(mx, my) || 1, up = q[2] / top, sp = (.35 + Math.random() * .9) * kick * (.5 + up);
+  return {x:q[0], y:q[1], z:q[2], w:q[3], d:q[4], h:q[5], m:q[6], vx:mx / L * sp + (Math.random() - .5) * .6, vy:my / L * sp + (Math.random() - .5) * .6, vz:car ? 1.5 + Math.random() * 3.5 : Math.random() * 1.6 * (.4 + up),
+   delay:car ? 0 : (1 - up) * .05 + up * .22 * Math.random(), spin:(Math.random() - .5) * 2, rest:false}; });
+ Bt.falls.push({pieces, t:0, dur:wall ? .9 : 1.9, cx, cy, top, car, flash:car ? .5 : .22});
+ // dust rolls out along the ground; the van burns
+ const nDust = wall ? 6 : Math.min(36, 12 + Math.round(p.fw * p.fh * 3));
+ for (let q = 0; q < nDust && st.puffs.length < 170; q++){ const a = Math.random() * 6.283, r = Math.random() * Math.max(p.fw, p.fh) * .5, sp = .6 + Math.random() * 1.4;
+  st.puffs.push({x:cx + Math.cos(a) * r, y:cy + Math.sin(a) * r, z:Math.random() * top * .3, age:0, sz:.12 + Math.random() * .16, vx:Math.cos(a) * sp, vy:Math.sin(a) * sp, vz:.15 + Math.random() * .4, m:st.fx.dust, life:2.4 + Math.random()}); }
+ for (let q = 0; q < (car ? 18 : wall ? 2 : 8) && st.puffs.length < 190; q++){ const a = Math.random() * 6.283, sp = 2 + Math.random() * 3;   // sparks
+  st.puffs.push({x:cx, y:cy, z:top * .5, age:0, sz:.035, vx:Math.cos(a) * sp, vy:Math.sin(a) * sp, vz:1 + Math.random() * 3, m:st.fx.spark, life:.5 + Math.random() * .3, grav:1}); }
+ if (car) for (let q = 0; q < 14 && st.puffs.length < 200; q++) st.puffs.push({x:cx + (Math.random() - .5) * p.fw * .6, y:cy + (Math.random() - .5) * p.fh * .6, z:.2 + Math.random() * .4, age:0, sz:.14 + Math.random() * .12, vx:(Math.random() - .5) * .3, vy:(Math.random() - .5) * .3, vz:.5 + Math.random() * .7, m:q < 6 ? st.fx.fire : st.fx.smoke, life:q < 6 ? .9 : 3.2});
+}
+function fallBoxes(V, I){ const Bt = st.battle; if (Bt && Bt.deaths && st.fig && !st.reduce) for (const d of Bt.deaths){ const meta = Bt.units[d.id] || {}, k = Math.min(1, d.t / .7); if (meta.fly){ pushFig(V, I, st.fig(meta.look, 0, 'idle', false), d.x, d.y, 1.1 * (1 - k) - k * .9, d.face); continue; } pushFig(V, I, st.fig(meta.look, 0, 'idle', false), d.x + Math.sin(d.face * 1.57) * k * .15, d.y + Math.cos(d.face * 1.57) * k * .15, -k * k * 1.0, d.face); }   // a fighter who falls drops where they stood (a drone falls out of the sky)
+ if (!Bt || !Bt.falls || !Bt.falls.length) return;
+ for (const F of Bt.falls){ const sink = Math.max(0, F.t - (F.dur - .45)) / .45, shake = F.t < .12 ? Math.sin(F.t * 90) * .04 : 0;
+  for (const q of F.pieces){ const s = 1 - sink * .6, z = q.z - sink * q.h; if (z + q.h * s <= 0) continue;
+   const tilt = q.rest ? 0 : Math.min(.12, Math.abs(q.spin) * F.t * .05);
+   pushBox(V, I, [q.x + shake + tilt, q.y, Math.max(0, z), q.w * s, q.d * s, Math.max(.01, q.h * s), q.m], 0, 0); } } }
+function fallStep(dt){ const Bt = st.battle; if (Bt && Bt.deaths && Bt.deaths.length){ Bt.deaths.forEach(d => d.t += dt); Bt.deaths = Bt.deaths.filter(d => d.t < .7); st.dirty = true; }
+ if (!Bt || !Bt.falls || !Bt.falls.length) return;
+ for (const F of Bt.falls){ F.t += dt;
+  for (const q of F.pieces){ if (q.rest || F.t < q.delay) continue;
+   q.vz -= 9.8 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt;
+   if (q.z <= 0){ q.z = 0; if (Math.abs(q.vz) > 1.2){ q.vz *= -.28; q.vx *= .45; q.vy *= .45; } else { q.vz = 0; q.vx *= .2; q.vy *= .2; if (Math.hypot(q.vx, q.vy) < .15) q.rest = true; } } } }
+ if (Bt.falls.some(F => F.t < F.flash)) st.dirty = true;
+ Bt.falls = Bt.falls.filter(F => F.t < F.dur); st.dirty = true; }
+function fallLights(){ const Bt = st.battle; if (!Bt || !Bt.falls) return []; return Bt.falls.filter(F => F.t < F.flash).map(F => [F.cx, F.cy, F.top * .6 + .3, (F.car ? 4.5 : 2.6) * (1 - F.t / F.flash)]); }
 function battleBoxes(V, I){
  const Bt = st.battle; if (!Bt) return;
  const i = Math.min(Bt.frames.length - 1, Math.floor(Bt.t / Bt.tick)), j = Math.min(Bt.frames.length - 1, i + 1), a = Bt.frames[i], b = Bt.frames[j], k = Bt.t / Bt.tick - i;
  const nb = {}; b.u.forEach(u => nb[u[0]] = u);
  for (const u of a.u){ if (!u[6]) continue; const n = nb[u[0]] || u, x = u[1] + (n[1] - u[1]) * k, y = u[2] + (n[2] - u[2]) * k, meta = Bt.units[u[0]] || {};
-  if (cam.zoom < 6 && Math.hypot(x - cam.tx, y - cam.ty) > cam.zoom * 2.6 + 1.5) continue;   // Turf: zoomed in, people far off screen are not drawn
+  if (!cam.cine && cam.zoom < 6 && Math.hypot(x - cam.tx, y - cam.ty) > cam.zoom * 2.6 + 1.5) continue;   // Turf: zoomed in, people far off screen are not drawn
   const mode = u[4] === 0 ? 'walk' : u[4] === 1 ? 'work' : 'idle', fr = Math.floor(Bt.t * (mode === 'walk' ? 7 : 4));
   pushFig(V, I, st.fig(meta.look, fr, mode, false), x, y, 0, u[5]);
   if (meta.max && u[3] < meta.max){ const w = .44, fr2 = Math.max(0, u[3] / meta.max), z = meta.fly ? 1.32 : (meta.barZ || .72);   // a life bar over the head
@@ -2602,17 +2785,17 @@ function battleBoxes(V, I){
 function battleLights(){ const Bt = st.battle; if (!Bt) return []; return Bt.shots.filter(s => s.s[4] === 3).slice(0, 6).map(s => { const p = Math.min(1, s.age / .3); return [s.s[0] + (s.s[2] - s.s[0]) * p, s.s[1] + (s.s[3] - s.s[1]) * p, .6, 1.2]; }); }
 
 // v3.4 figures carry fine detail (eyes, teeth, buckles); zoomed out it is too small to see, so it is skipped to save the phone some work
-function lod(bs){ if (cam.zoom < 6.5) return bs; return bs.filter(b => b[3] > .03 || b[4] > .03 || b[5] > .045); }
+function lod(bs){ if (cam.zoom < 6.5 || cam.cine) return bs; return bs.filter(b => b[3] > .03 || b[4] > .03 || b[5] > .045); }
 function dynGeo(){
  const V = [], I = [];
- st.puffs.forEach(p => { const s = p.sz * (1 + Math.min(p.age, 1.2) * .6) * Math.max(.2, 1 - Math.max(0, p.age - 1.2) / 2.4); pushBox(V, I, [p.x - s / 2, p.y - s / 2, p.z, s, s, s, 24], 0, 0); });
+ st.puffs.forEach(p => { const L = p.life || 3.2, s = p.m === st.fx.spark ? p.sz : p.sz * (1 + Math.min(p.age, 1.2) * (p.m === st.fx.dust ? 1.4 : .6)) * Math.max(.15, 1 - Math.max(0, p.age - L * .4) / (L * .6)); pushBox(V, I, [p.x - s / 2, p.y - s / 2, p.z, s, s, s, p.m || 24], 0, 0); });
  st.dynLights = [];
  for (const a of st.actors){ if (!a.pos) continue;
   const fr = a.mode === 'walk' ? Math.floor(a.anim * 7) : a.mode === 'work' ? Math.floor(a.anim * (a.drill ? 2.5 : 3.2)) : 0;
   pushFig(V, I, a.fig(fr, a.mode, a.torch), a.pos[0], a.pos[1], a.pos[2], a.face);
   if (a.torch) st.dynLights.push([a.pos[0], a.pos[1], a.pos[2] + .5, 1.6]); }
  animBoxes().forEach(b => pushBox(V, I, b, 0, 0));
- battleBoxes(V, I); st.dynLights = st.dynLights.concat(battleLights());
+ battleBoxes(V, I); fallBoxes(V, I); st.dynLights = st.dynLights.concat(battleLights(), fallLights());
  const D = st.drag; if (D && D.part){ const p = D.part, lift = .14, m = D.ok ? 32 : 33;
   p.boxes.forEach(b => pushBox(V, I, [b[0] + D.x, b[1] + D.y, b[2] + lift, b[3], b[4], b[5], b[6]], 0, 0));
   const fw = p.fw, fh = p.fh, t = .08, z = .03;
@@ -2681,9 +2864,9 @@ function loop(now){
  // nothing to draw when the app is in the background, the tab is hidden, or the village is scrolled out of sight
  if (document.hidden || !canvas.offsetWidth || !st.visible) return;
  // idle animation (torch flicker, smoke) runs at about 24 fps, slower if frames are expensive on this phone
- const dt = Math.min(.1, (now - (st.last || now)) / 1000), animate = !st.reduce, idleGap = Math.max(st.battle ? 30 : 42, st.cost * 4), due = st.dirty || (animate && now - st.last >= idleGap);
+ const dt = Math.min(.1, (now - (st.last || now)) / 1000), animate = !st.reduce, idleGap = Math.max(st.battle ? 30 : 42, st.cost * 4), due = st.dirty || !!st.battle || (animate && now - st.last >= idleGap);
  if (!due) return;
- stepSmoke(dt); if (!st.reduce) stepActors(dt); else st.actors.forEach(a => { if (!a.pos){ const R = a.route, e = R[R.length - 1]; a.pos = e; a.mode = 'idle'; a.face = a.workFace || 0; } }); stepAnim(dt); battleStep(dt); st.last = now;
+ stepSmoke(dt * (st.battle && st.battle.cine && st.battle.cine.on ? st.battle.cine.slow : 1)); if (!st.reduce) stepActors(dt); else st.actors.forEach(a => { if (!a.pos){ const R = a.route, e = R[R.length - 1]; a.pos = e; a.mode = 'idle'; a.face = a.workFace || 0; } }); stepAnim(dt); battleStep(dt); st.last = now;
  if (st.dirty) placeLabels();
  st.dirty = false; const t0 = performance.now(); draw(now); st.cost = st.cost * .8 + (performance.now() - t0) * .2;
  st.frames++; if (now - st.fpsT > 1000){ st.fps = Math.round(st.frames * 1000 / (now - st.fpsT)); st.frames = 0; st.fpsT = now; }
@@ -2697,7 +2880,7 @@ function groundAt(px, py){ const r = canvas.getBoundingClientRect(), iv = inv(ca
 function local(e){ const r = canvas.getBoundingClientRect(); return [e[0] - r.left, e[1] - r.top]; }
 let lastPaint = null;
 function tileAt(cx, cy){ const g = groundAt(...local([cx, cy])); return [Math.floor(g[0]), Math.floor(g[1]), g]; }
-function onDown(e){ try { canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); } catch (err){} ptr.set(e.pointerId, [e.clientX, e.clientY]);
+function onDown(e){ if (st.battle && st.battle.cine && st.battle.cine.on) cineOff(); try { canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); } catch (err){} ptr.set(e.pointerId, [e.clientX, e.clientY]);
  if (st.battle) st.battle.follow = false;
  if (st.edit && ptr.size === 1){
   const E = st.edit, r = canvas.getBoundingClientRect();
@@ -2706,7 +2889,7 @@ function onDown(e){ try { canvas.setPointerCapture && canvas.setPointerCapture(e
   else if (E.mode === 'paint' || E.mode === 'erase'){ const [x, y] = tileAt(e.clientX, e.clientY); lastPaint = x + ',' + y; E.h[E.mode](x, y); moved = 99; return; }
  }
  if (st.drag && ptr.size === 2){ const D = st.drag; st.drag = null; if (st.edit && st.edit.h.select) st.edit.h.select(D.key, D.x0, D.y0); if (lastScene) build(lastScene); }
- if (ptr.size === 1){ downAt = performance.now(); moved = 0; downXY = [e.clientX, e.clientY]; const r = canvas.getBoundingClientRect(); window.VIL.lastPick = pick(e.clientX - r.left, e.clientY - r.top); }
+ if (ptr.size === 1){ downAt = e.timeStamp || performance.now(); moved = 0; downXY = [e.clientX, e.clientY]; const r = canvas.getBoundingClientRect(); window.VIL.lastPick = pick(e.clientX - r.left, e.clientY - r.top); }
  if (ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); zoom0 = cam.zoom; mid0 = groundAt(...local([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2])); moved = 99; } }
 function onMove(e){ if (!ptr.has(e.pointerId)) return; let prev = ptr.get(e.pointerId), cur = [e.clientX, e.clientY];
  if (st.drag && ptr.size === 1){ ptr.set(e.pointerId, cur); const [, , g] = tileAt(cur[0], cur[1]), D = st.drag, x = Math.round(g[0] - D.ox), y = Math.round(g[1] - D.oy);
@@ -2732,7 +2915,7 @@ function onUp(e){ const was = ptr.size; ptr.delete(e.pointerId);
  lastPaint = null;
  if (ptr.size < 2){ pinch0 = 0; zoom0 = cam.zoom; }
  if (ptr.size === 1){ const [k, v] = [...ptr.entries()][0]; ptr.set(k, v); }  // the finger left behind keeps panning from where it is
- if (was === 1 && moved < 10 && performance.now() - downAt < 700){
+ if (was === 1 && moved < 10 && (e.timeStamp || performance.now()) - downAt < 700){   // event times, so a slow frame in between does not eat the tap
   if (st.battle && st.battle.live && st.onGround){ const g = groundAt(...local([e.clientX, e.clientY])); st.onGround(g[0], g[1]); return; }
   const now = performance.now(), r = canvas.getBoundingClientRect(), id = pick(e.clientX - r.left, e.clientY - r.top);
   if (st.edit && st.edit.mode === 'move'){ const p = pickPart(e.clientX - r.left, e.clientY - r.top); st.sel = p ? p.key : null; st.dirty = true; if (st.edit.h.select) st.edit.h.select(st.sel, p ? p.x0 : 0, p ? p.y0 : 0); if (p) return; }
@@ -2758,7 +2941,7 @@ function mount(el, opts){
  }
  if (lost) return false;
  host = el; host.appendChild(canvas); host.appendChild(labelLayer);
- st.onTap = opts.onTap || null; st.onGround = opts.onGround || null; st.palette = opts.palette || null; st.shotMats = opts.shotMats || null; st.reduce = !!opts.reduce; st.fig = opts.figure || null; st.canAnim = opts.canAnimate || null;
+ st.onTap = opts.onTap || null; st.onGround = opts.onGround || null; st.palette = opts.palette || null; st.shotMats = opts.shotMats || null; st.fx = opts.fxMats || {dust:24, spark:12, fire:22, smoke:18}; st.reduce = !!opts.reduce; st.fig = opts.figure || null; st.canAnim = opts.canAnimate || null;
  st.mats = new Float32Array(96 * 4); (opts.mats || []).forEach((m, i) => { if (i < 96) st.mats.set([m[0] / 255, m[1] / 255, m[2] / 255, m[3] || 0], i * 4); });
  st.mounted = true; resize(); if (!cam.fitted){ fit(); cam.fitted = true; } cancelAnimationFrame(st.raf); st.last = 0; st.raf = requestAnimationFrame(loop);
  return true;
@@ -2768,12 +2951,15 @@ function unmount(){ st.mounted = false; cancelAnimationFrame(st.raf); if (canvas
 window.VIL = {mount, update, unmount, project,
  setHour(h){ st.hour = h; st.dirty = true; },
  getHour(){ return st.hour; },
- battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); if (!o) st.rings = null; st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; st.dirty = true; },
+ battle(o){ if (st.battle && st.battle.endT) clearTimeout(st.battle.endT); if (st.battle && st.battle.cine && st.battle.cine.on){ cam.cine = null; Object.assign(cam, st.battle.cine.keep); } cam.cine = null; if (!o) st.rings = null;
+  st.battle = o ? Object.assign({t:0, last:-1, shots:[], speed:1, done:false, follow:true, zoom:7.5}, o) : null; if (st.battle) cinePrep(st.battle); st.dirty = true; },
+ cine(on){ const Bt = st.battle; if (!Bt) return false; if (!on){ cineOff(); return false; } if (!Bt.cine || !Bt.cine.on){ Bt.cine = true; const t = Bt.t, falls = Bt.falls; cinePrep(Bt); Bt.falls = falls; Bt.cine.ei = Bt.cine.ev.findIndex(e => e.k > Math.floor(t / Bt.tick)); if (Bt.cine.ei < 0) Bt.cine.ei = Bt.cine.ev.length; if (t > 1){ Bt.cine.shot = 'chase'; Bt.cine.cut = true; } } return true; },
+ cineInfo(){ const Bt = st.battle, C = Bt && Bt.cine; return C && C.on ? {shot:C.shot, slow:C.slow, eye:cam.cine && cam.cine.eye, ev:C.ev.length} : null; },
  battleSpeed(s){ if (st.battle) st.battle.speed = s; },
  battleEnd(){ if (st.battle) st.battle.live = false; },
  rings(list){ st.rings = list || null; st.dirty = true; },
  flashZone(tiles){ if (st.battle){ st.battle.zone = tiles; st.battle.zoneT = 1.2; st.dirty = true; } },
- battleSkip(){ const Bt = st.battle; if (!Bt) return; clearTimeout(Bt.endT); st.battle = null; Bt.onEnd && Bt.onEnd(); },
+ battleSkip(){ const Bt = st.battle; if (!Bt) return; clearTimeout(Bt.endT); if (Bt.cine && Bt.cine.on){ cam.cine = null; Object.assign(cam, Bt.cine.keep); } st.battle = null; Bt.onEnd && Bt.onEnd(); },
  battleInfo(){ const Bt = st.battle; return Bt ? {i:Math.floor(Bt.t / Bt.tick), n:Bt.frames.length, speed:Bt.speed, done:Bt.done} : null; },
  edit(mode, handlers){ st.edit = mode ? {mode, h:handlers || (st.edit && st.edit.h)} : null; st.drag = null; st.sel = null; if (host) host.classList.toggle('editing', !!mode); st.dirty = true; },
  select(key){ st.sel = key == null ? null : key; st.dirty = true; },
@@ -2787,14 +2973,14 @@ window.VIL = {mount, update, unmount, project,
 
 </script>
 <script>
-const VER = '0.7.6', BUILD_DATE = 'Nov 24 2026';
+const VER = '0.8.0', BUILD_DATE = 'Nov 25 2026';
 // ===== TURF UI =====
 // Screens: title, the Viceroy's story cards, the hands-on attack (the rescue and loot raids), the result, Watch, and your own block.
 (function(){
 'use strict';
 const B = BASE, T = TURF, $ = id => document.getElementById(id);
 const SAVE_KEY = 'turf.save.v1';
-const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0, name:'', crewCode:'', seen:{}, vicOff:false, hitAt:{}, shared:[], outbox:[], seenRaids:[], pvpDay:null};
+const DEFAULT_SAVE = {v:1, rescued:false, best:0, tries:0, reports:[], block:null, cash:0, sup:0, color:'lav', army:{brawler:0, shooter:0, bruiser:0}, nk:20, fs:false, rep:0, research:{}, camp:{}, night:false, kit:{}, party:{}, rounds:{}, jobs:{}, stats:{}, day:null, guide:null, rankPaid:0, name:'', crewCode:'', seen:{}, vicOff:false, props:0, rentAt:0, hitAt:{}, shared:[], outbox:[], seenRaids:[], pvpDay:null};
 const GANG_PICK = ['lav', 'teal', 'red', 'green', 'orange', 'blue'];   // gold belongs to the Boombox Kings
 
 // ---------- save (guarded: a phone that blocks storage still plays, it just forgets) ----------
@@ -2808,7 +2994,7 @@ function loadSave(){
  out.shared = (Array.isArray(s.shared) ? s.shared : []).filter(x => typeof x === 'string' && x.length <= 4000).slice(0, 3);
  out.outbox = (Array.isArray(s.outbox) ? s.outbox : []).filter(o => o && typeof o.to === 'string' && typeof o.pay === 'string' && o.pay.length <= 6500).map(o => ({to:o.to.slice(0, 40), pay:o.pay, id:typeof o.id === 'string' ? o.id.slice(0, 20) : ''})).slice(-5);
  { const pd = s.pvpDay; out.pvpDay = pd && typeof pd === 'object' && typeof pd.d === 'string' ? {d:pd.d.slice(0, 10), paid:Math.max(0, pd.paid | 0), hits:Math.max(0, pd.hits | 0), held:Math.max(0, pd.held | 0), corner:Math.max(0, pd.corner | 0)} : null; }
- { const sn = {}; if (s.seen && typeof s.seen === 'object' && !Array.isArray(s.seen)) for (const k of Object.keys(s.seen).slice(0, 120)) if (/^[a-z_0-9]{1,24}$/.test(k)) sn[k] = 1; out.seen = sn; } out.vicOff = s.vicOff === true;
+ { const sn = {}; if (s.seen && typeof s.seen === 'object' && !Array.isArray(s.seen)) for (const k of Object.keys(s.seen).slice(0, 120)) if (/^[a-z_0-9]{1,24}$/.test(k)) sn[k] = 1; out.seen = sn; } out.vicOff = s.vicOff === true; out.props = Math.max(0, Math.min(T.PROPS, s.props | 0)); out.rentAt = Math.max(0, +s.rentAt || 0);
  out.seenRaids = (Array.isArray(s.seenRaids) ? s.seenRaids : []).filter(x => typeof x === 'string').slice(0, 60);
  out.rankPaid = Math.max(0, Math.min(T.RANKS.length - 1, out.rankPaid | 0));
  out.guide = typeof s.guide === 'number' && (s.guide === 99 || (s.guide >= 0 && s.guide <= 5)) ? s.guide | 0 : (s.block ? 99 : 0);
@@ -2954,6 +3140,9 @@ const iconLook = k => 'm|' + (ICON_SEED[k] || 1) + '|' + MY_CREW + '|' + k;
 // ---------- the map: 3D renderer, or a flat canvas when WebGL2 is missing ----------
 const PALETTE = {sunC:[[.46, .44, .62], [1.0, .9, .76]], amb:[[.27, .27, .36], [.46, .46, .5]], sky:[[.07, .07, .13], [.33, .36, .44]], bg:[[.05, .05, .08], [.15, .16, .19]], torch:[1.35, .55]};
 const EDGE = ART.edge();
+// your block's neighborhood: the houses you own fly your colors (rebuilt only when that changes)
+let edgeKey = '', edgeOwn = EDGE;
+function homeEdge(){ const n = save.props | 0, k = n + '|' + MY_CREW; if (!n) return EDGE; if (k !== edgeKey){ edgeKey = k; edgeOwn = ART.edge(n, MINI.M[MINI.GANGS[MY_CREW][0]]); } return edgeOwn; }
 let gl3d = false;
 const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 // people get simpler as the camera pulls back: full detail up close, body blocks only when the whole block is on screen
@@ -2961,7 +3150,7 @@ function detail(){ const z = gl3d ? VIL.view().zoom : 9; return z < 3.4 ? 2 : z 
 function figFn(look, frame, mode){ return ART.figure(look, frame, mode, detail()); }
 let MY_CREW = save.color;
 function mountMap(){
- gl3d = !!(window.VIL && VIL.mount($('stage'), {mats:ART.MATS, figure:figFn, palette:PALETTE, shotMats:[9, 9, 22, 12], reduce, onGround, onTap:() => {}}));
+ gl3d = !!(window.VIL && VIL.mount($('stage'), {mats:ART.MATS, fxMats:ART.FX, figure:figFn, palette:PALETTE, shotMats:[9, 9, 22, 12], reduce, onGround, onTap:() => {}}));
  if (!gl3d){ $('fb').style.display = 'block'; $('nogl').style.display = 'block';
   if (location.protocol !== 'https:' && location.protocol !== 'http:') $('noglMsg').textContent = "Opened from a file, so the 3D block may not draw. Open Turf from its web address for the full look."; setTimeout(() => $('nogl').style.display = 'none', 6000); FB.init(); }
 }
@@ -3000,7 +3189,7 @@ function sceneFor(down){
   actors.push({route:[[p.x + post[0], p.y + post[1], post[2]]], faceAt:0, fig:fr => figFn(look, 0, 'work')}); });
  if (home) PARTS.forEach((p, i) => { for (let j = 0; j < (HANG[p.k] || 0); j++){ const x = p.x + .55 + j * .95, y = p.y + p.fh + .4; if (solidAt(Math.floor(x), Math.floor(y))) continue;
    const look = 'm|' + (300 + i * 7 + j) + '|' + MY_CREW + '|' + T.ORDER[(i + j) % 2]; actors.push({route:[[x, y, 0]], faceAt:0, fig:fr => figFn(look, fr, 'idle')}); } });
- return {w:28, h:28, tile:home ? homeTile : ART.tile, edge:EDGE, parts, actors};
+ return {w:28, h:28, tile:home ? homeTile : ART.tile, edge:home ? homeEdge() : EDGE, parts, actors};
 }
 // what is down on a frame: buildings at 0, traps once they went off; streetlights never
 // a Pop-up Window that has opened (and still stands) is 'open'
@@ -3063,7 +3252,7 @@ function meta(Rx){ const u = {}, base = (Rx.seed % 99991) * 37, AC = Rx.attColor
   : a.swarm ? {look:'m|' + (base + i + 1) + '|' + AC + '|drone', type:'drone', max:a.hp, side:'a', fly:true, barZ:.5}
   : {look:'m|' + (base + i + 1) + '|' + AC + '|' + a.type, type:a.type, max:a.hp, side:'a', fly:a.type === 'drone', barZ:a.type === 'bruiser' || a.type === 'heavy' ? .92 : a.type === 'biker' ? .98 : .76});
  Rx.defenders.forEach((d, i) => u[100 + i] = {look:/^boss:/.test(d.look || '') ? d.look : 'm|' + (base + 500 + i) + '|' + (Rx.crewColor || 'gold') + '|shooter', type:'shooter', max:d.hp, side:'d', barZ:.8});
- const it = Rx.items.map(b => { const p = PARTS.find(q => q.key === b.key); return {key:b.key, x:b.x, y:b.y, fw:b.fw, fh:b.fh, top:p ? p.top : 1, max:b.role === 'wall' ? 0 : b.hp}; }); return {u, it}; }
+ const it = Rx.items.map(b => { const p = PARTS.find(q => q.key === b.key); return {key:b.key, x:b.x, y:b.y, fw:b.fw, fh:b.fh, top:p ? p.top : 1, max:b.role === 'wall' ? 0 : b.hp, role:b.role}; }); return {u, it}; }
 // the bar: your fighters, then bosses, then items. A boss on the block turns its card into its ability button.
 // keys: a fighter kind ('brawler'), a boss ('b:enforcer') or an item ('i:hype')
 const BAR_ORDER = () => T.ORDER.concat(T.BOSS_ORDER.map(k => 'b:' + k), ['i:flag'], T.ITEM_ORDER.map(k => 'i:' + k));
@@ -3199,9 +3388,10 @@ function settle(Rx, res){
   let loot = !landed || !pvpPaid ? {cash:0, sup:0} : Rx.mode === 'pvp' ? T.pvpLoot(res, Rx.pvp.hl, Rx.night) : T.lootFor(res, save.block);
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};   // you take your share of what is left on that block
    loot = landed ? T.campLoot(res, Rx.camp[0], Rx.camp[1], was.t, Rx.night, Rx.round) : {cash:0, sup:0}; }
+  const base = loot, fl = T.flexLoot(save.block); loot = {cash:Math.round(loot.cash * fl.cash), sup:Math.round(loot.sup * fl.sup)};   // the Lowrider and the Grill add to what you carry home
   const got = addRes(loot.cash, loot.sup);   // what fit in your stashes; a block only loses what you actually carried home
   if (Rx.mode === 'camp'){ const key = Rx.camp[0] + '-' + Rx.camp[1], was = save.camp[key] || {s:0, t:[0, 0]};
-   save.camp[key] = {s:Math.max(was.s, landed ? stars : 0), t:[was.t[0] + got.cash, was.t[1] + got.sup]}; lastReport.firstTake = !was.s && stars > 0; }
+   save.camp[key] = {s:Math.max(was.s, landed ? stars : 0), t:[was.t[0] + Math.min(got.cash, base.cash), was.t[1] + Math.min(got.sup, base.sup)]}; lastReport.firstTake = !was.s && stars > 0; }
   const real = landed && pvpPaid && (stars > 0 || res.pct >= 25);   // a fight counts toward payouts, restocking and jobs only if it did real damage
   const p = real ? T.payout(save.block) : {cash:0, sup:0}, pg = addRes(p.cash, p.sup); lastReport.gain = {cash:got.cash + pg.cash, sup:got.sup + pg.sup};
   const rank0 = T.rankOf(save.rep), rp = landed && pvpPaid ? T.repFor(res, save.block) : 0; save.rep += rp; lastReport.gain.rep = rp; lastReport.gain.back = nb; lastReport.gain.walked = walked;
@@ -3261,11 +3451,26 @@ function watch(rep){
  sndRecipe = Rw; wLastSfx = -1; show('watch'); cam('watch');
  const wr = ringsOf(Rw);
  const onTick2 = i => { onTick(i); if (wr.length){ const f = wFrames[i]; wr.forEach(r => { if (r.follow != null){ const u = f.u.find(q => q[0] === r.follow); if (u){ r.x = u[1]; r.y = u[2]; } } }); } };
- if (gl3d){ VIL.battle({frames:wFrames, tick:B.TICK, units, items, speed:1, follow:true, zoom:VIL.view().zoom, onTick:onTick2, onEnd:endWatch}); VIL.rings(wr); }
- else { wI = 0; cancelAnimationFrame(wRaf); let a = 0, lt = 0; const step = now => { wRaf = requestAnimationFrame(step); const dt = Math.min(.25, (now - (lt || now)) / 1000); lt = now; if (wPaused) return; a += dt * wSpeed;
+ if (gl3d){ VIL.battle({frames:wFrames, tick:B.TICK, units, items, speed:1, follow:true, zoom:VIL.view().zoom, onTick:onTick2, onEnd:endWatch, cine:cineWanted(), onCine:cineMark}); VIL.rings(wr); cineMark(cineWanted()); }
+ else { cineMark(false); wI = 0; cancelAnimationFrame(wRaf); let a = 0, lt = 0; const step = now => { wRaf = requestAnimationFrame(step); const dt = Math.min(.25, (now - (lt || now)) / 1000); lt = now; if (wPaused) return; a += dt * wSpeed;
    while (a >= B.TICK){ a -= B.TICK; wI++; if (wI >= wFrames.length){ cancelAnimationFrame(wRaf); endWatch(); return; } FB.frame(wFrames[wI]); onTick(wI); } }; wRaf = requestAnimationFrame(step); }
 }
+// cinematic replays: on unless you turn them off; a finger on the screen takes the camera back for this replay
+const CINE_KEY = 'turf.cine.v1';
+function cineWanted(){ let v = null; try { v = localStorage.getItem(CINE_KEY); } catch (e){} return v == null ? !reduce : v !== '0'; }   // off by default for Reduce Motion
+function cineMark(on){ $('watch').classList.toggle('cine', !!on); $('wCine').textContent = on ? 'Overview' : 'Cinematic'; $('wCine').hidden = !gl3d; }
+$('wCine').onclick = () => { const on = !$('watch').classList.contains('cine'); try { localStorage.setItem(CINE_KEY, on ? '1' : '0'); } catch (e){} cineMark(VIL.cine(on)); };
 let watchFromList = false, practiceRep = null;
+// Own the block: four streets around your lot, six houses each, bought in this order
+const PROP_STREETS = ['Archer Street', 'Dorsey Avenue', 'Calloway Street', 'Mercer Avenue'];
+const RENT_HOURS = 12;
+function collectRent(quiet){ const n = save.props | 0, now = Date.now(); if (!n){ save.rentAt = now; return 0; }
+ if (!save.rentAt || now < save.rentAt){ save.rentAt = now; saveGame(); return 0; }   // first house, or the clock went backwards
+ const hrs = Math.min(RENT_HOURS, (now - save.rentAt) / 3.6e6), amt = Math.floor(T.propRent(n) * hrs); if (amt < 1) return 0;
+ const got = addRes(0, amt); save.rentAt = hrs >= RENT_HOURS ? now : save.rentAt + Math.round(amt / T.propRent(n) * 3.6e6); saveGame();
+ if (!quiet && got.sup > 0){ toast('Rent came in: ' + got.sup + ' Supplies' + (got.sup < amt ? ' (your Supply Stash is full)' : '') + '.', 2800); SND.fx('cash'); } return got.sup; }
+function buyProp(){ const o = save.props | 0, c = [T.propPrice(o), 0]; if (c[0] == null || !T.propOpen(save.block)) return; if (!has(c)){ toast('Needs ' + costText(c)); SND.fx('nope'); return; }
+ collectRent(true); pay(c); save.props = o + 1; if (o === 0) save.rentAt = Date.now(); saveGame(); SND.fx('build'); SND.fx('cash'); homeHud(); homePaint(); openSheet('props'); toast('You own ' + save.props + ' of ' + T.PROPS + '. Rent is now ' + T.propRent(save.props) + ' Supplies an hour.', 2800); }
 // Test my block: a rival crew built for your Main House level hits your own layout; you watch, nothing is lost or gained
 function practice(){ if (!save.block) return; save.stats.tests++; saveGame(); const Rp = T.practiceRecipe(save.block, seed(), MY_CREW, T.blockBonuses(save)), res = B.simRaid(JSON.parse(JSON.stringify(Rp))).result;
  practiceRep = T.reportFrom(Rp, res); closeSheet(); try { watch(practiceRep); } catch (e){ practiceRep = null; toast("The test couldn't run"); toHome(); } }
@@ -3447,6 +3652,8 @@ function statLine(it){
   if (k === 'nail') return 'Hits for ' + f.dmg + ' around it.'; if (k === 'kite') return 'Hits one drone for ' + f.dmg + '.';
   if (k === 'manhole') return 'Takes up to ' + f.cap + ' beds of small fighters out of the fight.'; return T.BDEFS.closet.n + ' of your crew wait inside.'; }
  if (k === 'light') return 'Keeps the guns within ' + T.LIGHT_R + ' tiles at full reach at night.';
+ if (T.FLEX.indexOf(k) >= 0){ const pc = T.FLEX_PCT[k] * lv, nx = lv < T.maxLv(k) ? ' Level ' + (lv + 1) + ': ' + T.FLEX_PCT[k] * (lv + 1) + '%.' : '';
+  return (k === 'ride' ? pc + '% more Cash from every fight you start.' : k === 'grill' ? pc + '% more Supplies from every fight you start.' : k === 'neon' ? 'Your guns hit ' + pc + '% harder when your block is hit or tested.' : 'Your buildings are ' + pc + '% tougher when your block is hit or tested.') + nx; }
  if (k === 'fence') return T.fenceName(lv) + ', ' + T.FENCE_HP[Math.min(3, lv - 1)] + ' health. ' + T.count(b, 'fence') + ' of ' + T.capFor('fence', T.houseLv(b)) + ' pieces up.';
  return '';
 }
@@ -3465,14 +3672,16 @@ function openSheet(kind){
    h += '<button class="btn" data-act="unfence">Take it down, ' + fenceRefund(it) + ' Supplies back</button>'; }
   else { if (it.k === 'house' && c){ const need = T.houseStars(it.lv + 1), have = T.starsAll(save); h += '<p class="stat">' + (have >= need ? 'You have the ' + need + ' stars the next level needs.' : 'The next level needs ' + need + ' stars on the streets. You have ' + have + '.') + '</p>'; }
    h += c ? '<button class="btn main' + (has(c) && (it.k !== 'house' || T.starsAll(save) >= T.houseStars(it.lv + 1)) ? '' : ' no') + '" data-act="up">Level up for ' + costText(c) + '</button>' : '<p class="stat">Top level.</p>';
+   if (c){ const capN = T.storeCap(save.block); if (c[0] > capN.cash || c[1] > capN.sup) h += '<p class="stat">Your ' + (c[0] > capN.cash ? 'Cash Stash holds ' + capN.cash : 'Supply Stash holds ' + capN.sup) + '. Grow it to afford this.</p>'; }
    if (it.k === 'workshop') h += '<button class="btn" data-act="lab">Research</button>';
    h += '<p>' + (gl3d ? 'Drag it to move it.' : 'Tap an open spot to move it there.') + '</p>'; } }
  else if (kind === 'shop'){ const b = save.block, lv = T.houseLv(b);
   h = '<h3>Build</h3><div>';
+  { const o = save.props | 0, open = T.propOpen(b); h += '<div class="rows"><button class="row' + (open ? '' : ' no') + '" data-act="props" data-ico="b:rowhouse:1"><span class="mid"><span class="nm">Own the block<em>' + o + ' of ' + T.PROPS + '</em></span><br><span class="sub">Buy the houses around your lot with Cash. Each one pays rent in Supplies every hour.</span><span class="costs">' + (open ? (o >= T.PROPS ? 'You own them all' : 'Next house ' + costChips([T.propPrice(o), 0])) : 'Opens at Main House level 2') + '</span></span></button></div>'; }
   const fn = T.count(b, 'fence'), fc = T.capFor('fence', lv);
   h += '</div><h4>Fences<span>' + fn + ' of ' + fc + ' up</span></h4><div class="rows"><div class="row" data-ico="b:fence:1"><span class="mid"><span class="nm">Fence</span><br><span class="sub">' + esc(T.fenceName(1)) + ' to start. Tap a piece on your block to make it stronger.</span><span class="costs">' + costChips([0, T.HOME.fence.cost[1]]) + ' a piece</span><span class="btnrow"><button class="mini" data-act="lay">Lay</button><button class="mini" data-act="pull">Take down</button></span></span></div>';
 
-  const GROUPS = ['Money and crew', 'Defenses', 'Traps and lights'], GROUP = k => T.BDEFS[k].role === 'tower' ? GROUPS[1] : T.BDEFS[k].role === 'trap' || k === 'light' ? GROUPS[2] : GROUPS[0];
+  const GROUPS = ['Money and crew', 'Defenses', 'Traps and lights', 'Flex: Cash only'], GROUP = k => T.FLEX.indexOf(k) >= 0 ? GROUPS[3] : T.BDEFS[k].role === 'tower' ? GROUPS[1] : T.BDEFS[k].role === 'trap' || k === 'light' ? GROUPS[2] : GROUPS[0];
   let lastG = '';
   T.SHOP.slice().sort((a, b2) => GROUPS.indexOf(GROUP(a)) - GROUPS.indexOf(GROUP(b2))).forEach(k => { const n = T.count(b, k), cap = T.capFor(k, lv), c = T.price(b, T.HOME[k].cost), off = n >= cap || !has(c);
    if (GROUP(k) !== lastG){ lastG = GROUP(k); h += '</div><h4>' + lastG + '</h4><div class="rows">'; }
@@ -3537,6 +3746,13 @@ function openSheet(kind){
      + (open ? '<button class="mini" data-make="' + k + '">+ ' + it.cost + '</button>' : '') + '</div>'; });
    h += '</div>'; } }
  else if (kind === 'help') h = vicSheet();
+ else if (kind === 'props'){ const o = save.props | 0, nx = T.propPrice(o), open = T.propOpen(save.block);
+  h = '<h3>Own the block</h3><p>The houses facing your lot are for sale, one at a time. Each one you own flies your colors and pays rent in Supplies by the hour. Rent collects when you come home, up to ' + RENT_HOURS + ' hours of it.</p>';
+  h += '<p class="stat">You own ' + o + ' of ' + T.PROPS + '. Rent: ' + T.propRent(o) + ' Supplies an hour.</p>';
+  if (!open) h += '<p>Opens at Main House level 2.</p>';
+  else if (nx == null) h += '<p>Every house on the block is yours.</p>';
+  else h += '<div class="rows"><button class="row' + (has([nx, 0]) ? '' : ' no') + '" data-act="buyprop" data-ico="b:rowhouse:1"><span class="mid"><span class="nm">' + esc(PROP_STREETS[Math.floor(o / 6)]) + ', house ' + (o % 6 + 1) + '</span><br><span class="sub">Pays ' + T.propRent1(o) + ' Supplies an hour, its price back in Supplies in about ' + Math.round(nx / T.propRent1(o)) + ' hours.</span><span class="costs">' + costChips([nx, 0]) + '</span></span></button></div>' + (nx > T.storeCap(save.block).cash ? '<p>Your Cash Stash holds ' + T.storeCap(save.block).cash + '. Grow it to afford this one.</p>' : '');
+  h += '<div class="rows">' + PROP_STREETS.map((nm, i) => { const mine = Math.max(0, Math.min(6, o - i * 6)); return '<div class="row" data-ico="b:rowhouse:' + (mine >= 6 ? 3 : mine ? 2 : 1) + '"><span class="mid"><span class="nm">' + esc(nm) + '<em>' + mine + ' of 6</em></span></span></div>'; }).join('') + '</div>'; }
  else if (kind === 'online'){ h = onlineSheet(); if (save.crewCode) setTimeout(() => netSync(false), 50); }
  else if (kind === 'fights'){
   h = '<h3>Your fights<span>' + save.reports.length + '</span></h3>';
@@ -3560,6 +3776,8 @@ $('sheetBody').addEventListener('click', e => {
  if (t.dataset.runback){ const ci = +t.dataset.runback; if (runArmed !== ci){ runArmed = ci; t.textContent = 'Sure? They come back tougher. Your stars are kept. Tap again.'; return; } runArmed = -1; runBack(ci); return; }
  if (t.dataset.job){ jobClaim(t.dataset.job); return; }
  if (t.dataset.help){ vic(t.dataset.help); return; }
+ if (t.dataset.act === 'props'){ if (T.propOpen(save.block)) openSheet('props'); else toast('Opens at Main House level 2'); return; }
+ if (t.dataset.act === 'buyprop'){ buyProp(); return; }
  if (t.dataset.act === 'viceroy'){ save.vicOff = !save.vicOff; if (save.vicOff) save.guide = 99; saveGame(); openSheet('help'); toast(save.vicOff ? 'Tips off. Ask me any time.' : 'Tips on.'); return; }
  if (t.dataset.daily){ dailyClaim(+t.dataset.daily); return; }
  if (t.dataset.party){ partyUp(t.dataset.party); return; }
@@ -3764,10 +3982,11 @@ const vicCap = () => T.storeCap(save.block || []), vicHouse = () => T.houseLv(sa
 const VIC = {
  cash:{t:'Cash', ico:'b:stash:1', say:() => ["That green stack is Cash, darling. It keeps the music playing.",
   "You take it off rival blocks. Your Hustle tables pay a little more after every fight that wins a star or knocks down a quarter of the block, and Jobs pay too.",
-  "Cash hires your crew, goes into most new buildings and the Main House, and pays for the Block Party. Your stash holds " + vicCap().cash + ". Anything past that stays on the street, so spend it or grow the Cash Stash."]},
+  "Cash hires your crew, goes into most new buildings and the Main House, and pays for the Block Party. Your stash holds " + vicCap().cash + ". Anything past that stays on the street, so spend it or grow the Cash Stash.",
+  "Once the block is built, Cash buys the houses around it and the flex: a Lowrider, a Grill, a Neon Sign, a Hoop Court. Every one of them pays you back."]},
  sup:{t:'Supplies', ico:'b:supstash:1', say:() => ["The crate is Supplies. Lumber, sandbags, wire. Not glamorous, but neither is a stage before the lights come up.",
   "It comes off rival blocks, and your Supply Run van brings some home after every fight that does real damage. A Corner Store adds a fifth more on the Boombox corner.",
-  "Supplies pay for leveling up your buildings, fences and guns, items for the crew, and research in the Workshop. Your stash holds " + vicCap().sup + ". " + (T.count(save.block || [], 'supstash') ? "Level up the Supply Stash to hold more." : "Build a Supply Stash to hold more.")]},
+  "Supplies also come from rent on houses you own, and a Cookout Grill adds more from every fight. They pay for leveling up your buildings, fences and guns, items for the crew, and research in the Workshop. Your stash holds " + vicCap().sup + ". " + (T.count(save.block || [], 'supstash') ? "Level up the Supply Stash to hold more." : "Build a Supply Stash to hold more.")]},
  rep:{t:'Rep and ranks', ico:'star', show:'jobs', say:() => { const rk = T.rankOf(save.rep), nx = T.RANKS[rk + 1];
   return ["And that coin is Rep. Your name on these streets. Honey, it is not for sale.",
    "You can't spend it, and nobody can take it from you. Every fight earns some, more for stars and for how much you knock down. A Studio on your lot adds more, and holding your block against a friend online is worth 5, up to three times a day.",
@@ -3808,17 +4027,26 @@ const VIC = {
  hit:{t:'Getting hit', ico:'b:porch:1', show:'fights', say:() => ["Somebody from your crew hit your block while you were out.",
   "Your phone replayed it when you came back. Watch it under Your crew online or Your fights on the streets screen, and see exactly where they got in.",
   "Then fix it. Move your guns, add fences, set a trap, or tap Test your block on the streets screen and watch a rival try."]},
+ props:{t:'Own the block', ico:'b:rowhouse:2', show:'props', say:() => ["See those houses around your lot? Every one of them is for sale, darling, and I know the owners.",
+  "Buy them one at a time with Cash. Each one flies your colors and pays rent in Supplies every hour, collected when you come home, up to 12 hours of it. You own " + (save.props | 0) + " of 24, paying " + T.propRent(save.props) + " an hour.",
+  "Each house costs 400 more than the last and pays a little more. Every one gives its price back in Supplies in about 40 hours, and then it's all profit."]},
+ flex:{t:'Flex', ico:'b:ride:2', show:'shop', say:() => ["Flex. The things a block buys once it has everything else. Cash only, and every one pays.",
+  "The Lowrider brings home 5% more Cash per level. The Grill brings 5% more Supplies per level. That's on every fight you start.",
+  "The Neon Sign makes your guns hit 10% harder per level, and the Hoop Court makes your buildings 10% tougher per level, whenever a friend hits your block and when you Test your block. They stack with the Block Party."]},
  fights:{t:'Your fights', ico:'star3', show:'fights', say:() => ["The last 30 fights are kept here, hits on your block included. Tap one to watch it again. Test your block runs are not kept.",
+  "Replays play like a film now: street-level angles, and slow motion when something big comes down. Tap Overview for the view from above, or touch the screen to take the camera.",
   "Hits on your own block land here too, once your crew is online. Watching where they got in is the cheapest lesson in town."]}
 };
-const VIC_LIST = ['cash', 'sup', 'rep', 'crew', 'fight', 'streets', 'night', 'build', 'house', 'jobs', 'lab', 'party', 'online', 'hit', 'fights'];
-const VIC_SHEET = {shop:'build', crew:'crew', jobs:'jobs', streets:'streets', online:'online', lab:'lab', party:'party', fights:'fights'};
+const VIC_LIST = ['cash', 'sup', 'rep', 'crew', 'fight', 'streets', 'night', 'build', 'house', 'props', 'flex', 'jobs', 'lab', 'party', 'online', 'hit', 'fights'];
+const VIC_SHEET = {props:'props', shop:'build', crew:'crew', jobs:'jobs', streets:'streets', online:'online', lab:'lab', party:'party', fights:'fights'};
 // the walk-on parts of the walkthrough, after the first fight: one per trip home, each said once
 const VIC_NUDGE = [
  {k:'rank', when:() => rankOwed(), key:() => 'n_rank' + rankOwed(), say:() => ["You made " + T.RANKS[rankOwed()][1] + ". There's a bonus with your name on it in Jobs."], show:'jobs'},
  {k:'hit', when:() => save.reports.some(r => r.def), key:() => 'hit', topic:'hit'},
  {k:'house', when:() => { const lv = vicHouse(); return lv < 4 && T.starsAll(save) >= T.houseStars(lv + 1); }, key:() => 'n_house' + vicHouse(), say:() => ["You have the stars for Main House level " + (vicHouse() + 1) + ". Bigger lot, higher limits, new buildings. Tap it to see what it costs."], show:'house'},
  {k:'full', when:() => { const c = vicCap(); return save.cash >= c.cash * .95 || save.sup >= c.sup * .95; }, key:() => 'n_full', say:() => ["A stash is full, darling. Whatever you win past the top stays on the street. Spend it, or grow the stash."], show:'shop'},
+ {k:'props', when:() => T.propOpen(save.block) && !save.props && save.cash >= T.propPrice(0), key:() => 'n_props', say:() => ["Cash burning a hole? The houses around your lot are for sale. Buy one and it pays rent in Supplies every hour. Find it at the top of Build."], show:'props'},
+ {k:'flex', when:() => vicHouse() >= 2 && !T.FLEX.some(k => T.count(save.block || [], k)) && save.cash >= 2000, key:() => 'n_flex', say:() => ["You've got Cash and nothing to show for it. A Lowrider on the lot brings home 5% more Cash every fight. Look under Flex in Build."], show:'shop'},
  {k:'runback', when:() => T.CREWS.some((c, ci) => T.canRunBack(save.camp, save.rounds, ci)), key:() => 'n_runback', say:() => ["You've taken every block from a crew. Want more? Run it back from the streets screen. They come back tougher, and richer."], show:'streets'},
  {k:'online', when:() => vicHouse() >= 2 && !save.crewCode, key:() => 'n_online', say:() => ["Your house is big enough for company now. Go online with a crew code and you can hit your friends' real blocks, and they can hit yours."], show:'online'},
  {k:'party', when:() => T.partyOpen(save.block || [], 0), key:() => 'n_party', say:() => ["The Block Party board on your Main House is open. The neighborhood chips in, you cover it in Cash, and the whole block gets tougher."], show:'party'},
@@ -3838,6 +4066,7 @@ function vic(topic){ const v = VIC[topic]; if (!v) return; save.seen[topic] = 1;
 function vicGo(where){ vicClose(); if (!$('home').classList.contains('on')) return;
  if (where === 'house'){ const h = (save.block || []).find(i => i.k === 'house'); if (!h) return; if (!$('home').classList.contains('on')) toHome(); homeSel = h.key; homePaint(); openSheet('info'); focusOn(h.x + 1, h.y + 1); return; }
  if (where === 'lab' && !T.count(save.block || [], 'workshop')){ openSheet('shop'); toast('Build a Workshop first. It opens at Main House level 2.', 2600); return; }
+ if (where === 'props' && !T.propOpen(save.block)){ toast('Owning the block opens at Main House level 2.', 2400); return; }
  if (where === 'party' && !T.partyOpen(save.block || [], 0)){ toast('The Block Party opens at Main House level 2.', 2400); return; }
  if (!$('home').classList.contains('on')) toHome(); openSheet(where); }
 $('vicNext').onclick = e => { e.stopPropagation(); if (!vicQ) return; if (vicQ.i < vicQ.lines.length - 1){ vicQ.i++; vicPaint(); } else vicClose(); };
@@ -3888,6 +4117,7 @@ function toHome(){
  if (!T.armySize(save.army) && save.cash < T.trainCost('brawler') * 4){ save.army.brawler = Math.min(6, T.armyCap(save.block)); saveGame(); setTimeout(() => toast('The Viceroy sent ' + save.army.brawler + ' Brawlers over. On the house.', 3000), 600); }
  homeHud(); netSync(false); if (MY_CREW !== 'lav') setTimeout(() => Object.keys(MY_BOSS).forEach(k => tintFace(k, MY_CREW)), 1500);
  if (firstHome){ firstHome = false; openSheet('crew'); }
+ collectRent(); homeHud();
  setTimeout(vicNudge, 1400);
 }
 

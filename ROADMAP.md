@@ -4,6 +4,15 @@ A base-building and raiding game for the crew. Single-page PWA on GitHub Pages, 
 (base.js fight sim + village-iso.js renderer) first made for Ravenmarrow.
 
 ## Now
+**v0.8.0 · Nov 25 2026 · Replays like a film, things that come down hard, and something to spend Cash on.**
+- Cinematic replays (Caleb's idea): every replay now plays like a film. It opens on a crane shot around the block, then cuts between a chase behind your crew, a low side angle and a high angle. When a big building falls, it cuts to it in slow motion, and the last one gets the longest, slowest look. Letterbox bars; the buttons sit in the bottom bar. Overview switches back to the view from above (remembered), and touching the screen takes the camera for that replay.
+- Things come down: a building that falls now shudders and breaks into pieces that fly out, tumble and settle in a cloud of dust, with sparks. The Supply Run van and the Lowrider go up in fire and black smoke. Fallen fighters drop where they stood. This happens in every fight, not only replays.
+- Own the block: the 24 houses facing your lot are for sale from Main House level 2, one at a time, from 800 Cash rising 400 each to 10,000. Each one flies your crew's flag and pays rent in Supplies every hour, collected when you come home (up to 12 hours of it). Each house gives its price back in Supplies in about 40 hours. All 24 pay 3,240 Supplies an hour. At the top of Build.
+- Flex, Cash only, each with a real payoff: Lowrider (5% more Cash from every fight you start, per level), Cookout Grill (5% more Supplies, per level), Neon Sign (your guns hit 10% harder when your block is hit or tested, per level), Hoop Court (your buildings 10% tougher, per level); both stack with the Block Party. Three levels each.
+- The Viceroy explains both, and points you at the houses once you have the Cash.
+- Fixed: with Reduce Motion turned on, fights and replays no longer freeze (the debris and slow-motion film are skipped for those players).
+- Online: blocks with flex pieces need everyone on v0.8; older versions are asked to update before fighting.
+
 **v0.7.6 · Nov 24 2026 · The corner works like the streets.** On the Boombox corner, whoever is still standing at the end now walks home, the same as on the streets. The corner never runs dry, so it pays loot and Rep 6 times a day; after that a run is practice, and the result screen says so. The Viceroy's lines match.
 
 **v0.7.5 · Nov 24 2026 · The Viceroy explains.**
